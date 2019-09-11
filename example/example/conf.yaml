@@ -2,17 +2,17 @@ logging:
   version: 1
   root:
     handlers:
-      - default
+      # - default
       - console
     level: DEBUG
   loggers:
     bobcat_idp:
       level: DEBUG
   handlers:
-    default:
-      class: logging.FileHandler
-      filename: 'debug.log'
-      formatter: default
+    # default:
+      # class: logging.FileHandler
+      # filename: 'debug.log'
+      # formatter: default
     console:
       class: logging.StreamHandler
       'stream': 'ext://sys.stdout'
@@ -21,7 +21,7 @@ logging:
     default:
       format: '%(asctime)s %(name)s %(levelname)s %(message)s'
 
-session_cookie_name: flop
+session_cookie_name: oidc_op
 port: &port 8000
 domain: &domain 127.0.0.1
 server_name: &server_name 127.0.0.1:8000
@@ -39,9 +39,9 @@ key_def: &key_def
       - sig
 
 OIDC_KEYS: &oidc_keys
-    'private_path': "private/jwks.json"
+    'private_path': "data/oidc_op/private/jwks.json"
     'key_defs': *key_def
-    'public_path': 'static/jwks.json'
+    'public_path': 'data/static/jwks.json'
     'read_only': False
     # otherwise OP metadata will have jwks_uri: https://127.0.0.1:5000/None!
     'uri_path': 'static/jwks.json'
@@ -86,7 +86,6 @@ op:
       backchannel_logout_supported: True
       backchannel_logout_session_supported: True
       check_session_iframe: https://127.0.0.1:5000/check_session_iframe
-    template_dir: templates
     id_token:
       class: oidcendpoint.id_token.IDToken
       kwargs:
@@ -129,6 +128,10 @@ op:
         lifetime: 86400
     jwks:
       *oidc_keys
+
+    template_dir: oidc_op/templates
+    template_handler: django.template.Template
+
     endpoint:
       webfinger:
         path: '.well-known/webfinger'
@@ -181,10 +184,13 @@ op:
       # Develop a Django oidcendpoint class
       user:
         acr: oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD
-        class: oidcendpoint.user_authn.user.UserPassJinja2
-        verify_endpoint: 'verify/user'
+        class: oidc_op.authn_methods.UserPassDjango
+
+        # this would override web resource where credentials will be POSTed
+        #verify_endpoint: 'verify/user'
+
         kwargs:
-          template: user_pass.jinja2
+          template: oidc_login.html
           db:
             class: oidcendpoint.util.JSONDictDB
             kwargs:

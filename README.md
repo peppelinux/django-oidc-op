@@ -1,5 +1,5 @@
 # django-oidc-op
-A Django implementation of a OIDC OP on top of [Roland Hedberg oidc-op](https://github.com/rohe/oidc-op).
+A Django implementation of OIDC OP built top of [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op).
 
 ## Status
 Work in Progress, please wait for the first release tag before considering it ready to use.
@@ -40,8 +40,10 @@ These following files needed to be present in `data/oidc_op/private`.
 
 ## General description
 
-The example included in the example enables dynamic registration of RPs.
-Using an example RP like [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP) and configuring in its `CLIENTS` configuration section to use django-oidc-op, we'll see the following flow happen:
+The example included in this project enables dynamic registration of RPs (you can even disable it).
+Using an example RP like [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP)
+and configuring in `CLIENTS` section to use django-oidc-op (see `example/data/oidc_rp/conf.django.yaml`),
+we'll see the following flow happens:
 
 1. /.well-known/openid-configuration
    RP get the OP configuration (metadata)
@@ -49,7 +51,8 @@ Using an example RP like [JWTConnect-Python-OidcRP](https://github.com/openid/JW
    RP registers in the OP
 3. /authorization
    RP mades OIDC authorization
-4. RP going to be redirected to login form page
+4. RP going to be redirected to login form page (see authn_methods.py)
+5. user-agent posts form (user credentials) to `/verify/user_pass_django`
 
 ## Proposed resources namespace
 Add them to `urls.py` if needed, then updated oidc_op `conf.yaml`.
