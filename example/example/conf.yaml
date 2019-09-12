@@ -96,7 +96,7 @@ op:
             essential: True
     token_handler_args:
       jwks_def:
-        private_path: 'private/token_jwk.json'
+        private_path: private/token_jwk.json
         read_only: False
         key_defs:
           -
@@ -185,16 +185,18 @@ op:
       user:
         acr: oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD
         class: oidc_op.authn_methods.UserPassDjango
-
-        # this would override web resource where credentials will be POSTed
-        #verify_endpoint: 'verify/user'
-
         kwargs:
+          # this would override web resource where credentials will be POSTed
+          # append the trailing slash or add APPEND_SLASH=False in Django settings.py
+          verify_endpoint: 'verify/oidc_user_login/'
           template: oidc_login.html
-          db:
-            class: oidcendpoint.util.JSONDictDB
-            kwargs:
-              json_path: data/oidc_op/private/passwd.json
+
+          # removed in Django: it will use Django's authbackends
+          # db:
+            # class: oidcendpoint.util.JSONDictDB
+            # kwargs:
+              # json_path: data/oidc_op/private/passwd.json
+
           page_header: "Testing log in"
           submit_btn: "Get me in!"
           user_label: "Nickname"

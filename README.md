@@ -12,7 +12,7 @@ Available resources:
 - /registration [tested, working]
 - /authorization [tested, working]
 
-- login form [wip]
+- login form [tested, working -> WiP userinfo resource]
 
 ## Run the example demo
 
@@ -35,8 +35,12 @@ These following files needed to be present in `data/oidc_op/private`.
 
 1. session.json (JWK symmetric)
 2. cookie_sign_jwk.json (JWK symmetric)
-3. passwd.json: deprecated, optional. To be replaced with Django internals.
-4. users.json: deprecated, optional. To be replaced with Django internals.
+
+
+The followings was removed and adapted to Django internals:
+
+1. passwd.json
+2. users.json
 
 ## General description
 
@@ -53,6 +57,9 @@ we'll see the following flow happens:
    RP mades OIDC authorization
 4. RP going to be redirected to login form page (see authn_methods.py)
 5. user-agent posts form (user credentials) to `/verify/user_pass_django`
+6. verify_user in django, on top of oidcendpoint_app.endpoint_context.authn_broker
+7. RP get's the redirection to OP's USERINFO endpoint, using the access token (HttpRedirect to op's /token resource)
+8.
 
 ## Proposed resources namespace
 Add them to `urls.py` if needed, then updated oidc_op `conf.yaml`.

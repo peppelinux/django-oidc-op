@@ -1,4 +1,4 @@
-# import django
+from django.contrib.auth import login, logout, authenticate
 from django.template.loader import render_to_string
 
 from oidcendpoint.util import instantiate
@@ -18,12 +18,13 @@ class UserPassDjango(UserAuthnMethod):
     # TODO: get this though settings conf
     url_endpoint = "/verify/user_pass_django"
 
-    def __init__(self, db, template_handler=render_to_string, template="oidc_login.html",
+    # def __init__(self, db, template_handler=render_to_string, template="oidc_login.html",
+                 # endpoint_context=None, verify_endpoint='', **kwargs):
+    def __init__(self, template_handler=render_to_string, template="oidc_login.html",
                  endpoint_context=None, verify_endpoint='', **kwargs):
         """
         template_handler is only for backwards compatibility, it will be always replaced by Django's default
         """
-
         super(UserPassDjango, self).__init__(endpoint_context=endpoint_context)
 
         self.kwargs = kwargs
@@ -43,7 +44,7 @@ class UserPassDjango(UserAuthnMethod):
         self.template = template
 
         # TODO: force to Django....
-        self.user_db = instantiate(db["class"], **db["kwargs"])
+        # self.user_db = instantiate(db["class"], **db["kwargs"])
 
         self.action = verify_endpoint or self.url_endpoint
         self.kwargs['action'] = self.action
@@ -77,8 +78,11 @@ class UserPassDjango(UserAuthnMethod):
 
     def verify(self, *args, **kwargs):
         username = kwargs["username"]
-        if username in self.user_db and self.user_db[username] == kwargs[
-                "password"]:
-            return username
+        password = kwargs["password"]
+
+        user = authenticate(username=username, password=password)
+
+        if username:
+            return user
         else:
             raise FailedAuthentication()

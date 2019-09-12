@@ -192,3 +192,39 @@ def registration(request):
 def authorization(request):
     _endpoint = oidcendpoint_app.endpoint_context.endpoint['authorization']
     return service_endpoint(request, _endpoint)
+
+
+@csrf_exempt
+def verify_user(request):
+    """csrf is not needed because it uses oidc token in the post
+    """
+    token = request.POST.get('token')
+    if not token:
+        return HttpResponse('Access forbidden: invalid token.', status=403)
+
+    authn_method = oidcendpoint_app.endpoint_context.\
+                   authn_broker.get_method_by_id('user')
+
+    kwargs = dict([(k, v) for k, v in request.POST.items()])
+    user = authn_method.verify(**kwargs)
+    if not user:
+        return HttpResponse('Authentication failed', status=403)
+
+    auth_args = authn_method.unpack_token(kwargs['token'])
+    authz_request = AuthorizationRequest().from_urlencoded(auth_args['query'])
+
+    # TODO: 'salt' should change/be randomized/be configured
+    authn_event = create_authn_event(
+        uid=user.username, salt='salt',
+        authn_info=auth_args['authn_class_ref'],
+        authn_time=auth_args['iat'])
+
+    endpoint = oidcendpoint_app.endpoint_context.endpoint['authorization']
+    args = endpoint.authz_part2(user=user.username, request=authz_request,
+                                authn_event=authn_event)
+
+    if isinstance(args, ResponseMessage) and 'error' in args:
+        return HttpResponse(args.to_json(), status=400)
+
+    response = do_response(endpoint, request, **args)
+    return response
