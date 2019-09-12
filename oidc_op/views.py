@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 # TODO: decide if refactor this with a decorator
 oidcendpoint_app = oidcendpoint_application()
 
+
 def _add_cookie(resp, cookie_spec):
     for key, _morsel in cookie_spec.items():
         kwargs = {'value': _morsel.value}
@@ -86,8 +87,8 @@ def service_endpoint(request, endpoint):
     logger = oidcendpoint_app.srv_config.logger
     logger.info('At the "{}" endpoint'.format(endpoint.endpoint_name))
 
-    # if hasattr(request, 'test') and request.test == 1:
-        # import pdb; pdb.set_trace()
+    if hasattr(request, 'debug') and request.debug:
+        import pdb; pdb.set_trace()
 
     try:
         # {'Content-Type': 'application/x-www-form-urlencoded', 'Connection': 'keep-alive', 'Content-Length': '493', 'Host': '127.0.0.1:8000', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Authorization': 'Basic SnFLS2M4RURYY1g2OmVlZDliYWZlMmZlZWRkNmQwMDYyOGVjMjViZGU0OTQ3MDBiNDdkNjVmMTc3ZTRmYWZkNGY5ZDUx', 'User-Agent': 'python-requests/2.22.0'}
@@ -189,6 +190,7 @@ def well_known(request, service):
 
 @csrf_exempt
 def registration(request):
+    logger.info('registration request')
     _endpoint = oidcendpoint_app.endpoint_context.endpoint['registration']
     return service_endpoint(request, _endpoint)
 
@@ -236,6 +238,20 @@ def verify_user(request):
 
 @csrf_exempt
 def token(request):
+    logger.info('token request')
     _endpoint = oidcendpoint_app.endpoint_context.endpoint['token']
-    request.test = 1
+
+    # if not hasattr(request, 'debug'):
+        # request.debug = 0
+    # request.debug +=1
+    return service_endpoint(request, _endpoint)
+
+
+@csrf_exempt
+def userinfo(request):
+    logger.info('userinfo request')
+    _endpoint = oidcendpoint_app.endpoint_context.endpoint['userinfo']
+    # if not hasattr(request, 'debug'):
+        # request.debug = 0
+    # request.debug +=1
     return service_endpoint(request, _endpoint)

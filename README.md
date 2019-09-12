@@ -27,6 +27,7 @@ pip install -r requirements.txt
 cd example
 ./manage.py migrate
 ./manage.py createsuperuser
+./manage.py collectstatic
 
 gunicorn example.wsgi -b0.0.0.0:8000 --keyfile=./data/oidc_op/certs/key.pem --certfile=./data/oidc_op/certs/cert.pem --reload
 ````

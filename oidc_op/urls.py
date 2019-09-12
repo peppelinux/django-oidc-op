@@ -13,6 +13,6 @@ urlpatterns = [
 
     path('verify/oidc_user_login/', views.verify_user, name="oidc_verify_user"),
     path('token', views.token, name="oidc_token"),
-
+    path('userinfo', views.token, name="oidc_userinfo"),
 
 ]

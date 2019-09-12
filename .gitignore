@@ -1,4 +1,6 @@
 example/db.sqlite3
+example/data/static/
+!example/data/static/jwks.json
 __pycache__/*
 *.pyc
 
