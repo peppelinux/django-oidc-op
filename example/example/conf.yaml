@@ -39,9 +39,9 @@ key_def: &key_def
       - sig
 
 OIDC_KEYS: &oidc_keys
-    'private_path': "data/oidc_op/private/jwks.json"
+    'private_path': data/oidc_op/private/jwks.json
     'key_defs': *key_def
-    'public_path': 'data/static/jwks.json'
+    'public_path': data/static/jwks.json
     'read_only': False
     # otherwise OP metadata will have jwks_uri: https://127.0.0.1:5000/None!
     'uri_path': 'static/jwks.json'
@@ -209,7 +209,7 @@ op:
     cookie_dealer:
       class: oidcendpoint.cookie.CookieDealer
       kwargs:
-        sign_jwk: 'data/oidc_op/private/cookie_sign_jwk.json'
+        sign_jwk: data/oidc_op/private/cookie_sign_jwk.json
         sign_alg: 'SHA256'
         # enc_jwk: 'data/oidc_op/private/cookie_enc_jwk.json'
         default_values:

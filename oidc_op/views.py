@@ -86,7 +86,11 @@ def service_endpoint(request, endpoint):
     logger = oidcendpoint_app.srv_config.logger
     logger.info('At the "{}" endpoint'.format(endpoint.endpoint_name))
 
+    # if hasattr(request, 'test') and request.test == 1:
+        # import pdb; pdb.set_trace()
+
     try:
+        # {'Content-Type': 'application/x-www-form-urlencoded', 'Connection': 'keep-alive', 'Content-Length': '493', 'Host': '127.0.0.1:8000', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Authorization': 'Basic SnFLS2M4RURYY1g2OmVlZDliYWZlMmZlZWRkNmQwMDYyOGVjMjViZGU0OTQ3MDBiNDdkNjVmMTc3ZTRmYWZkNGY5ZDUx', 'User-Agent': 'python-requests/2.22.0'}
         authn = request.headers['Authorization']
         pr_args = {'auth': authn}
     except KeyError:
@@ -112,7 +116,7 @@ def service_endpoint(request, endpoint):
                 'method': request.method
                 }, status=400)
     else:
-        if request.body:
+        if request.body and not request.POST:
             req_args = request.body \
                        if isinstance(request.body, str) else \
                        request.body.decode()
@@ -228,3 +232,10 @@ def verify_user(request):
 
     response = do_response(endpoint, request, **args)
     return response
+
+
+@csrf_exempt
+def token(request):
+    _endpoint = oidcendpoint_app.endpoint_context.endpoint['token']
+    request.test = 1
+    return service_endpoint(request, _endpoint)

@@ -12,7 +12,9 @@ Available resources:
 - /registration [tested, working]
 - /authorization [tested, working]
 
-- login form [tested, working -> WiP userinfo resource]
+- login form
+- access token
+- /userinfo [wip]
 
 ## Run the example demo
 
@@ -58,8 +60,8 @@ we'll see the following flow happens:
 4. RP going to be redirected to login form page (see authn_methods.py)
 5. user-agent posts form (user credentials) to `/verify/user_pass_django`
 6. verify_user in django, on top of oidcendpoint_app.endpoint_context.authn_broker
-7. RP get's the redirection to OP's USERINFO endpoint, using the access token (HttpRedirect to op's /token resource)
-8.
+7. RP request for an access token -> the response of the previous authentication is a HttpRedirect to op's /token resource
+8. RP get the redirection to OP's USERINFO endpoint, using the access token got before
 
 ## Proposed resources namespace
 Add them to `urls.py` if needed, then updated oidc_op `conf.yaml`.
