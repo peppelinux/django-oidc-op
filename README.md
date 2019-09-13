@@ -14,7 +14,9 @@ Available resources:
 
 - login form
 - access token
-- /userinfo [wip]
+- /userinfo [test, working: need work to handle some attribute release policy]
+
+- logout resources [WiP]
 
 ## Run the example demo
 
@@ -40,11 +42,6 @@ These following files needed to be present in `data/oidc_op/private`.
 2. cookie_sign_jwk.json (JWK symmetric)
 
 
-The followings was removed and adapted to Django internals:
-
-1. passwd.json
-2. users.json
-
 ## General description
 
 The example included in this project enables dynamic registration of RPs (you can even disable it).
@@ -68,3 +65,7 @@ we'll see the following flow happens:
 Add them to `urls.py` if needed, then updated oidc_op `conf.yaml`.
 
 - /oidc/endpoint/<provider_name>
+
+## debug notes
+
+- `RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi flask_rp/conf.django.yaml`

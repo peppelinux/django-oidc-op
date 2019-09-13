@@ -16,6 +16,7 @@ from oidcendpoint.oidc.token import AccessToken
 from oidcmsg.oauth2 import ResponseMessage
 from oidcmsg.oidc import AccessTokenRequest
 from oidcmsg.oidc import AuthorizationRequest
+from urllib import parse as urlib_parse
 
 from . application import oidcendpoint_application
 
@@ -90,53 +91,47 @@ def service_endpoint(request, endpoint):
     if hasattr(request, 'debug') and request.debug:
         import pdb; pdb.set_trace()
 
-    try:
-        # {'Content-Type': 'application/x-www-form-urlencoded', 'Connection': 'keep-alive', 'Content-Length': '493', 'Host': '127.0.0.1:8000', 'Accept-Encoding': 'gzip, deflate', 'Accept': '*/*', 'Authorization': 'Basic SnFLS2M4RURYY1g2OmVlZDliYWZlMmZlZWRkNmQwMDYyOGVjMjViZGU0OTQ3MDBiNDdkNjVmMTc3ZTRmYWZkNGY5ZDUx', 'User-Agent': 'python-requests/2.22.0'}
-        authn = request.headers['Authorization']
-        pr_args = {'auth': authn}
-    except KeyError:
-        pr_args = {}
+
+    authn = request.headers.get('Authorization', {})
+    pr_args = {'auth': authn}
+    if authn:
+        logger.debug('request.headers["Authorization"] => {}'.format(pr_args))
 
     if request.method == 'GET':
-        try:
-            # req_args should be
-            # {'verify_ssl': True, 'jwe_header': None, 'jws_header': None, 'lax': False, 'jwt': None, '_dict': {'client_id': 'gTiwqgrDKgcH', 'state': 'F56tjqAeTGhqd7iyCFmlYmOiGunDoim6', 'response_type': ['code'], 'nonce': 'ypXILwdBHbRfWvZALk5vBkaP', 'redirect_uri': 'https://127.0.0.1:8090/authz_cb/flop', 'scope': ['openid', 'profile', 'email', 'address', 'phone']}}
-            request.args = {k:v for k,v in request.GET.items()}
-            req_args = endpoint.parse_request(request.args, **pr_args)
-            if req_args._dict.get('error'):
-                msg = 'Inconsistent req_args from endpoint.parse_request: {}'
-                err = msg.format(req_args._dict.get('error_description'))
-                # logger.error(err)
-                raise Exception(err)
-
-        except Exception as err:
-            logger.error(err)
-            return JsonResponse({
-                'error': 'invalid_request',
-                'error_description': str(err),
-                'method': request.method
-                }, status=400)
+        data = {k:v for k,v in request.GET.items()}
+    elif request.body:
+        data = request.body \
+               if isinstance(request.body, str) else \
+               request.body.decode()
+        #<oidcendpoint.oidc.token.AccessToken object at 0x7fd626329d68>
+        if authn:
+            data = {k:v[0] for k,v in urlib_parse.parse_qs(data).items()}
     else:
-        if request.body and not request.POST:
-            req_args = request.body \
-                       if isinstance(request.body, str) else \
-                       request.body.decode()
-        else:
-            req_args = {k:v for k,v in request.POST.items()}
-        try:
-            req_args = endpoint.parse_request(req_args, **pr_args)
-        except Exception as err:
-            logger.error(err)
-            return JsonResponse(json.dumps({
-                'error': 'invalid_request',
-                'error_description': str(err),
-                'method': request.method
-                }), status=400)
+        data = {k:v for k,v in request.POST.items()}
+
+    # for .well-known resources like provider-config no data are submitted
+    # if not data:
+        # msg = 'Any request.args provided in {}'.format(str(type(endpoint)))
+        # logger.error(msg)
+        # return JsonResponse(json.dumps({
+            # 'error': 'invalid_request',
+            # 'error_description':msg,
+            # 'method': request.method
+            # }), status=400)
+
+    logger.debug('Request arguments [{}]: {}'.format(request.method, data))
+    try:
+        req_args = endpoint.parse_request(data, **pr_args)
+    except Exception as err:
+        logger.error(err)
+        return JsonResponse(json.dumps({
+            'error': 'invalid_request',
+            'error_description': str(err),
+            'method': request.method
+            }), status=400)
 
     logger.info('request: {}'.format(req_args))
     if isinstance(req_args, ResponseMessage) and 'error' in req_args:
-        # <oidcmsg.oauth2.ResponseMessage object at 0x7f654122cac8>
-        # {'lax': False, 'verify_ssl': True, 'jwe_header': None, '_dict': {'error': 'invalid_request', 'error_description': "Missing required attribute 'rel'"}, 'jwt': None, 'jws_header': None}
         return JsonResponse(req_args.__dict__, status=400)
 
     if request.COOKIES:
@@ -240,10 +235,6 @@ def verify_user(request):
 def token(request):
     logger.info('token request')
     _endpoint = oidcendpoint_app.endpoint_context.endpoint['token']
-
-    # if not hasattr(request, 'debug'):
-        # request.debug = 0
-    # request.debug +=1
     return service_endpoint(request, _endpoint)
 
 
