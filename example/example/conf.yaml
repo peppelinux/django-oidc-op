@@ -74,6 +74,7 @@ op:
         - implicit
         - urn:ietf:params:oauth:grant-type:jwt-bearer
         - refresh_token
+      # TODO: Django mapping of claims -> user attrs
       claim_types_supported:
         - normal
         - aggregated
@@ -123,7 +124,7 @@ op:
           - phone_number_verified
         add_claim_by_scope: True
         aud:
-          - https://example.org/appl
+          - https://127.0.0.1:8000
       refresh:
         lifetime: 86400
     jwks:
@@ -137,22 +138,26 @@ op:
         path: '.well-known/webfinger'
         class: oidcendpoint.oidc.discovery.Discovery
         kwargs:
+          # TODO: optionally manage discovery service authn
           client_authn_method: null
       provider_info:
         path: ".well-known/openid-configuration"
         class: oidcendpoint.oidc.provider_config.ProviderConfiguration
         kwargs:
+          # TODO: optionally manage openid-configuration authn
           client_authn_method: null
       registration:
           path: registration
           class: oidcendpoint.oidc.registration.Registration
           kwargs:
+            # TODO: make a authn method for 'client_authn_method'
             client_authn_method: null
             client_secret_expiration_time: 432000
       authorization:
           path: authorization
           class: oidcendpoint.oidc.authorization.Authorization
           kwargs:
+            # TODO: make a authn method for 'client_authn_method'
             client_authn_method: null
       token:
           path: token
@@ -174,28 +179,26 @@ op:
               post_logout_uri_path: post_logout
               signing_alg: "ES256"
     userinfo:
-      # TODO -> port to a django specific resource
-      # Develop a Django oidcendpoint class
-      class: oidcendpoint.user_info.UserInfo
-      kwargs:
-        db_file: ../example/data/oidc_op/private/users.json
+      class: oidc_op.users.UserInfo
+      # kwargs:
+        # arg1: ....
+        # arg2: ....
     authentication:
       # TODO -> port to django auth !!!
       # Develop a Django oidcendpoint class
       user:
         acr: oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD
-        class: oidc_op.authn_methods.UserPassDjango
+        class: oidc_op.users.UserPassDjango
         kwargs:
           # this would override web resource where credentials will be POSTed
           # append the trailing slash or add APPEND_SLASH=False in Django settings.py
           verify_endpoint: 'verify/oidc_user_login/'
           template: oidc_login.html
 
-          # removed in Django: it will use Django's authbackends
-          # db:
+          # args1:
             # class: oidcendpoint.util.JSONDictDB
             # kwargs:
-              # json_path: data/oidc_op/private/passwd.json
+              # args1_1: data/oidc_op/things.json
 
           page_header: "Testing log in"
           submit_btn: "Get me in!"
@@ -205,13 +208,16 @@ op:
         #acr: oidcendpoint.user_authn.authn_context.UNSPECIFIED
         #class: oidcendpoint.user_authn.user.NoAuthn
         #kwargs:
-          #user: diana
+          #user: thatusername
     cookie_dealer:
       class: oidcendpoint.cookie.CookieDealer
       kwargs:
         sign_jwk: data/oidc_op/private/cookie_sign_jwk.json
         sign_alg: 'SHA256'
-        # enc_jwk: 'data/oidc_op/private/cookie_enc_jwk.json'
+
+        # jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
+        enc_jwk: 'data/oidc_op/private/cookie_enc_jwk.json'
+
         default_values:
             name: oidc_op
             domain: *domain

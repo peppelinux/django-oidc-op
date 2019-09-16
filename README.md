@@ -1,22 +1,21 @@
 # django-oidc-op
-A Django implementation of OIDC OP built top of [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op).
+A Django implementation of an **OIDC Provider** built top of [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op).
 
 ## Status
-Work in Progress, please wait for the first release tag before considering it ready to use.
-See TODO list.
+_Work in Progress_
+
+Please wait for the first release tag before considering it ready to use.
+See Issues section.
 
 Available resources:
 
 - /.well-known/webfinger [to be tested]
 - /.well-known/openid-configuration [tested, working]
-
 - /registration [tested, working]
 - /authorization [tested, working]
-
 - login form
 - /token (access/authorization token)
 - /userinfo [test, working: need work to handle some attribute release policy]
-
 - logout resources [Tested, working]
 
 ## Run the example demo
@@ -37,11 +36,24 @@ gunicorn example.wsgi -b0.0.0.0:8000 --keyfile=./data/oidc_op/certs/key.pem --ce
 
 ## Configure OIDC endpoint
 
+#### Django settings.py parameters
+
+`OIDC_OP_AUTHN_SALT_SIZE`: Salt size in byte, default: 4 (Integer).
+
+#### Signatures
 These following files needed to be present in `data/oidc_op/private`.
 
-1. session.json (JWK symmetric)
-2. cookie_sign_jwk.json (JWK symmetric)
+1. session.json (JWK symmetric);
+2. cookie_sign_jwk.json (JWK symmetric);
+3. cookie_enc_jwk.json (JWK symmetric), optional, see `conf.yaml`.
 
+To create them by hands comment out `'read_only': False'` in `conf.yaml`,
+otherwise they will be created automatically on each run.
+
+A JWK creation example would be:
+````
+jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
+````
 
 ## General description
 
@@ -62,20 +74,14 @@ we'll see the following flow happens:
 7. RP request for an access token -> the response of the previous authentication is a HttpRedirect to op's /token resource
 8. RP get the redirection to OP's USERINFO endpoint, using the access token got before
 
-## Todo
-
-- Better configuration handling, Django's settings.py integration;
-- Configurable (admin ui) Attribute release policies per RP;
-- Better templates (do also an agid compliant template in a separate app);
-- Unit tests;
-- Federation API;
 
 ## Proposed resources namespace
 Add them to `urls.py` if needed, then updated oidc_op `conf.yaml`.
 
 - /oidc/endpoint/<provider_name>
 
-## debug notes
+## Additional debug notes
 
 - Using [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP):
+
   `RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi flask_rp/conf.django.yaml`

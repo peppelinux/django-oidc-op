@@ -1,5 +1,7 @@
+import base64
 import logging
 import json
+import os
 
 from django.conf import settings
 from django.http import (HttpResponse,
@@ -215,9 +217,11 @@ def verify_user(request):
     auth_args = authn_method.unpack_token(kwargs['token'])
     authz_request = AuthorizationRequest().from_urlencoded(auth_args['query'])
 
-    # TODO: 'salt' should change/be randomized/be configured
+    # salt size can be customized in settings.OIDC_OP_AUTHN_SALT_SIZE
+    salt_size = getattr(settings, 'OIDC_OP_AUTHN_SALT_SIZE', 4)
     authn_event = create_authn_event(
-        uid=user.username, salt='salt',
+        uid=user.username,
+        salt=base64.b64encode(os.urandom(salt_size)).decode(),
         authn_info=auth_args['authn_class_ref'],
         authn_time=auth_args['iat'])
 

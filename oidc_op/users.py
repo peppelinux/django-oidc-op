@@ -1,4 +1,7 @@
-from django.contrib.auth import login, logout, authenticate
+import copy
+
+from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
 
 from oidcendpoint.util import instantiate
@@ -79,3 +82,59 @@ class UserPassDjango(UserAuthnMethod):
             return user
         else:
             raise FailedAuthentication()
+
+
+class UserInfo(object):
+    """ Read only interface to a user info store """
+
+    def __init__(self, *args, **kwargs):
+        #put additional sources here
+        pass
+
+    def filter(self, user, user_info_claims=None):
+        """
+        Return only those claims that are asked for.
+        It's a best effort task; if essential claims are not present
+        no error is flagged.
+
+        :param userinfo: A dictionary containing the available info for one user
+        :param user_info_claims: A dictionary specifying the asked for claims
+        :return: A dictionary of filtered claims.
+        """
+        if user_info_claims is None:
+            return copy.copy(user.__dict__)
+        else:
+            result = {}
+            missing = []
+            optional = []
+            for key, restr in user_info_claims.items():
+                try:
+                    result[key] = getattr(user, key) if hasattr(user, key) else ''
+                except KeyError:
+                    if restr == {"essential": True}:
+                        missing.append(key)
+                    else:
+                        optional.append(key)
+            return result
+
+    def __call__(self, user_id, client_id, user_info_claims=None, **kwargs):
+        """
+        user_id = username
+        client_id = client id, ex: 'mHwpZsDeWo5g'
+        """
+        user = get_user_model().objects.filter(username=user_id).first()
+        if not user:
+            # Todo: raise exception here, this wouldn't be possible.
+            return {}
+
+        try:
+            return self.filter(user, user_info_claims)
+        except KeyError:
+            return {}
+
+    def search(self, **kwargs):
+        for uid, args in self.db.items():
+            if dict_subset(kwargs, args):
+                return uid
+
+        raise KeyError('No matching user')
