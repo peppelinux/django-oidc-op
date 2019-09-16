@@ -7,10 +7,12 @@ from typing import Dict
 
 from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwx import key_from_jwk_dict
+from django.conf import settings
 
 from oidcop.logging import configure_logging
 from oidcop.utils import load_yaml_config
 
+# TODO: check this
 try:
     from secrets import token_urlsafe as rnd_token
 except ImportError:
@@ -21,7 +23,7 @@ class Configuration:
     """OP Configuration"""
 
     def __init__(self, conf: Dict) -> None:
-        self.logger = configure_logging(config=conf.get('logging')).getChild(__name__)
+        self.logger = configure_logging(settings.LOGGING)
 
         # OIDC provider configuration
         self.conf = conf

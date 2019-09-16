@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from . configure import Configuration
 
+
 def init_oidc_op_endpoints(app):
     _config = app.srv_config.op
     _server_info_config = _config['server_info']

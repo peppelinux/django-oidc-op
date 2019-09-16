@@ -1,26 +1,4 @@
-logging:
-  version: 1
-  root:
-    handlers:
-      # - default
-      - console
-    level: DEBUG
-  loggers:
-    bobcat_idp:
-      level: DEBUG
-  handlers:
-    # default:
-      # class: logging.FileHandler
-      # filename: 'debug.log'
-      # formatter: default
-    console:
-      class: logging.StreamHandler
-      'stream': 'ext://sys.stdout'
-      formatter: default
-  formatters:
-    default:
-      format: '%(asctime)s %(name)s %(levelname)s %(message)s'
-
+# TODO: the following four should be handled in settings.py
 session_cookie_name: oidc_op
 port: &port 8000
 domain: &domain 127.0.0.1

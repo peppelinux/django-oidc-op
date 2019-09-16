@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 
 from oidc_op import oidcendpoint_app
 
-# TODO: refactor logging
+
 logger = logging.getLogger(__name__)
 
 
