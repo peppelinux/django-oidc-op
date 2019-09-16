@@ -21,12 +21,10 @@ from oidcmsg.oidc import AuthorizationRequest
 from urllib import parse as urlib_parse
 from urllib.parse import urlparse
 
-from . application import oidcendpoint_application
+from oidc_op import oidcendpoint_app
 
-
+# TODO: refactor logging
 logger = logging.getLogger(__name__)
-# TODO: decide if refactor this with a decorator
-oidcendpoint_app = oidcendpoint_application()
 
 
 def _add_cookie(resp, cookie_spec):

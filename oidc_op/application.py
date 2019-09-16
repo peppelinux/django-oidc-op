@@ -3,13 +3,9 @@ import os
 from cryptojwt.key_jar import init_key_jar
 from django.conf import settings
 from oidcendpoint.endpoint_context import EndpointContext
-from oidcop.configure import Configuration
 from urllib.parse import urlparse
 
-
-# TODO -> purge, work over settings base_dir
-folder = os.path.dirname(os.path.realpath(__file__))
-
+from . configure import Configuration
 
 def init_oidc_op_endpoints(app):
     _config = app.srv_config.op
@@ -18,26 +14,14 @@ def init_oidc_op_endpoints(app):
     _kj_args = {k:v for k,v in _server_info_config['jwks'].items()
                 if k != 'uri_path'}
     _kj = init_key_jar(**_kj_args)
-
     iss = _server_info_config['issuer']
 
     # make sure I have a set of keys under my 'real' name
     _kj.import_jwks_as_json(_kj.export_jwks_as_json(True, ''), iss)
-    try:
-        _kj.verify_ssl = _config['server_info']['verify_ssl']
-    except KeyError:
-        pass
+    _kj.verify_ssl = _config['server_info'].get('verify_ssl', False)
 
     endpoint_context = EndpointContext(_server_info_config, keyjar=_kj,
-                                       cwd=folder)
-
-    for endp in endpoint_context.endpoint.values():
-        p = urlparse(endp.endpoint_path)
-        _vpath = p.path.split('/')
-        if _vpath[0] == '':
-            endp.vpath = _vpath[1:]
-        else:
-            endp.vpath = _vpath
+                                       cwd=settings.BASE_DIR)
 
     return endpoint_context
 
