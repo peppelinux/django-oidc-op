@@ -3,6 +3,7 @@ A Django implementation of OIDC OP built top of [Roland Hedberg's oidc-op](https
 
 ## Status
 Work in Progress, please wait for the first release tag before considering it ready to use.
+See TODO list.
 
 Available resources:
 
@@ -13,10 +14,10 @@ Available resources:
 - /authorization [tested, working]
 
 - login form
-- access token
+- /token (access/authorization token)
 - /userinfo [test, working: need work to handle some attribute release policy]
 
-- logout resources [WiP]
+- logout resources [Tested, working]
 
 ## Run the example demo
 
@@ -61,6 +62,14 @@ we'll see the following flow happens:
 7. RP request for an access token -> the response of the previous authentication is a HttpRedirect to op's /token resource
 8. RP get the redirection to OP's USERINFO endpoint, using the access token got before
 
+## Todo
+
+- Better configuration handling, Django's settings.py integration;
+- Configurable (admin ui) Attribute release policies per RP;
+- Better templates (do also an agid compliant template in a separate app);
+- Unit tests;
+- Federation API;
+
 ## Proposed resources namespace
 Add them to `urls.py` if needed, then updated oidc_op `conf.yaml`.
 
@@ -68,4 +77,5 @@ Add them to `urls.py` if needed, then updated oidc_op `conf.yaml`.
 
 ## debug notes
 
-- `RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi flask_rp/conf.django.yaml`
+- Using [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP):
+  `RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi flask_rp/conf.django.yaml`

@@ -17,6 +17,7 @@ from oidcmsg.oauth2 import ResponseMessage
 from oidcmsg.oidc import AccessTokenRequest
 from oidcmsg.oidc import AuthorizationRequest
 from urllib import parse as urlib_parse
+from urllib.parse import urlparse
 
 from . application import oidcendpoint_application
 
@@ -246,3 +247,43 @@ def userinfo(request):
         # request.debug = 0
     # request.debug +=1
     return service_endpoint(request, _endpoint)
+
+
+########
+# LOGOUT
+########
+def session_endpoint(request):
+    return service_endpoint(request,
+        oidcendpoint_app.endpoint_context.endpoint['end_session'])
+
+@csrf_exempt
+def rp_logout(request):
+    _endp = oidcendpoint_app.endpoint_context.endpoint['end_session']
+    _info = _endp.unpack_signed_jwt(request.POST['sjwt'])
+    alla = request.POST.get('logout')
+
+    _iframes = _endp.do_verified_logout(alla=alla, **_info)
+    if _iframes:
+        d = dict(frames=" ".join(_iframes),
+                 size=len(_iframes),
+                 timeout=5000,
+                 postLogoutRedirectUri=_info['redirect_uri'])
+        res = render_to_response('frontchannel_logout.html', d)
+
+    else:
+        res = HttpResponseRedirect(_info['redirect_uri'])
+        _kakor = _endp.kill_cookies()
+        _add_cookie(res, _kakor)
+
+    return res
+
+def verify_logout(request):
+    part = urlparse(oidcendpoint_app.endpoint_context.issuer)
+    d = dict(op=part.hostname,
+             do_logout='rp_logout',
+             sjwt=request.GET['sjwt'] or request.POST['sjwt'])
+    return render_to_response('logout.html', d)
+
+
+def post_logout(request):
+    return render_to_response('post_logout.html')

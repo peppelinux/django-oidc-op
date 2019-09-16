@@ -11,19 +11,20 @@ class UserPassDjango(UserAuthnMethod):
     """
     see oidcendpoint.authn_context
         oidcendpoint.endpoint_context
-
         https://docs.djangoproject.com/en/2.2/ref/templates/api/#rendering-a-context
     """
 
     # TODO: get this though settings conf
     url_endpoint = "/verify/user_pass_django"
 
-    # def __init__(self, db, template_handler=render_to_string, template="oidc_login.html",
-                 # endpoint_context=None, verify_endpoint='', **kwargs):
-    def __init__(self, template_handler=render_to_string, template="oidc_login.html",
+
+    def __init__(self,
+                 # template_handler=render_to_string,
+                 template="oidc_login.html",
                  endpoint_context=None, verify_endpoint='', **kwargs):
         """
-        template_handler is only for backwards compatibility, it will be always replaced by Django's default
+        template_handler is only for backwards compatibility
+        it will be always replaced by Django's default
         """
         super(UserPassDjango, self).__init__(endpoint_context=endpoint_context)
 
@@ -39,12 +40,9 @@ class UserPassDjango(UserAuthnMethod):
         self.kwargs.setdefault("logo_label", "")
         self.kwargs.setdefault("policy_label", "")
 
-        # TODO check this
+        # TODO this could be taken from args
         self.template_handler = render_to_string
         self.template = template
-
-        # TODO: force to Django....
-        # self.user_db = instantiate(db["class"], **db["kwargs"])
 
         self.action = verify_endpoint or self.url_endpoint
         self.kwargs['action'] = self.action
@@ -69,11 +67,6 @@ class UserPassDjango(UserAuthnMethod):
                 _label = '{}_label'.format(attr)
                 _kwargs[_label] = LABELS[_uri]
 
-        # TODO: clean this
-        # return self.template_handler.render(self.template, action=self.action,
-                                            # token=jws, **_kwargs)
-
-        #return self.template_handler.render(django.template.Context(_kwargs))
         return self.template_handler(self.template, _kwargs)
 
     def verify(self, *args, **kwargs):
