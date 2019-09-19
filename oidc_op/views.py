@@ -89,9 +89,8 @@ def service_endpoint(request, endpoint):
     logger = oidcendpoint_app.srv_config.logger
     logger.info('At the "{}" endpoint'.format(endpoint.endpoint_name))
 
-    if hasattr(request, 'debug') and request.debug:
-        import pdb; pdb.set_trace()
-
+    # if hasattr(request, 'debug') and request.debug:
+        # import pdb; pdb.set_trace()
 
     authn = request.headers.get('Authorization', {})
     pr_args = {'auth': authn}
@@ -112,13 +111,7 @@ def service_endpoint(request, endpoint):
 
     # for .well-known resources like provider-config no data are submitted
     # if not data:
-        # msg = 'Any request.args provided in {}'.format(str(type(endpoint)))
-        # logger.error(msg)
-        # return JsonResponse(json.dumps({
-            # 'error': 'invalid_request',
-            # 'error_description':msg,
-            # 'method': request.method
-            # }), status=400)
+    #   ... not possible in this implementation
 
     logger.debug('Request arguments [{}]: {}'.format(request.method, data))
     try:
@@ -157,7 +150,6 @@ def service_endpoint(request, endpoint):
             }), status=400)
 
     logger.info('Response args: {}'.format(args))
-
     if 'redirect_location' in args:
         return HttpResponseRedirect(args['redirect_location'])
     if 'http_response' in args:
