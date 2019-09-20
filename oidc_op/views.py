@@ -161,13 +161,11 @@ def service_endpoint(request, endpoint):
 def well_known(request, service):
     """
     /.well-known/<service>
-
-    oidcendpoint_app is rohe's flask_op current_app
     """
     if service == 'openid-configuration':
         _endpoint = oidcendpoint_app.endpoint_context.endpoint['provider_info']
     # if service == 'openid-federation':
-    #     _endpoint = current_app.endpoint_context.endpoint['provider_info']
+    #     _endpoint = oidcendpoint_app.endpoint_context.endpoint['provider_info']
     elif service == 'webfinger':
         _endpoint = oidcendpoint_app.endpoint_context.endpoint['webfinger']
     else:

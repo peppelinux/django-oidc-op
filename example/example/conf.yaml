@@ -57,6 +57,11 @@ op:
         - normal
         - aggregated
         - distributed
+      # filter as you prefer, see oidcmsg(.__init__.)SCOPE2CLAIMS
+      # defaults are ['family_name', 'email_verified', 'profile', 'given_name', 'picture', 'address', 'name', 'sub', 'email', 'zoneinfo', 'gender', 'website', 'phone_number_verified', 'middle_name', 'nickname', 'birthdate', 'preferred_username', 'locale', 'updated_at', 'phone_number']
+      # claims_supported:
+        # - picture
+        # - nickname
       claims_parameter_supported: True
       request_parameter_supported: True
       request_uri_parameter_supported: True

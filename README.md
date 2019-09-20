@@ -1,5 +1,6 @@
 # django-oidc-op
-A Django implementation of an **OIDC Provider** built top of [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op).
+A Django implementation of an **OIDC Provider** built top of [Roland Hedberg's libraries](https://github.com/rohe/oidc-op).
+If you are just going to build a standard OIDC Provider you only have to write the configuration file.
 
 ## Status
 _Work in Progress_
@@ -7,16 +8,41 @@ _Work in Progress_
 Please wait for the first release tag before considering it ready to use.
 See Issues section.
 
-Available resources:
+Before adopting this project in a production use you should consider if the following endpoint should be enabled:
 
-- /.well-known/webfinger [to be tested]
-- /.well-known/openid-configuration [tested, working]
-- /registration [tested, working]
-- /authorization [tested, working]
-- login form
-- /token (access/authorization token)
-- /userinfo [test, working: need work to handle some attribute release policy]
-- logout resources [Tested, working]
+- [Web Finger](https://openid.net/specs/openid-connect-discovery-1_0.html#IssuerDiscovery)
+- [dynamic discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig)
+- [dynamic client registration](https://openid.net/specs/openid-connect-registration-1_0.html)
+
+**TODO**: _document how to disable them and how to register RP via django admin backend._
+
+#### Endpoints
+
+Available resources are:
+
+- webfinger
+  - /.well-known/webfinger [to be tested]
+
+- provider_info
+  - /.well-known/openid-configuration [tested, working]
+
+- registration
+  - /registration [tested, working]
+
+- authorization
+  - /authorization [tested, working]
+  - authentication, which type decide to support, default: login form.
+
+- token
+  - access/authorization token
+
+- refresh_token
+- userinfo
+  - /userinfo [test, working: need work to handle some attribute release policy]
+
+- end_session
+  - logout
+
 
 ## Run the example demo
 
@@ -63,9 +89,9 @@ and configuring in `CLIENTS` section to use django-oidc-op (see `example/data/oi
 we'll see the following flow happens:
 
 1. /.well-known/openid-configuration
-   RP get the OP configuration (metadata)
+   RP get the Provider configuration, what declared in the configuration at `op.server_info`;
 2. /registration
-   RP registers in the OP
+   RP registers in the Provider if
 3. /authorization
    RP mades OIDC authorization
 4. RP going to be redirected to login form page (see authn_methods.py)
