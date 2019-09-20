@@ -88,8 +88,7 @@ class UserInfo(object):
     """ Read only interface to a user info store """
 
     def __init__(self, *args, **kwargs):
-        #put additional sources here
-        pass
+        self.claims_map = kwargs.get('claims_map', {})
 
     def filter(self, user, user_info_claims=None):
         """
@@ -101,20 +100,26 @@ class UserInfo(object):
         :param user_info_claims: A dictionary specifying the asked for claims
         :return: A dictionary of filtered claims.
         """
+        result = {}
+        if not user.is_active:
+            return result
+
         if user_info_claims is None:
             return copy.copy(user.__dict__)
         else:
-            result = {}
             missing = []
             optional = []
             for key, restr in user_info_claims.items():
-                try:
-                    result[key] = getattr(user, key) if hasattr(user, key) else ''
-                except KeyError:
-                    if restr == {"essential": True}:
+                if key in self.claims_map:
+                    # manage required and optional: TODO extends this approach
+                    if not hasattr(user, self.claims_map[key]) and restr == {"essential": True}:
                         missing.append(key)
+                        continue
                     else:
                         optional.append(key)
+                    #
+                    uattr = getattr(user, self.claims_map[key], None)
+                    result[key] = uattr() if callable(uattr) else uattr
             return result
 
     def __call__(self, user_id, client_id, user_info_claims=None, **kwargs):

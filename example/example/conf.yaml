@@ -163,12 +163,15 @@ op:
               signing_alg: "ES256"
     userinfo:
       class: oidc_op.users.UserInfo
-      # kwargs:
-        # arg1: ....
-        # arg2: ....
+      kwargs:
+        # map claims to django user attributes here:
+        claims_map:
+            phone_number: telephone
+            family_name: last_name
+            given_name: first_name
+            email: email
+            verified_email: email
     authentication:
-      # TODO -> port to django auth !!!
-      # Develop a Django oidcendpoint class
       user:
         acr: oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD
         class: oidc_op.users.UserPassDjango

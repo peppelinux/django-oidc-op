@@ -37,8 +37,9 @@ Available resources are:
   - access/authorization token
 
 - refresh_token
+
 - userinfo
-  - /userinfo [test, working: need work to handle some attribute release policy]
+  - /userinfo [test, working]
 
 - end_session
   - logout
@@ -99,6 +100,29 @@ we'll see the following flow happens:
 6. verify_user in django, on top of oidcendpoint_app.endpoint_context.authn_broker
 7. RP request for an access token -> the response of the previous authentication is a HttpRedirect to op's /token resource
 8. RP get the redirection to OP's USERINFO endpoint, using the access token got before
+
+
+## UserInfo endpoint
+
+Claims are released as configured in `op.server_info.user_info` (in `conf.yaml`).
+All the attributes release and userauthentication rely on classes developed in `oidc_op.users.py`.
+
+Configuration Example:
+
+````
+    userinfo:
+      class: oidc_op.users.UserInfo
+      kwargs:
+        # map claims to django user attributes here:
+        claims_map:
+            phone_number: telephone
+            family_name: last_name
+            given_name: first_name
+            email: email
+            verified_email: email
+````
+
+**TODO**: Do a RP configuration UI for custom claims release for every client.
 
 
 ## Proposed resources namespace
