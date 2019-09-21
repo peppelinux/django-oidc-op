@@ -119,6 +119,7 @@ class UserInfo(object):
                         optional.append(key)
                     #
                     uattr = getattr(user, self.claims_map[key], None)
+                    if not uattr: continue
                     result[key] = uattr() if callable(uattr) else uattr
             return result
 

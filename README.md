@@ -1,13 +1,13 @@
 # django-oidc-op
-A Django implementation of an **OIDC Provider** built top of [Roland Hedberg's libraries](https://github.com/rohe/oidc-op).
+A Django implementation of an **OIDC Provider** built top of [jwtconnect libraries](https://jwtconnect.io/).
 If you are just going to build a standard OIDC Provider you only have to write the configuration file.
+
+This project is based on [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op).
 
 ## Status
 _Work in Progress_
 
 Please wait for the first release tag before considering it ready to use.
-See Issues section.
-
 Before adopting this project in a production use you should consider if the following endpoint should be enabled:
 
 - [Web Finger](https://openid.net/specs/openid-connect-discovery-1_0.html#IssuerDiscovery)
@@ -24,13 +24,13 @@ Available resources are:
   - /.well-known/webfinger [to be tested]
 
 - provider_info
-  - /.well-known/openid-configuration [tested, working]
+  - /.well-known/openid-configuration
 
 - registration
-  - /registration [tested, working]
+  - /registration
 
 - authorization
-  - /authorization [tested, working]
+  - /authorization
   - authentication, which type decide to support, default: login form.
 
 - token
@@ -39,7 +39,7 @@ Available resources are:
 - refresh_token
 
 - userinfo
-  - /userinfo [test, working]
+  - /userinfo
 
 - end_session
   - logout
@@ -54,12 +54,18 @@ cd django-oidc-op
 pip install -r requirements.txt
 
 cd example
+pip install -r requirements.txt
 ./manage.py migrate
 ./manage.py createsuperuser
 ./manage.py collectstatic
 
 gunicorn example.wsgi -b0.0.0.0:8000 --keyfile=./data/oidc_op/certs/key.pem --certfile=./data/oidc_op/certs/cert.pem --reload
 ````
+
+You can use [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP) as an example RP as follows:
+
+`RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/example/data/oidc_rp/conf.django.yaml`
+
 
 ## Configure OIDC endpoint
 
@@ -92,7 +98,7 @@ we'll see the following flow happens:
 1. /.well-known/openid-configuration
    RP get the Provider configuration, what declared in the configuration at `op.server_info`;
 2. /registration
-   RP registers in the Provider if
+   RP registers in the Provider if `dynamic client registration` is enabled (default true)
 3. /authorization
    RP mades OIDC authorization
 4. RP going to be redirected to login form page (see authn_methods.py)
@@ -104,8 +110,8 @@ we'll see the following flow happens:
 
 ## UserInfo endpoint
 
-Claims are released as configured in `op.server_info.user_info` (in `conf.yaml`).
-All the attributes release and userauthentication rely on classes developed in `oidc_op.users.py`.
+Claims to be released are configured in `op.server_info.user_info` (in `conf.yaml`).
+All the attributes release and user authentication mechanism rely on classes implemented in `oidc_op.users.py`.
 
 Configuration Example:
 
@@ -125,13 +131,10 @@ Configuration Example:
 **TODO**: Do a RP configuration UI for custom claims release for every client.
 
 
-## Proposed resources namespace
-Add them to `urls.py` if needed, then updated oidc_op `conf.yaml`.
+## OIDC endpoint url prefix
+Can be configured in `urls.py` and also in oidc_op `conf.yaml`.
 
 - /oidc/endpoint/<provider_name>
 
-## Additional debug notes
 
-- Using [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP):
 
-  `RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi flask_rp/conf.django.yaml`

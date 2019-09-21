@@ -67,11 +67,11 @@ services: &id002
 
 
 CLIENTS:
-  django:
+  djop:
     client_preferences: *id001
     issuer: https://127.0.0.1:8000/
     jwks_uri: https://127.0.0.1:8099/static/jwks.json
-    redirect_uris: ['https://127.0.0.1:8099/authz_cb/flop']
+    redirect_uris: ['https://127.0.0.1:8099/authz_cb/djop']
     services: *id002
 
 # Whether an attempt to fetch the userinfo should be made

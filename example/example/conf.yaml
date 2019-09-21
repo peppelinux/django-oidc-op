@@ -80,7 +80,7 @@ op:
             essential: True
     token_handler_args:
       jwks_def:
-        private_path: private/token_jwk.json
+        private_path: data/oidc_op/private/token_jwk.json
         read_only: False
         key_defs:
           -
@@ -171,6 +171,9 @@ op:
             given_name: first_name
             email: email
             verified_email: email
+            gender: gender
+            birthdate: get_oidc_birthdate
+            updated_at: get_oidc_lastlogin
     authentication:
       user:
         acr: oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD
