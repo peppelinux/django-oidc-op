@@ -1,5 +1,5 @@
 # TODO: the following four should be handled in settings.py
-session_cookie_name: oidc_op
+session_cookie_name: django_oidc_op
 port: &port 8000
 domain: &domain 127.0.0.1
 server_name: &server_name 127.0.0.1:8000
@@ -136,6 +136,14 @@ op:
             # TODO: make a authn method for 'client_authn_method'
             client_authn_method: null
             client_secret_expiration_time: 432000
+      # introspection:
+          # path: introspection
+          # class: oidcendpoint.oauth2.introspection.Introspection
+          # kwargs:
+            # client_authn_method:
+              # client_secret_post: ClientSecretPost
+            # release:
+            # - username
       authorization:
           path: authorization
           class: oidcendpoint.oidc.authorization.Authorization

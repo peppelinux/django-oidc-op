@@ -123,7 +123,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'data/static')
 
-OIDCENDPOINT_CONFIG = 'example/conf.yaml'
+OIDCENDPOINT_CONFIG = 'example/oidc_op.conf.yaml'
 
 # LOGGING
 LOGGING = {
