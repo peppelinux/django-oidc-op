@@ -144,14 +144,14 @@ op:
           # kwargs:
             # client_authn_method:
               # - bearer_header
-      # introspection:
-          # path: introspection
-          # class: oidcendpoint.oauth2.introspection.Introspection
-          # kwargs:
-            # client_authn_method:
-              # client_secret_post: ClientSecretPost
-            # release:
-            # - username
+      introspection:
+          path: introspection
+          class: oidcendpoint.oauth2.introspection.Introspection
+          kwargs:
+            client_authn_method:
+              client_secret_post: ClientSecretPost
+            release:
+            - username
       authorization:
           path: authorization
           class: oidcendpoint.oidc.authorization.Authorization
@@ -235,12 +235,14 @@ op:
           email:
             - oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD
 
+    # this adds PKCE support as mandatory - disable if needed
     add_on:
       pkce:
         function: oidcendpoint.oidc.add_on.pkce.add_pkce_support
         kwargs:
           essential: True
           code_challenge_method:
+            #plain
             S256
             S384
             S512
