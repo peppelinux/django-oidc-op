@@ -122,7 +122,7 @@ def service_endpoint(request, endpoint):
             'error': 'invalid_request',
             'error_description': str(err),
             'method': request.method
-            }), status=400)
+            }), safe=False, status=400)
 
     logger.info('request: {}'.format(req_args))
     if isinstance(req_args, ResponseMessage) and 'error' in req_args:

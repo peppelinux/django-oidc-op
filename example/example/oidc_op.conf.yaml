@@ -233,7 +233,7 @@ op:
           email:
             - oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD
 
-    # this adds PKCE support as mandatory - disable if needed
+    # this adds PKCE support as mandatory - disable it if needed (essential: False)
     add_on:
       pkce:
         function: oidcendpoint.oidc.add_on.pkce.add_pkce_support
