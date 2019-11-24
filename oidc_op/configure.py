@@ -1,6 +1,7 @@
 """Configuration management for IDP"""
 
 import json
+import logging
 import os
 import sys
 from typing import Dict
@@ -9,7 +10,7 @@ from cryptojwt.jwk.hmac import SYMKey
 from cryptojwt.jwx import key_from_jwk_dict
 from django.conf import settings
 
-from oidcop.logging import configure_logging
+# from oidcop.logging import configure_logging
 from oidcop.utils import load_yaml_config
 
 # TODO: check this
@@ -19,11 +20,14 @@ except ImportError:
     from oidcendpoint import rndstr as rnd_token
 
 
+logger = logging.getLogger(__name__)
+
+
 class Configuration:
     """OP Configuration"""
 
     def __init__(self, conf: Dict) -> None:
-        self.logger = configure_logging(settings.LOGGING)
+        self.logger = logger #configure_logging(settings.LOGGING)
 
         # OIDC provider configuration
         self.conf = conf

@@ -1,3 +1,4 @@
+import logging
 import os
 
 from cryptojwt.key_jar import init_key_jar
@@ -6,6 +7,9 @@ from oidcendpoint.endpoint_context import EndpointContext
 from urllib.parse import urlparse
 
 from . configure import Configuration
+
+
+logger = logging.getLogger(__name__)
 
 
 def init_oidc_op_endpoints(app):

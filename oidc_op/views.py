@@ -47,7 +47,7 @@ def add_cookie(resp, cookie_spec):
 def do_response(endpoint, req_args, error='', **args):
     info = endpoint.do_response(request=req_args, error=error, **args)
 
-    logger = oidcendpoint_app.srv_config.logger
+    # logger = oidcendpoint_app.srv_config.logger
     logger.debug('do_response: {}'.format(info))
 
     try:
@@ -59,17 +59,17 @@ def do_response(endpoint, req_args, error='', **args):
 
     if error:
         if _response_placement == 'body':
-            logger.info('Error Response: {}'.format(info['response']))
+            logger.debug('Error Response: {}'.format(info['response']))
             resp = HttpResponse(info['response'], status=400)
         else:  # _response_placement == 'url':
-            logger.info('Redirect to: {}'.format(info['response']))
+            logger.debug('Redirect to: {}'.format(info['response']))
             resp = HttpResponseRedirect(info['response'])
     else:
         if _response_placement == 'body':
-            logger.info('Response: {}'.format(info['response']))
+            logger.debug('Response: {}'.format(info['response']))
             resp = HttpResponse(info['response'], status=200)
         else:  # _response_placement == 'url':
-            logger.info('Redirect to: {}'.format(info['response']))
+            logger.debug('Redirect to: {}'.format(info['response']))
             resp = HttpResponseRedirect(info['response'])
 
     for key, value in info['http_headers']:
@@ -86,7 +86,7 @@ def service_endpoint(request, endpoint):
     """
     TODO: documentation here
     """
-    logger = oidcendpoint_app.srv_config.logger
+    #logger = oidcendpoint_app.srv_config.logger
     logger.info('At the "{}" endpoint'.format(endpoint.endpoint_name))
 
     # if hasattr(request, 'debug') and request.debug:
@@ -124,7 +124,8 @@ def service_endpoint(request, endpoint):
             'method': request.method
             }), safe=False, status=400)
 
-    logger.info('request: {}'.format(req_args))
+    # already logged in oidcendpoint
+    # logger.info('request: {}'.format(req_args))
     if isinstance(req_args, ResponseMessage) and 'error' in req_args:
         return JsonResponse(req_args.__dict__, status=400)
 
@@ -149,7 +150,7 @@ def service_endpoint(request, endpoint):
             'error_description': str(err)
             }), status=400)
 
-    logger.info('Response args: {}'.format(args))
+    logger.debug('Response args: {}'.format(args))
     if 'redirect_location' in args:
         return HttpResponseRedirect(args['redirect_location'])
     if 'http_response' in args:

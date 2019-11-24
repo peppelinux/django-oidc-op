@@ -1,9 +1,6 @@
 # TODO: the following four should be handled in settings.py
 session_cookie_name: django_oidc_op
-port: &port 8000
-domain: &domain 127.0.0.1
-server_name: &server_name 127.0.0.1:8000
-base_url: &base_url https://127.0.0.1:8000
+base_url: &base_url 'https://127.0.0.1:8000'
 
 key_def: &key_def
   -
@@ -69,7 +66,7 @@ op:
       frontchannel_logout_session_supported: True
       backchannel_logout_supported: True
       backchannel_logout_session_supported: True
-      check_session_iframe: https://127.0.0.1:5000/check_session_iframe
+      check_session_iframe: https://127.0.0.1:8000/check_session_iframe
     id_token:
       class: oidcendpoint.id_token.IDToken
       kwargs:
@@ -107,7 +104,7 @@ op:
           - phone_number_verified
         add_claim_by_scope: True
         aud:
-          - https://127.0.0.1:8000
+          - *base_url
       refresh:
         lifetime: 86400
     jwks:
@@ -223,7 +220,7 @@ op:
 
         default_values:
             name: oidc_op
-            domain: *domain
+            domain: *base_url
             path: /
             max_age: 3600
     login_hint2acrs:

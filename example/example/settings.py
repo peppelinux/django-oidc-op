@@ -153,29 +153,34 @@ LOGGING = {
         },
         'console': {
             'formatter': 'detailed',
-            'level': 'INFO',
+            'level': 'DEBUG',
             'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'django': {
             'handlers': ['console', 'mail_admins'],
-            'level': 'ERROR',
+            'level': 'INFO',
             'propagate': False,
         },
         'oidc_op': {
             'handlers': ['console', 'mail_admins'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
         'oidcendpoint': {
+            'handlers': ['console', 'mail_admins'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'oidcendpoint.sso_db': {
             'handlers': ['console', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'oidcmsg': {
             'handlers': ['console', 'mail_admins'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
     }
