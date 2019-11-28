@@ -27,21 +27,22 @@ from oidc_op import oidcendpoint_app
 logger = logging.getLogger(__name__)
 
 
-def _add_cookie(resp, cookie_spec):
-    for key, _morsel in cookie_spec.items():
-        kwargs = {'value': _morsel.value}
-        for param in ['expires', 'path', 'comment', 'domain', 'max-age',
-                      'secure',
-                      'version']:
-            if _morsel[param]:
-                kwargs[param] = _morsel[param]
-        resp.set_cookie(key, **kwargs)
+# to be evaluated in a pure Django Session
+# def _add_cookie(resp, cookie_spec):
+    # for key, _morsel in cookie_spec.items():
+        # kwargs = {'value': _morsel.value}
+        # for param in ['expires', 'path', 'comment', 'domain', 'max-age',
+                      # 'secure',
+                      # 'version']:
+            # if _morsel[param]:
+                # kwargs[param] = _morsel[param]
+        # resp.set_cookie(key, **kwargs)
 
 
-def add_cookie(resp, cookie_spec):
-    if isinstance(cookie_spec, list):
-        for _spec in cookie_spec:
-            _add_cookie(resp, _spec)
+# def add_cookie(resp, cookie_spec):
+    # if isinstance(cookie_spec, list):
+        # for _spec in cookie_spec:
+            # _add_cookie(resp, _spec)
 
 
 def do_response(endpoint, req_args, error='', **args):
@@ -76,8 +77,8 @@ def do_response(endpoint, req_args, error='', **args):
         # set response headers
         resp[key] = value
 
-    if 'cookie' in info:
-        add_cookie(resp, info['cookie'])
+    # if 'cookie' in info:
+        # add_cookie(resp, info['cookie'])
 
     return resp
 
@@ -257,6 +258,29 @@ def session_endpoint(request):
     return service_endpoint(request,
         oidcendpoint_app.endpoint_context.endpoint['session'])
 
+def check_session_iframe(request):
+    if request.method == 'GET':
+        req_args = request.GET
+    else:
+        if request.method == 'POST':
+            req_args = json.loads(request.POST)
+        else:
+            req_args = dict([(k, v) for k, v in request.BODY.items()])
+
+    if req_args:
+        # will contain client_id and origin
+        if req_args['origin'] != current_app.endpoint_context.issuer:
+            return 'error'
+        if req_args['client_id'] != current_app.endpoint_context.cdb:
+            return 'error'
+        return 'OK'
+
+    oidcendpoint_app.srv_config.logger.debug(
+        'check_session_iframe: {}'.format(req_args))
+    res = render_to_response('check_session_iframe.html')
+    return res
+
+
 @csrf_exempt
 def rp_logout(request):
     _endp = oidcendpoint_app.endpoint_context.endpoint['session']
@@ -274,7 +298,7 @@ def rp_logout(request):
     else:
         res = HttpResponseRedirect(_info['redirect_uri'])
         _kakor = _endp.kill_cookies()
-        _add_cookie(res, _kakor)
+        #_add_cookie(res, _kakor)
 
     return res
 
