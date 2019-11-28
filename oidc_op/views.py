@@ -132,7 +132,6 @@ def service_endpoint(request, endpoint):
 
     if request.COOKIES:
         logger.debug(request.COOKIES)
-        # TODO: cookie
         kwargs = {'cookie': request.COOKIES}
     else:
         kwargs = {}

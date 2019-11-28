@@ -3,7 +3,11 @@ import os
 
 from cryptojwt.key_jar import init_key_jar
 from django.conf import settings
-from oidcendpoint.endpoint_context import EndpointContext
+from oidcendpoint.endpoint_context import (EndpointContext,
+                                           get_token_handlers,
+                                           )
+from oidcendpoint.session import create_session_db
+from oidcendpoint.sso_db import SSODb
 from urllib.parse import urlparse
 
 from . configure import Configuration
@@ -25,8 +29,20 @@ def init_oidc_op_endpoints(app):
     _kj.import_jwks_as_json(_kj.export_jwks_as_json(True, ''), iss)
     _kj.verify_ssl = _config['server_info'].get('verify_ssl', False)
 
-    endpoint_context = EndpointContext(_server_info_config, keyjar=_kj,
+    # TODO, overcome the circularity dep os ec and session_db have each other
+    endpoint_context = EndpointContext(_server_info_config,
+                                       # session_db=session_db,
+                                       keyjar=_kj,
                                        cwd=settings.BASE_DIR)
+
+    # Work in progress
+    # session db - TODO: adopt a pure django approach
+    # also check ec._sub_func
+    # th_args = get_token_handlers(_config)
+    # session_db = create_session_db(
+        # endpoint_context, th_args, db=None, sso_db=SSODb(), sub_func=self._sub_func
+    # )
+    # endpoint_context.session_db = session_db
 
     return endpoint_context
 
