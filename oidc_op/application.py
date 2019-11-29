@@ -6,6 +6,7 @@ from django.conf import settings
 from oidcendpoint.endpoint_context import (EndpointContext,
                                            get_token_handlers,
                                            )
+from oidcendpoint.in_memory_db import InMemoryDataBase
 from oidcendpoint.session import create_session_db
 from oidcendpoint.sso_db import SSODb
 from urllib.parse import urlparse
@@ -38,11 +39,16 @@ def init_oidc_op_endpoints(app):
     # Work in progress
     # session db - TODO: adopt a pure django approach
     # also check ec._sub_func
-    # th_args = get_token_handlers(_config)
+    th_args = get_token_handlers(_server_info_config)
+    # db = InMemoryDataBase()
     # session_db = create_session_db(
-        # endpoint_context, th_args, db=None, sso_db=SSODb(), sub_func=self._sub_func
+        # endpoint_context, th_args,
+        # db=db, sso_db=SSODb(),
+        # sub_func=endpoint_context._sub_func
     # )
-    # endpoint_context.session_db = session_db
+    endpoint_context.set_session_db(_server_info_config,
+                                    sso_db=SSODb(),
+                                    db=InMemoryDataBase())
 
     return endpoint_context
 

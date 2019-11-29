@@ -173,6 +173,11 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'oidcendpoint.endpoint_context': {
+            'handlers': ['console', 'mail_admins'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'oidcendpoint.sso_db': {
             'handlers': ['console', 'mail_admins'],
             'level': 'DEBUG',
