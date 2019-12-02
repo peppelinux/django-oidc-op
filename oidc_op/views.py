@@ -87,16 +87,20 @@ def service_endpoint(request, endpoint):
     """
     TODO: documentation here
     """
-    #logger = oidcendpoint_app.srv_config.logger
-    logger.info('At the "{}" endpoint'.format(endpoint.endpoint_name))
+    logger.info('\n\nAt the "{}" endpoint'.format(endpoint.endpoint_name))
+    logger.debug('Request Headers: {}'.format(request.headers))
+    if request.GET:
+        logger.debug('Request arguments GET: {}'.format(request.GET))
+    if request.POST or request.body:
+        logger.debug('Request arguments POST: {}\n'.format(request.POST or request.body))
 
     # if hasattr(request, 'debug') and request.debug:
         # import pdb; pdb.set_trace()
 
     authn = request.headers.get('Authorization', {})
     pr_args = {'auth': authn}
-    if authn:
-        logger.debug('request.headers["Authorization"] => {}'.format(pr_args))
+    # if authn:
+        # logger.debug('request.headers["Authorization"] => {}'.format(pr_args))
 
     if request.method == 'GET':
         data = {k:v for k,v in request.GET.items()}
@@ -114,7 +118,7 @@ def service_endpoint(request, endpoint):
     # if not data:
     #   ... not possible in this implementation
 
-    logger.debug('Request arguments [{}]: {}'.format(request.method, data))
+    # logger.debug('Request arguments [{}]: {}'.format(request.method, data))
     try:
         req_args = endpoint.parse_request(data, **pr_args)
     except Exception as err:

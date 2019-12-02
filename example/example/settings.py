@@ -158,31 +158,31 @@ LOGGING = {
         },
     },
     'loggers': {
-        'django': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'INFO',
-            'propagate': False,
-        },
+        # 'django': {
+            # 'handlers': ['console', 'mail_admins'],
+            # 'level': 'INFO',
+            # 'propagate': False,
+        # },
         'oidc_op': {
             'handlers': ['console', 'mail_admins'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'oidcendpoint': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'oidcendpoint.endpoint_context': {
-            'handlers': ['console', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': False,
         },
-        'oidcendpoint.sso_db': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
+        # 'oidcendpoint': {
+            # 'handlers': ['console', 'mail_admins'],
+            # 'level': 'DEBUG',
+            # 'propagate': False,
+        # },
+        # 'oidcendpoint.endpoint_context': {
+            # 'handlers': ['console', 'mail_admins'],
+            # 'level': 'DEBUG',
+            # 'propagate': False,
+        # },
+        # 'oidcendpoint.sso_db': {
+            # 'handlers': ['console', 'mail_admins'],
+            # 'level': 'DEBUG',
+            # 'propagate': False,
+        # },
         'oidcmsg': {
             'handlers': ['console', 'mail_admins'],
             'level': 'INFO',
