@@ -9,7 +9,7 @@ from django.http import (HttpResponse,
                          HttpResponseRedirect,
                          JsonResponse)
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from oidcendpoint.authn_event import create_authn_event
@@ -276,7 +276,7 @@ def check_session_iframe(request):
 
     oidcendpoint_app.srv_config.logger.debug(
         'check_session_iframe: {}'.format(req_args))
-    res = render_to_response('check_session_iframe.html')
+    res = render(request, template_name='check_session_iframe.html')
     return res
 
 
@@ -292,7 +292,7 @@ def rp_logout(request):
                  size=len(_iframes),
                  timeout=5000,
                  postLogoutRedirectUri=_info['redirect_uri'])
-        res = render_to_response('frontchannel_logout.html', d)
+        res = render(request, 'frontchannel_logout.html', d)
 
     else:
         res = HttpResponseRedirect(_info['redirect_uri'])
@@ -306,8 +306,8 @@ def verify_logout(request):
     d = dict(op=part.hostname,
              do_logout='rp_logout',
              sjwt=request.GET['sjwt'] or request.POST['sjwt'])
-    return render_to_response('logout.html', d)
+    return render(request, 'logout.html', d)
 
 
 def post_logout(request):
-    return render_to_response('post_logout.html')
+    return render(request, 'post_logout.html')
