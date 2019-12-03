@@ -22,7 +22,7 @@ from urllib import parse as urlib_parse
 from urllib.parse import urlparse
 
 from oidc_op import oidcendpoint_app
-
+from pprint import pformat
 
 logger = logging.getLogger(__name__)
 
@@ -49,28 +49,31 @@ def do_response(endpoint, req_args, error='', **args):
     info = endpoint.do_response(request=req_args, error=error, **args)
 
     # logger = oidcendpoint_app.srv_config.logger
-    logger.debug('do_response: {}'.format(info))
+    # logger.debug('do_response: {}'.format(info))
 
     try:
         _response_placement = info['response_placement']
     except KeyError:
         _response_placement = endpoint.response_placement
 
-    logger.debug('response_placement: {}'.format(_response_placement))
+    # logger.debug('response_placement: {}'.format(_response_placement))
+
+    #info_response = json.dumps(json.loads(info['response']), indent=4,)
+    info_response = info['response']
 
     if error:
         if _response_placement == 'body':
-            logger.debug('Error Response: {}'.format(info['response']))
+            logger.debug('Error Response [Body]: {}'.format(info_response))
             resp = HttpResponse(info['response'], status=400)
         else:  # _response_placement == 'url':
-            logger.debug('Redirect to: {}'.format(info['response']))
+            logger.debug('Redirect to: {}'.format(info_response))
             resp = HttpResponseRedirect(info['response'])
     else:
         if _response_placement == 'body':
-            logger.debug('Response: {}'.format(info['response']))
+            logger.debug('Response [Body]: {}'.format(info_response))
             resp = HttpResponse(info['response'], status=200)
         else:  # _response_placement == 'url':
-            logger.debug('Redirect to: {}'.format(info['response']))
+            logger.debug('Redirect to: {}'.format(info_response))
             resp = HttpResponseRedirect(info['response'])
 
     for key, value in info['http_headers']:
@@ -88,11 +91,12 @@ def service_endpoint(request, endpoint):
     TODO: documentation here
     """
     logger.info('\n\nAt the "{}" endpoint'.format(endpoint.endpoint_name))
-    logger.debug('Request Headers: {}'.format(request.headers))
+    logger.debug('Request Headers: {}'.format(json.dumps(dict(request.headers), indent=2)))
     if request.GET:
-        logger.debug('Request arguments GET: {}'.format(request.GET))
+        logger.debug('Request arguments GET: {}'.format(request.GET, indent=2))
     if request.POST or request.body:
-        logger.debug('Request arguments POST: {}\n'.format(request.POST or request.body))
+        values = request.POST or request.body
+        logger.debug('Request arguments POST: {}\n'.format(values))
 
     # if hasattr(request, 'debug') and request.debug:
         # import pdb; pdb.set_trace()
@@ -154,7 +158,7 @@ def service_endpoint(request, endpoint):
             'error_description': str(err)
             }), status=400)
 
-    logger.debug('Response args: {}'.format(args))
+    # logger.debug('Response args: {}'.format(args))
     if 'redirect_location' in args:
         return HttpResponseRedirect(args['redirect_location'])
     if 'http_response' in args:
