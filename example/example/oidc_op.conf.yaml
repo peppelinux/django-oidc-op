@@ -37,6 +37,11 @@ op:
         - "id_token token"
         - "code id_token token"
         - none
+      token_endpoint_auth_methods_supported:
+        - client_secret_post
+        - client_secret_basic
+        - client_secret_jwt
+        - private_key_jwt
       response_modes_supported:
         - query
         - fragment
@@ -49,24 +54,6 @@ op:
         - implicit
         - urn:ietf:params:oauth:grant-type:jwt-bearer
         - refresh_token
-      # TODO: Django mapping of claims -> user attrs
-      claim_types_supported:
-        - normal
-        - aggregated
-        - distributed
-      # filter as you prefer, see oidcmsg(.__init__.)SCOPE2CLAIMS
-      # defaults are ['family_name', 'email_verified', 'profile', 'given_name', 'picture', 'address', 'name', 'sub', 'email', 'zoneinfo', 'gender', 'website', 'phone_number_verified', 'middle_name', 'nickname', 'birthdate', 'preferred_username', 'locale', 'updated_at', 'phone_number']
-      # claims_supported:
-        # - picture
-        # - nickname
-      claims_parameter_supported: True
-      request_parameter_supported: True
-      request_uri_parameter_supported: True
-      frontchannel_logout_supported: True
-      frontchannel_logout_session_supported: True
-      backchannel_logout_supported: True
-      backchannel_logout_session_supported: True
-      check_session_iframe: https://127.0.0.1:8000/check_session_iframe
     id_token:
       class: oidcendpoint.id_token.IDToken
       kwargs:
@@ -153,6 +140,22 @@ op:
           kwargs:
             # TODO: make a authn method for 'client_authn_method'
             client_authn_method: null
+            claims_parameter_supported: True
+            request_parameter_supported: True
+            request_uri_parameter_supported: True
+            response_types_supported:
+              - code
+              - token
+              - id_token
+              - "code token"
+              - "code id_token"
+              - "id_token token"
+              - "code id_token token"
+              - none
+            response_modes_supported:
+              - query
+              - fragment
+              - form_post
       token:
           path: token
           class: oidcendpoint.oidc.token.AccessToken
@@ -165,6 +168,11 @@ op:
       userinfo:
           path: userinfo
           class: oidcendpoint.oidc.userinfo.UserInfo
+          kwargs:
+            claim_types_supported:
+              - normal
+              - aggregated
+              - distributed
       end_session:
           path: session
           class: oidcendpoint.oidc.session.Session
@@ -172,6 +180,11 @@ op:
               logout_verify_url: verify_logout
               post_logout_uri_path: post_logout
               signing_alg: "ES256"
+              frontchannel_logout_supported: True
+              frontchannel_logout_session_supported: True
+              backchannel_logout_supported: True
+              backchannel_logout_session_supported: True
+              check_session_iframe: https://127.0.0.1:8000/check_session_iframe
     userinfo:
       class: oidc_op.users.UserInfo
       kwargs:
@@ -241,3 +254,15 @@ op:
             S256
             S384
             S512
+      claims:
+        function: oidcendpoint.oidc.add_on.custom_scopes.add_custom_scopes
+        kwargs:
+          research_and_scholarship:
+            - name
+            - given_name
+            - family_name
+            - email
+            - email_verified
+            - sub
+            - iss
+            - eduperson_scoped_affiliation

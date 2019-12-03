@@ -34,7 +34,9 @@ RP_KEYS:
 # PUBLIC_JWKS_PATH: 'https://127.0.0.1:8090/static/jwks.json'
 # PRIVATE_JWKS_PATH: './private/jwks.json'
 
-client_preferences: &id001
+# information used when registering the client, this may be the same for all OPs
+
+client_preferences: &prefs
     application_name: rphandler
     application_type: web
     contacts: [ops@example.com]
@@ -42,7 +44,7 @@ client_preferences: &id001
     scope: [openid, profile, email, address, phone]
     token_endpoint_auth_method: [client_secret_basic, client_secret_post]
 
-services: &id002
+services: &services
   discovery:
     class: oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery
     kwargs: {}
@@ -67,12 +69,20 @@ services: &id002
 
 
 CLIENTS:
+  # The ones that support webfinger, OP discovery and client registration
+  # This is the default, any client that is not listed here is expected to
+  # support dynamic discovery and registration.
+  "": 
+    client_preferences: *prefs
+    redirect_uris: None
+    services: *services
+
   django_oidc_op:
-    client_preferences: *id001
+    client_preferences: *prefs
     issuer: https://127.0.0.1:8000/
     jwks_uri: https://127.0.0.1:8099/static/jwks.json
     redirect_uris: ['https://127.0.0.1:8099/authz_cb/django_oidc_op']
-    services: *id002
+    services: *services
     add_ons:
       pkce:
         function: oidcservice.oidc.add_on.pkce.add_pkce_support
