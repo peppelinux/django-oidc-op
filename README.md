@@ -59,7 +59,8 @@ pip install -r requirements.txt
 ./manage.py createsuperuser
 ./manage.py collectstatic
 
-gunicorn example.wsgi -b0.0.0.0:8000 --keyfile=./data/oidc_op/certs/key.pem --certfile=./data/oidc_op/certs/cert.pem --reload
+# debug server
+gunicorn example.wsgi -b0.0.0.0:8000 --keyfile=./data/oidc_op/certs/key.pem --certfile=./data/oidc_op/certs/cert.pem --reload --log-level debug --timeout 3600 --capture-output --enable-stdio-inheritance
 ````
 
 You can use [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP) as an example RP as follows:
@@ -135,6 +136,3 @@ Configuration Example:
 Can be configured in `urls.py` and also in oidc_op `conf.yaml`.
 
 - /oidc/endpoint/<provider_name>
-
-
-

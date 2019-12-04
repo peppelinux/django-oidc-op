@@ -2,12 +2,14 @@ import base64
 import logging
 import json
 import os
+import urllib
 
 from django.conf import settings
 from django.http import (HttpResponse,
                          HttpResponseBadRequest,
                          HttpResponseRedirect,
                          JsonResponse)
+from django.http.request import QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.urls import reverse
@@ -47,19 +49,21 @@ logger = logging.getLogger(__name__)
 
 def do_response(endpoint, req_args, error='', **args):
     info = endpoint.do_response(request=req_args, error=error, **args)
-
-    # logger = oidcendpoint_app.srv_config.logger
-    # logger.debug('do_response: {}'.format(info))
-
-    try:
-        _response_placement = info['response_placement']
-    except KeyError:
+    _response_placement = info.get('response_placement')
+    if not _response_placement:
         _response_placement = endpoint.response_placement
 
-    # logger.debug('response_placement: {}'.format(_response_placement))
-
-    #info_response = json.dumps(json.loads(info['response']), indent=4,)
     info_response = info['response']
+    # Debugging things
+    try:
+        response_params = json.dumps(json.loads(info_response), indent=2)
+        logger.debug('Response params: {}\n'.format(response_params))
+    except:
+        url, args = urllib.parse.splitquery(info_response)
+        response_params = urllib.parse.parse_qs(args)
+        resp = json.dumps(response_params, indent=2)
+        logger.debug('Response params: {}\n{}\n\n'.format(url, resp))
+    # end debugging
 
     if error:
         if _response_placement == 'body':
@@ -70,10 +74,10 @@ def do_response(endpoint, req_args, error='', **args):
             resp = HttpResponseRedirect(info['response'])
     else:
         if _response_placement == 'body':
-            logger.debug('Response [Body]: {}'.format(info_response))
+            #logger.debug('Response [Body]: {}'.format(info_response))
             resp = HttpResponse(info['response'], status=200)
         else:  # _response_placement == 'url':
-            logger.debug('Redirect to: {}'.format(info_response))
+            #logger.debug('Redirect to: {}'.format(info_response))
             resp = HttpResponseRedirect(info['response'])
 
     for key, value in info['http_headers']:
@@ -85,26 +89,35 @@ def do_response(endpoint, req_args, error='', **args):
 
     return resp
 
+def fancy_debug(request):
+    """
+    fancy logging of JWT things
+    """
+    _headers = json.dumps(dict(request.headers), indent=2)
+    logger.debug('Request Headers: {}\n\n'.format(_headers))
+
+    _get = json.dumps(dict(request.GET), indent=2)
+    if request.GET:
+        logger.debug('Request arguments GET: {}\n'.format(_get))
+    if request.POST or request.body:
+        _post = request.POST or request.body
+        if isinstance(_post, bytes):
+            _post = json.dumps(json.loads(_post.decode()), indent=2)
+        elif isinstance(_post, QueryDict):
+            _post = json.dumps({k:v for k,v in _post.items()},
+                               indent=2)
+        logger.debug('Request arguments POST: {}\n'.format(_post))
 
 def service_endpoint(request, endpoint):
     """
     TODO: documentation here
     """
-    logger.info('\n\nAt the "{}" endpoint'.format(endpoint.endpoint_name))
-    logger.debug('Request Headers: {}'.format(json.dumps(dict(request.headers), indent=2)))
-    if request.GET:
-        logger.debug('Request arguments GET: {}'.format(request.GET, indent=2))
-    if request.POST or request.body:
-        values = request.POST or request.body
-        logger.debug('Request arguments POST: {}\n'.format(values))
-
-    # if hasattr(request, 'debug') and request.debug:
-        # import pdb; pdb.set_trace()
+    logger.info('\n\nRequest at the "{}" endpoint'.format(endpoint.endpoint_name))
+    if logger.level == 0:
+        fancy_debug(request)
 
     authn = request.headers.get('Authorization', {})
     pr_args = {'auth': authn}
-    # if authn:
-        # logger.debug('request.headers["Authorization"] => {}'.format(pr_args))
 
     if request.method == 'GET':
         data = {k:v for k,v in request.GET.items()}
@@ -122,7 +135,6 @@ def service_endpoint(request, endpoint):
     # if not data:
     #   ... not possible in this implementation
 
-    # logger.debug('Request arguments [{}]: {}'.format(request.method, data))
     try:
         req_args = endpoint.parse_request(data, **pr_args)
     except Exception as err:
@@ -133,13 +145,10 @@ def service_endpoint(request, endpoint):
             'method': request.method
             }), safe=False, status=400)
 
-    # already logged in oidcendpoint
-    # logger.info('request: {}'.format(req_args))
     if isinstance(req_args, ResponseMessage) and 'error' in req_args:
         return JsonResponse(req_args.__dict__, status=400)
 
     if request.COOKIES:
-        logger.debug(request.COOKIES)
         kwargs = {'cookie': request.COOKIES}
     else:
         kwargs = {}

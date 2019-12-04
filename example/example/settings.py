@@ -109,13 +109,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 
@@ -132,7 +128,7 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'default': {
+        'verbose': {
             # exact format is not important, this is the minimum information
             'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
         },
@@ -161,12 +157,22 @@ LOGGING = {
         'django': {
             'handlers': ['console', 'mail_admins'],
             'level': 'ERROR',
-            'propagate': False,
+            'propagate': True,
         },
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
+        # 'django.server': {
+            # 'handlers': ['console'],
+            # 'level': 'INFO',
+            # 'propagate': False,
+        # },
         'oidc_op': {
             'handlers': ['console', 'mail_admins'],
             'level': 'DEBUG',
-            'propagate': False,
+            'propagate': True,
         },
         # 'oidcendpoint': {
             # 'handlers': ['console', 'mail_admins'],
@@ -183,15 +189,15 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
-        'oidcendpoint.session': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'oidcmsg': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'INFO',
-            'propagate': False,
-        },
+        # 'oidcendpoint.session': {
+            # 'handlers': ['console', 'mail_admins'],
+            # 'level': 'DEBUG',
+            # 'propagate': False,
+        # },
+        # 'oidcmsg': {
+            # 'handlers': ['console', 'mail_admins'],
+            # 'level': 'INFO',
+            # 'propagate': False,
+        # },
     }
 }
