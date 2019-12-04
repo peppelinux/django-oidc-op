@@ -92,6 +92,10 @@ class OidcRelyingParty(TimeStampedModel):
                                                            for i in
                                                            OIDC_TOKEN_AUTHN_METHODS],
                                                   max_length=33)
+    auth_method = models.CharField(choices=[(i, i)
+                                            for i in
+                                            OIDC_TOKEN_AUTHN_METHODS],
+                                   max_length=33)
     jwks_uri = models.URLField(max_length=255, blank=True, null=True)
     post_logout_redirect_uris = models.CharField(max_length=254,
                                                  blank=True, null=True)

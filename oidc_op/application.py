@@ -9,6 +9,8 @@ from oidcendpoint.endpoint_context import (EndpointContext,
 from oidcendpoint.in_memory_db import InMemoryDataBase
 from oidcendpoint.session import create_session_db
 from oidcendpoint.sso_db import SSODb
+from oidcendpoint.util import importer
+
 from urllib.parse import urlparse
 
 from . configure import Configuration
@@ -30,25 +32,35 @@ def init_oidc_op_endpoints(app):
     _kj.import_jwks_as_json(_kj.export_jwks_as_json(True, ''), iss)
     _kj.verify_ssl = _config['server_info'].get('verify_ssl', False)
 
+    # set session, client and ssodb
+    client_db = None
+    if _config.get("client_db"):
+        cdb_kwargs = _config["client_db"].get('kwargs', {})
+        client_db = importer(_config["client_db"]['class'])(**cdb_kwargs)
+
+    session_db = None
+    if _config.get("session_db"):
+        ses_kwargs = _config["session_db"].get('kwargs', {})
+        session_db = importer(_config["session_db"]['class'])(**ses_kwargs)
+
+    sso_db = None
+    if _config.get("sso_db"):
+        ssodb_kwargs = _config["sso_db"].get('kwargs', {})
+        sso_db = importer(_config["sso_db"]['class'])(**ssodb_kwargs)
+
     # TODO, overcome the circularity dep os ec and session_db have each other
     endpoint_context = EndpointContext(_server_info_config,
-                                       # session_db=session_db,
+                                       client_db={},
+                                       session_db=session_db,
+                                       sso_db=sso_db,
                                        keyjar=_kj,
                                        cwd=settings.BASE_DIR)
 
-    # Work in progress
-    # session db - TODO: adopt a pure django approach
-    # also check ec._sub_func
-    th_args = get_token_handlers(_server_info_config)
+    # th_args = get_token_handlers(_server_info_config)
     # db = InMemoryDataBase()
-    # session_db = create_session_db(
-        # endpoint_context, th_args,
-        # db=db, sso_db=SSODb(),
-        # sub_func=endpoint_context._sub_func
-    # )
-    endpoint_context.set_session_db(_server_info_config,
-                                    sso_db=SSODb(),
-                                    db=InMemoryDataBase())
+    # endpoint_context.set_session_db(_server_info_config,
+                                    # sso_db=sso_db,
+                                    # db=InMemoryDataBase())
 
     return endpoint_context
 

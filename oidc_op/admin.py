@@ -21,6 +21,7 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
                                       ('application_type', 'response_types'),
                                       'grant_types',
                                       'token_endpoint_auth_method',
+                                      'auth_method',
                                       'is_active'
                                     )
                        },
