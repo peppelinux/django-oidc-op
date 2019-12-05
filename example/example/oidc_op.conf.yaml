@@ -24,12 +24,13 @@ OIDC_KEYS: &oidc_keys
 session_jwk: 'data/oidc_op/private/session.json'
 
 op:
-  client_db:
-    class: oidcendpoint.in_memory_db.InMemoryDataBase
-  session_db:
-    class: oidcendpoint.in_memory_db.InMemoryDataBase
-  sso_db:
-    class: oidcendpoint.sso_db.SSODb
+  # client_db:
+    # class: oidcendpoint.in_memory_db.InMemoryDataBase
+    # class: oidc_op.models.OidcClientDatabase
+  # session_db:
+    # class: oidcendpoint.in_memory_db.InMemoryDataBase
+  # sso_db:
+    # class: oidcendpoint.sso_db.SSODb
   server_info:
     issuer: *base_url
     verify_ssl: False

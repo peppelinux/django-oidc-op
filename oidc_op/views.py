@@ -23,8 +23,10 @@ from oidcmsg.oidc import AuthorizationRequest
 from urllib import parse as urlib_parse
 from urllib.parse import urlparse
 
-from oidc_op import oidcendpoint_app
 from pprint import pformat
+
+from . application import oidcendpoint_application
+oidcendpoint_app = oidcendpoint_application()
 
 logger = logging.getLogger(__name__)
 

@@ -14,7 +14,7 @@ from oidcendpoint.util import importer
 from urllib.parse import urlparse
 
 from . configure import Configuration
-
+from . db_interfaces import OidcClientDatabase
 
 logger = logging.getLogger(__name__)
 
@@ -48,20 +48,14 @@ def init_oidc_op_endpoints(app):
         ssodb_kwargs = _config["sso_db"].get('kwargs', {})
         sso_db = importer(_config["sso_db"]['class'])(**ssodb_kwargs)
 
-    # TODO, overcome the circularity dep os ec and session_db have each other
     endpoint_context = EndpointContext(_server_info_config,
-                                       client_db={},
+                                       client_db=OidcClientDatabase(),
                                        session_db=session_db,
                                        sso_db=sso_db,
                                        keyjar=_kj,
                                        cwd=settings.BASE_DIR)
 
-    # th_args = get_token_handlers(_server_info_config)
-    # db = InMemoryDataBase()
-    # endpoint_context.set_session_db(_server_info_config,
-                                    # sso_db=sso_db,
-                                    # db=InMemoryDataBase())
-
+    # endpoint_context.client_db = OidcClientDatabase()
     return endpoint_context
 
 

@@ -1,8 +1,57 @@
+from django import forms
 from django.contrib import admin
 from django.contrib import messages
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from . models import *
+
+
+class OidcRPContactModelForm(forms.ModelForm):
+    class Meta:
+        model = OidcRPContact
+        fields = ('__all__')
+
+
+class OidcRPContactInline(admin.TabularInline):
+    model = OidcRPContact
+    form = OidcRPContactModelForm
+    extra = 0
+
+
+class OidcRPRedirectUriModelForm(forms.ModelForm):
+    class Meta:
+        model = OidcRPRedirectUri
+        fields = ('__all__')
+
+
+class OidcRPRedirectUriInline(admin.TabularInline):
+    model = OidcRPRedirectUri
+    form = OidcRPRedirectUriModelForm
+    extra = 0
+
+
+class OidcRPGrantTypeModelForm(forms.ModelForm):
+    class Meta:
+        model = OidcRPGrantType
+        fields = ('__all__')
+
+
+class OidcRPGrantTypeInline(admin.TabularInline):
+    model = OidcRPGrantType
+    form = OidcRPGrantTypeModelForm
+    extra = 0
+
+
+class OidcRPResponseTypeModelForm(forms.ModelForm):
+    class Meta:
+        model = OidcRPResponseType
+        fields = ('__all__')
+
+
+class OidcRPResponseTypeInline(admin.TabularInline):
+    model = OidcRPResponseType
+    form = OidcRPResponseTypeModelForm
+    extra = 0
 
 
 @admin.register(OidcRelyingParty)
@@ -11,38 +60,45 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
     list_display = ('client_id', 'created', 'is_active')
     search_fields = ('client_id',)
     list_editable = ('is_active',)
+    inlines = (OidcRPResponseTypeInline,
+               OidcRPGrantTypeInline,
+               OidcRPContactInline,
+               OidcRPRedirectUriInline,
+               )
     fieldsets = (
              (None, {
                         'fields' : (
                                       ('client_id', 'client_secret',),
-                                      ('client_salt',),
+                                      ('client_salt','jwks_uri'),
                                       ('registration_client_uri',),
                                       ('registration_access_token',),
-                                      ('application_type', 'response_types'),
-                                      'grant_types',
-                                      'token_endpoint_auth_method',
-                                      'auth_method',
-                                      'is_active'
+                                      ('application_type',
+                                       'token_endpoint_auth_method'),
+                                      # ('token_endpoint_auth_method',
+                                       # 'auth_method'
+                                       # ),
+                                      ('is_active', 'last_seen')
                                     )
                        },
              ),
              ('Temporal values',
                                 {
                                 'fields' : (
-                                            (('client_id_issued_at',)),
-                                             'client_secret_expires_at'
+                                            (('client_id_issued_at',
+                                              'client_secret_expires_at')),
+
                                              ),
 
                                 },
              ),
-             ('URIs', {
-                         'classes': ('collapse',),
-                         'fields' : ('jwks_uri',
-                                     'post_logout_redirect_uris',
-                                     'redirect_uris'
-                                    )
-                        },
-              ),
+             # ('URIs', {
+                         # 'classes': ('collapse',),
+                         # 'fields' : ('jwks_uri',
+                                     # 'post_logout_redirect_uris',
+                                     # 'redirect_uris'
+                                    # )
+                        # },
+              # ),
         )
 
     # def save_model(self, request, obj, form, change):

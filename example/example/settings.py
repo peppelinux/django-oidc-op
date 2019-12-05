@@ -154,6 +154,10 @@ LOGGING = {
         },
     },
     'loggers': {
+        'django_test': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+        },
         'django': {
             'handlers': ['console', 'mail_admins'],
             'level': 'ERROR',
@@ -174,21 +178,21 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        # 'oidcendpoint': {
-            # 'handlers': ['console', 'mail_admins'],
-            # 'level': 'DEBUG',
-            # 'propagate': False,
-        # },
+        'oidcendpoint': {
+            'handlers': ['console', 'mail_admins'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         # 'oidcendpoint.endpoint_context': {
             # 'handlers': ['console', 'mail_admins'],
             # 'level': 'DEBUG',
             # 'propagate': False,
         # },
-        'oidcendpoint.sso_db': {
-            'handlers': ['console', 'mail_admins'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
+        # 'oidcendpoint.sso_db': {
+            # 'handlers': ['console', 'mail_admins'],
+            # 'level': 'DEBUG',
+            # 'propagate': False,
+        # },
         # 'oidcendpoint.session': {
             # 'handlers': ['console', 'mail_admins'],
             # 'level': 'DEBUG',

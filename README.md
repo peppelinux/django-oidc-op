@@ -7,6 +7,11 @@ This project is based on [Roland Hedberg's oidc-op](https://github.com/rohe/oidc
 ## Status
 _Work in Progress_
 
+running tests
+````
+./manage.py test --pdb  oidc_op.tests.01_client_db
+````
+
 Please wait for the first release tag before considering it ready to use.
 Before adopting this project in a production use you should consider if the following endpoint should be enabled:
 
