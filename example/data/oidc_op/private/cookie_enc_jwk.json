@@ -1,4 +1,1 @@
-{
-    "k": "Aj4Sd1d7E6KuGFmX5lDE6oaaYPbqZl495K-xEH9q1HU",
-    "kty": "oct"
-}
+{"kty": "oct", "kid": "cookie_enc_key_id", "k": "lPLkUsqv7KuvYbwFalNZVaAT_TBKYtEH"}

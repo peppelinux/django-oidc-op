@@ -6,8 +6,7 @@ import os
 import sys
 from typing import Dict
 
-from cryptojwt.jwk.hmac import SYMKey
-from cryptojwt.jwx import key_from_jwk_dict
+from cryptojwt.key_bundle import init_key
 from django.conf import settings
 
 # from oidcop.logging import configure_logging
@@ -38,24 +37,33 @@ class Configuration:
 
         # session key
         self.session_jwk = conf.get('session_jwk')
-        if self.session_jwk is not None:
-            self.logger.debug("Reading session signer from %s", self.session_jwk)
-            try:
-                with open(self.session_jwk) as jwk_file:
-                    jwk_dict = json.loads(jwk_file.read())
-                    self.session_key = key_from_jwk_dict(jwk_dict).k
-            except Exception:
-                self.logger.critical("Failed reading session signer from %s",
-                                     self.session_jwk)
-                sys.exit(-1)
-        else:
-            self.logger.debug("Generating random session signer")
-            self.session_key = SYMKey(key=rnd_token(32)).k
+        # set OP session key
+        session_key = self.op['server_info'].get('session_key')
+        if session_key:
+            self.session_key = init_key(**session_key)
+            # self.op['server_info']['password'] = self.session_key
+            self.logger.debug("Set server password to %s", self.session_key.key)
+
+        # TODO: automagic cookie jwk builder
+        # cookie_dealer = self.op['server_info'].get('cookie_dealer')
+        # if cookie_dealer:
+            # ## sign_jwk
+            # cookie_sign_jwk = cookie_dealer.get('kwargs', {}).get('sign_jwk')
+            # if cookie_sign_jwk:
+                # self.cookie_sign_jwk = init_key(**cookie_sign_jwk)
+                # self.logger.debug("Set cookie_sign_jwk to %s",
+                                  # self.cookie_sign_jwk)
+            # ## enc_jwk
+            # cookie_enc_jwk = cookie_dealer['kwargs'].get('enc_jwk')
+            # if cookie_enc_jwk:
+                # self.cookie_enc_jwk = init_key(**cookie_enc_jwk)
+                # self.logger.debug("Set cookie_enc_jwk to %s",
+                                  # self.cookie_enc_jwk)
 
         # set OP session key
-        if self.op is not None:
+        if self.op :
             if self.op['server_info'].get('password') is None:
-                key = self.session_key
+                key = self.session_key.key
                 self.op['server_info']['password'] = key
                 self.logger.debug("Set server password to %s", key)
 

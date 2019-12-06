@@ -21,8 +21,6 @@ OIDC_KEYS: &oidc_keys
     # otherwise OP metadata will have jwks_uri: https://127.0.0.1:5000/None!
     'uri_path': 'static/jwks.json'
 
-session_jwk: 'data/oidc_op/private/session.json'
-
 op:
   client_db:
     class: oidc_op.db_interfaces.OidcClientDatabase
@@ -33,6 +31,10 @@ op:
   server_info:
     issuer: *base_url
     verify_ssl: False
+    session_key:
+      filename: data/oidc_op/private/session_jwks.json
+      type: OCT
+      use: sig
     capabilities:
       subject_types_supported:
         - public
@@ -52,7 +54,7 @@ op:
             essential: True
     token_handler_args:
       jwks_def:
-        private_path: data/oidc_op/private/token_jwk.json
+        private_path: data/oidc_op/private/token_jwks.json
         read_only: False
         key_defs:
           -
@@ -213,10 +215,23 @@ op:
     cookie_dealer:
       class: oidcendpoint.cookie.CookieDealer
       kwargs:
+        # these should be updated...
+        # sign_jwk:
+          # filename: data/oidc_op/private/cookie_sign_jwk.json
+          # sign_alg: 'SHA256'
+          # type: OCT
+          # kid: cookie_sign_key_id
+        # enc_jwk:
+          # ## otherwise do it yourself: jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
+          # filename: 'data/oidc_op/private/cookie_enc_jwk.json'
+          # type: OCT
+          # kid: cookie_enc_key_id
+
+        ## the manual one here...
         sign_jwk: data/oidc_op/private/cookie_sign_jwk.json
         sign_alg: 'SHA256'
 
-        # jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
+        # ## jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
         enc_jwk: 'data/oidc_op/private/cookie_enc_jwk.json'
 
         default_values:

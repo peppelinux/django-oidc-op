@@ -1,6 +1,1 @@
-{
-    "kid": "cookie",
-    "use": "sig",
-    "k": "ZExxkaHv7KxCNEOytD77x6wEs9Lt9GZzR7tp6lIdTFA",
-    "kty": "oct"
-}
+{"kty": "oct", "kid": "cookie_sign_key_id", "k": "8wLRLNmGXscfN9gg33bIc6_IaCAowWZb"}
