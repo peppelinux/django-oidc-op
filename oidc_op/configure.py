@@ -39,23 +39,24 @@ class Configuration:
         self.session_jwk = conf.get('session_jwk')
         # set OP session key
         session_key = self.op['server_info'].get('session_key')
-        if session_key:
+        if isinstance(session_key, dict):
             self.session_key = init_key(**session_key)
             # self.op['server_info']['password'] = self.session_key
             self.logger.debug("Set server password to %s", self.session_key.key)
 
-        # TODO: automagic cookie jwk builder
+        # Not needed anymore cause of automatic builder in oidcendpoint.cookie __init__
+        #
         # cookie_dealer = self.op['server_info'].get('cookie_dealer')
         # if cookie_dealer:
             # ## sign_jwk
             # cookie_sign_jwk = cookie_dealer.get('kwargs', {}).get('sign_jwk')
-            # if cookie_sign_jwk:
+            # if isinstance(cookie_sign_jwk, dict):
                 # self.cookie_sign_jwk = init_key(**cookie_sign_jwk)
                 # self.logger.debug("Set cookie_sign_jwk to %s",
                                   # self.cookie_sign_jwk)
             # ## enc_jwk
             # cookie_enc_jwk = cookie_dealer['kwargs'].get('enc_jwk')
-            # if cookie_enc_jwk:
+            # if isinstance(cookie_enc_jwk, dict):
                 # self.cookie_enc_jwk = init_key(**cookie_enc_jwk)
                 # self.logger.debug("Set cookie_enc_jwk to %s",
                                   # self.cookie_enc_jwk)

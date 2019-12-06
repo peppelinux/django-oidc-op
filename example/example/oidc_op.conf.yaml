@@ -216,23 +216,23 @@ op:
       class: oidcendpoint.cookie.CookieDealer
       kwargs:
         # these should be updated...
-        # sign_jwk:
-          # filename: data/oidc_op/private/cookie_sign_jwk.json
-          # sign_alg: 'SHA256'
-          # type: OCT
-          # kid: cookie_sign_key_id
-        # enc_jwk:
-          # ## otherwise do it yourself: jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
-          # filename: 'data/oidc_op/private/cookie_enc_jwk.json'
-          # type: OCT
-          # kid: cookie_enc_key_id
+        sign_jwk:
+          filename: data/oidc_op/private/cookie_sign_jwk.json
+          sign_alg: 'SHA256'
+          type: OCT
+          kid: cookie_sign_key_id
+        enc_jwk:
+          ## otherwise do it yourself: jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
+          filename: 'data/oidc_op/private/cookie_enc_jwk.json'
+          type: OCT
+          kid: cookie_enc_key_id
 
         ## the manual one here...
-        sign_jwk: data/oidc_op/private/cookie_sign_jwk.json
-        sign_alg: 'SHA256'
+        # sign_jwk: data/oidc_op/private/cookie_sign_jwk.json
+        # sign_alg: 'SHA256'
 
         # ## jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
-        enc_jwk: 'data/oidc_op/private/cookie_enc_jwk.json'
+        # enc_jwk: 'data/oidc_op/private/cookie_enc_jwk.json'
 
         default_values:
             name: oidc_op

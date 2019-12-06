@@ -4,4 +4,4 @@ example/data/static/*
 !example/data/static/README.md
 __pycache__/*
 *.pyc
-
+example/data/oidc_op/private/*

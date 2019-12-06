@@ -155,19 +155,19 @@ def service_endpoint(request, endpoint):
     else:
         kwargs = {}
 
-    try:
-        if isinstance(endpoint, AccessToken):
-            args = endpoint.process_request(AccessTokenRequest(**req_args),
-                                            **kwargs)
-        else:
-            args = endpoint.process_request(req_args, **kwargs)
-    except Exception as err:
-        message = '{}'.format(err)
-        logger.error(message)
-        return JsonResponse(json.dumps({
-            'error': 'invalid_request',
-            'error_description': str(err)
-            }), status=400)
+    # try:
+    if isinstance(endpoint, AccessToken):
+        args = endpoint.process_request(AccessTokenRequest(**req_args),
+                                        **kwargs)
+    else:
+        args = endpoint.process_request(req_args, **kwargs)
+    # except Exception as err:
+        # message = '{}'.format(err)
+        # logger.error(message)
+        # return JsonResponse(json.dumps({
+            # 'error': 'invalid_request',
+            # 'error_description': str(err)
+            # }), safe=False, status=400)
 
     # logger.debug('Response args: {}'.format(args))
     if 'redirect_location' in args:
