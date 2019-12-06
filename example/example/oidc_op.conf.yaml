@@ -24,9 +24,8 @@ OIDC_KEYS: &oidc_keys
 session_jwk: 'data/oidc_op/private/session.json'
 
 op:
-  # client_db:
-    # class: oidcendpoint.in_memory_db.InMemoryDataBase
-    # class: oidc_op.models.OidcClientDatabase
+  client_db:
+    class: oidc_op.db_interfaces.OidcClientDatabase
   # session_db:
     # class: oidcendpoint.in_memory_db.InMemoryDataBase
   # sso_db:

@@ -12,7 +12,7 @@ from . models import (OidcRelyingParty,
 
 class OidcClientDatabase(object):
     """
-    Adaptation of a Django model as it would been a dict
+    Adaptation of a Django model as if it were a dict
     """
     model = OidcRelyingParty
 

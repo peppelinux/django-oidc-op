@@ -1,6 +1,5 @@
 import datetime
 import json
-import pytz
 
 from django.conf import settings
 from django.db import models
@@ -8,20 +7,21 @@ from oidcendpoint.sso_db import SSODb
 
 from . configure import Configuration
 
-_op_config = Configuration.create_from_config_file(settings.OIDCENDPOINT_CONFIG)
-
-OIDC_RESPONSE_TYPES = _op_config.conf['op']\
+OIDC_OP_CONFIG = Configuration.\
+                  create_from_config_file(settings.OIDCENDPOINT_CONFIG)
+OIDC_RESPONSE_TYPES = OIDC_OP_CONFIG.conf['op']\
                         ['server_info']['endpoint']['authorization']\
                         ['kwargs']['response_types_supported']
 
-OIDC_TOKEN_AUTHN_METHODS = _op_config.conf['op']\
+OIDC_TOKEN_AUTHN_METHODS = OIDC_OP_CONFIG.conf['op']\
                             ['server_info']['endpoint']['token']\
                             ['kwargs']['client_authn_method']
 
-OIDC_GRANT_TYPES = _op_config.conf['op']\
+OIDC_GRANT_TYPES = OIDC_OP_CONFIG.conf['op']\
                     ['server_info']['capabilities']['grant_types_supported']
 
 TIMESTAMP_FIELDS = ['client_id_issued_at', 'client_secret_expires_at']
+
 
 
 class TimeStampedModel(models.Model):
@@ -113,7 +113,6 @@ class OidcRelyingParty(TimeStampedModel):
         return [elem.response_type
                 for elem in self.oidcrpresponsetype_set.filter(client = self)]
 
-
     @response_types.setter
     def response_types(self, values):
         old = self.oidcrpresponsetype_set.filter(client = self)
@@ -166,6 +165,7 @@ class OidcRelyingParty(TimeStampedModel):
         verbose_name = ('Relying Party')
         verbose_name_plural = ('Relying Parties')
 
+
     def copy(self):
         """
             Compability with rohe approach based on dictionaries
@@ -184,30 +184,6 @@ class OidcRelyingParty(TimeStampedModel):
         d['post_logout_redirect_uris'] = self.post_logout_redirect_uris
         d['redirect_uris'] = self.redirect_uris
         return d
-
-    def __getitem__(self, key):
-        """self[key]    Accessing an item using an index"""
-        value = getattr(self, key)
-        if key in TIMESTAMP_FIELDS:
-            value = self.get_timestamp(key)
-        return value
-
-    def __setitem__(self, key, val):
-        """ self[key] = val Assigning to an item using an index"""
-        if key in TIMESTAMP_FIELDS:
-            value = self.set_timestamp(key, val)
-        else:
-            setattr(self, key, val)
-            self.save()
-
-    def get_timestamp(self, key):
-        value = getattr(self, key)
-        return int(datetime.datetime.timestamp(value))
-
-    def set_timestamp(self, key, value):
-        ts = pytz.utc.localize(datetime.datetime.fromtimestamp(value))
-        setattr(self, key, ts)
-        self.save()
 
     def __str__(self):
         return '{}, [{}]'.format(self.client_id, self.is_active)
