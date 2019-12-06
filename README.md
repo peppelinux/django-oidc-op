@@ -1,49 +1,28 @@
 # django-oidc-op
 A Django implementation of an **OIDC Provider** built top of [jwtconnect libraries](https://jwtconnect.io/).
-If you are just going to build a standard OIDC Provider you only have to write the configuration file.
+If you are just going to build a standard OIDC Provider you just have to edit the oidcendpoint configuration file.
+See `example/example/oidc_op.conf.yaml` to get in.
 
 This project is based on [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op).
+
+oidcendpoint supports the following standards and draft:
+
+- [OpenID Connect Core 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-core-1_0.html)
+- [OpenID Connect Session Management 1.0 - draft 28](https://openid.net/specs/openid-connect-session-1_0.html)
+- [oAuth2 Token introspection](https://tools.ietf.org/html/rfc7662)
+
+It also have an extended support, with add_ons modules, of the following:
+
+- Custom scopes, that extends [OIDC standard ScopeClaims](https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims)
+- PKCE, [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
 
 ## Status
 _Work in Progress_
 
+- Relying-Parties Admin UI completed, unit tests included.
+- Session management and cookies: still in progress.
+
 Please wait for the first release tag before considering it ready to use.
-Before adopting this project in a production use you should consider if the following endpoint should be enabled:
-
-- [Web Finger](https://openid.net/specs/openid-connect-discovery-1_0.html#IssuerDiscovery)
-- [dynamic discovery](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig)
-- [dynamic client registration](https://openid.net/specs/openid-connect-registration-1_0.html)
-
-**TODO**: _document how to disable them and how to register RP via django admin backend._
-
-#### Endpoints
-
-Available resources are:
-
-- webfinger
-  - /.well-known/webfinger [to be tested]
-
-- provider_info
-  - /.well-known/openid-configuration
-
-- registration
-  - /registration
-
-- authorization
-  - /authorization
-  - authentication, which type decide to support, default: login form.
-
-- token
-  - access/authorization token
-
-- refresh_token
-
-- userinfo
-  - /userinfo
-
-- end_session
-  - logout
-
 
 ## Run the example demo
 
@@ -89,27 +68,12 @@ A JWK creation example would be:
 jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
 ````
 
-## General description
+# Django custom implementations
 
-The example included in this project enables dynamic registration of RPs (you can even disable it).
-Using an example RP like [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP)
-and configuring in `CLIENTS` section to use django-oidc-op (see `example/data/oidc_rp/conf.django.yaml`),
-we'll see the following flow happens:
+This project rely interely on behaviour and features set provided by oidcendpoint but to get an exaustive integration in Django it
+introduces the following customizations.
 
-1. /.well-known/openid-configuration
-   RP get the Provider configuration, what declared in the configuration at `op.server_info`;
-2. /registration
-   RP registers in the Provider if `dynamic client registration` is enabled (default true)
-3. /authorization
-   RP mades OIDC authorization
-4. RP going to be redirected to login form page (see authn_methods.py)
-5. user-agent posts form (user credentials) to `/verify/user_pass_django`
-6. verify_user in django, on top of oidcendpoint_app.endpoint_context.authn_broker
-7. RP request for an access token -> the response of the previous authentication is a HttpRedirect to op's /token resource
-8. RP get the redirection to OP's USERINFO endpoint, using the access token got before
-
-
-## UserInfo endpoint
+#### UserInfo endpoint
 
 Claims to be released are configured in `op.server_info.user_info` (in `conf.yaml`).
 All the attributes release and user authentication mechanism rely on classes implemented in `oidc_op.users.py`.
@@ -129,7 +93,10 @@ Configuration Example:
             verified_email: email
 ````
 
-**TODO**: Do a RP configuration UI for custom claims release for every client.
+#### Relying-Party Registration
+
+See oidc_op.models and admin, an UI was built to let us configure new RP via Django admin backend.
+![Alt text](images/rp.png)
 
 
 ## OIDC endpoint url prefix
