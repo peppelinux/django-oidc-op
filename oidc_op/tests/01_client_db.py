@@ -51,40 +51,45 @@ class TestRP(TestCase):
         self.client = self.cdb[self.rp]
         print('Created and fetched RP: {}'.format(self.client))
 
-    def test_get_timestamp(self):
+    def test_get_set_client_db(self):
         for key in TIMESTAMP_FIELDS:
             value = self.client[key]
             assert isinstance(value, int)
 
-    def test_set_timestamp(self):
+        # test_set_timestamp
         for key in TIMESTAMP_FIELDS:
             dt_value = self.now+datetime.timedelta(minutes=-60)
             self.client[key] = datetime.datetime.timestamp(dt_value)
             assert isinstance(self.client[key], int)
 
-    def test_grant_types(self):
+        # contacts
+        vt = ['contacts']
+        self.client.contacts = vt
+        assert self.client.contacts == vt
+
+        # grant_types
         vt = ['authorization_code']
         self.client.grant_types = vt
         assert self.client.grant_types == vt
 
-    def test_response_types(self):
+        # response_types
         vt = ['code']
         self.client.response_types = vt
         assert self.client.response_types == vt
 
-    def test_post_logout_redirect_uris(self):
+        # post_logout_redirect_uris
         vt = [('https://127.0.0.1:8099', None)]
         self.client.post_logout_redirect_uris = vt
         assert self.client.post_logout_redirect_uris == vt
 
-    def test_redirect_uris(self):
+        # redirect_uris
         vt = [('https://127.0.0.1:8099/authz_cb/django_oidc_op', {})]
         self.client.redirect_uris = vt
         assert self.client.redirect_uris == vt
 
-    # def test_get_as_dict(self):
-        # logger.info(self.client.copy())
+        logger.info(json.dumps(self.client.copy(), indent=2))
 
     def test_create_as_dict(self):
+        logger.info('Test creare ad Dict')
         self.cdb[CLIENT_ID] = CLIENT_TEST
-        logger.info(json.dumps(self.client.copy(), indent=2))
+        logger.info(json.dumps(self.cdb[CLIENT_ID], indent=2))

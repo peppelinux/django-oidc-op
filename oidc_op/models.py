@@ -101,12 +101,26 @@ class OidcRelyingParty(TimeStampedModel):
     is_active = models.BooleanField(('active'), default=True)
     last_seen = models.DateTimeField(blank=True, null=True)
 
+
+    @property
+    def contacts(self):
+        return [elem.contact
+                for elem in self.oidcrpcontact_set.filter(client = self)]
+
+    @contacts.setter
+    def contacts(self, values):
+        old = self.oidcrpcontact_set.filter(client = self)
+        old.delete()
+        if isinstance(values, str):
+            value = [values]
+        for value in values:
+            self.oidcrpcontact_set.create(client=self,
+                                          contact=value)
+
     @property
     def grant_types(self):
-        l = []
-        for elem in self.oidcrpgranttype_set.filter(client = self):
-            l.append(elem.grant_type)
-        return l
+        return [elem.grant_type
+                for elem in self.oidcrpgranttype_set.filter(client = self)]
 
     @grant_types.setter
     def grant_types(self, values):
@@ -120,10 +134,9 @@ class OidcRelyingParty(TimeStampedModel):
 
     @property
     def response_types(self):
-        l = []
-        for elem in self.oidcrpresponsetype_set.filter(client = self):
-            l.append(elem.response_type)
-        return l
+        return [elem.response_type
+                for elem in self.oidcrpresponsetype_set.filter(client = self)]
+
 
     @response_types.setter
     def response_types(self, values):
@@ -170,8 +183,7 @@ class OidcRelyingParty(TimeStampedModel):
             self.oidcrpredirecturi_set.create(client=self,
                                               uri=value[0],
                                               values=json.dumps(value[1]),
-                                              type='redirect_uris'
-                                              )
+                                              type='redirect_uris')
 
     class Meta:
         verbose_name = ('Relying Party')
@@ -186,9 +198,10 @@ class OidcRelyingParty(TimeStampedModel):
         for dis in disabled:
             d.pop(dis)
         for key in TIMESTAMP_FIELDS:
-            if key in d:
+            if d.get(key):
                 d[key] = int(datetime.datetime.timestamp(d[key]))
 
+        d['contacts'] = self.contacts
         d['grant_types'] = self.grant_types
         d['response_types'] = self.response_types
         d['post_logout_redirect_uris'] = self.post_logout_redirect_uris
