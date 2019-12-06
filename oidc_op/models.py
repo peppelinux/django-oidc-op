@@ -40,30 +40,6 @@ class OidcRelyingParty(TimeStampedModel):
     """
     See: https://openid.net/specs/openid-connect-registration-1_0.html#ClientMetadata
 
-    endpoint.endpoint_context.cdb['gE6Yw35JFTl1']
-    should return this asset
-
-    # Client db
-    {'gE6Yw35JFTl1':
-        {'client_id': 'gE6Yw35JFTl1',
-         'client_salt': '6flfsj0Z',
-         'registration_access_token': 'z3PCMmC1HZ1QmXeXGOQMJpWQNQynM4xY',
-         'registration_client_uri': 'https://127.0.0.1:8000/registration_api?client_id=gE6Yw35JFTl1',
-         'client_id_issued_at': 1575460012,
-         'client_secret': '19cc69b70d0108f630e52f72f7a3bd37ba4e11678ad1a7434e9818e1',
-         'client_secret_expires_at': 1575892012,
-         'application_type': 'web',
-         'response_types': ['code'],
-         'contacts': ['ops@example.com'],
-         'token_endpoint_auth_method': 'client_secret_basic',
-         'jwks_uri': 'https://127.0.0.1:8099/static/jwks.json',
-         'post_logout_redirect_uris': [('https://127.0.0.1:8099', None)],
-         'grant_types': ['authorization_code'],
-         'redirect_uris': [('https://127.0.0.1:8099/authz_cb/django_oidc_op', {})]
-         }
-    }
-
-
     unique if available (check on save):
         client_secret should be
         registration_access_token unique if available
@@ -161,9 +137,10 @@ class OidcRelyingParty(TimeStampedModel):
         old = self.oidcrpredirecturi_set.filter(client = self)
         old.delete()
         for value in values:
+            args = json.dumps(value[1] if value[1] else [])
             self.oidcrpredirecturi_set.create(client=self,
                                               uri=value[0],
-                                              values=json.dumps(value[1]),
+                                              values=args,
                                               type='post_logout_redirect_uris'
                                               )
 
@@ -206,7 +183,6 @@ class OidcRelyingParty(TimeStampedModel):
         d['response_types'] = self.response_types
         d['post_logout_redirect_uris'] = self.post_logout_redirect_uris
         d['redirect_uris'] = self.redirect_uris
-
         return d
 
     def __getitem__(self, key):
@@ -247,7 +223,7 @@ class OidcRPResponseType(TimeStampedModel):
         unique_together = ('client', 'response_type')
 
     def __str__(self):
-        return '{}, [{}]'.format(self.client, self.grant_type)
+        return '{}, [{}]'.format(self.client, self.response_type)
 
 
 class OidcRPGrantType(TimeStampedModel):
@@ -283,7 +259,8 @@ class OidcRPRedirectUri(TimeStampedModel):
     values = models.CharField(max_length=254,
                            blank=True, null=True,)
     type = models.CharField(choices=(('redirect_uris', 'redirect_uris'),
-                                     ('post_logout_redirect_uris', 'post_logout_redirect_uris')),
+                                     ('post_logout_redirect_uris',
+                                      'post_logout_redirect_uris')),
                             max_length=33)
     class Meta:
         verbose_name = ('Relying Party URI')

@@ -57,14 +57,14 @@ class OidcRPResponseTypeInline(admin.TabularInline):
 @admin.register(OidcRelyingParty)
 class OidcRelyingPartyAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified', 'is_active')
-    list_display = ('client_id', 'created', 'is_active')
+    list_display = ('client_id', 'created',
+                    'last_seen', 'is_active')
     search_fields = ('client_id',)
     list_editable = ('is_active',)
     inlines = (OidcRPResponseTypeInline,
                OidcRPGrantTypeInline,
                OidcRPContactInline,
-               OidcRPRedirectUriInline,
-               )
+               OidcRPRedirectUriInline)
     fieldsets = (
              (None, {
                         'fields' : (
@@ -74,10 +74,7 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
                                       ('registration_access_token',),
                                       ('application_type',
                                        'token_endpoint_auth_method'),
-                                      # ('token_endpoint_auth_method',
-                                       # 'auth_method'
-                                       # ),
-                                      ('is_active', 'last_seen')
+                                      ('is_active', )
                                     )
                        },
              ),
@@ -85,7 +82,8 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
                                 {
                                 'fields' : (
                                             (('client_id_issued_at',
-                                              'client_secret_expires_at')),
+                                              'client_secret_expires_at',
+                                              'last_seen')),
 
                                              ),
 
