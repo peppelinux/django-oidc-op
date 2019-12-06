@@ -242,8 +242,13 @@ def verify_user(request):
         authn_time=auth_args['iat'])
 
     endpoint = oidcendpoint_app.endpoint_context.endpoint['authorization']
-    args = endpoint.authz_part2(user=user.username, request=authz_request,
-                                authn_event=authn_event)
+
+    try:
+        args = endpoint.authz_part2(user=user.username, request=authz_request,
+                                    authn_event=authn_event)
+    except ValueError as excp:
+        msg = 'Something wrong with your Session ... {}'.format(excp)
+        return HttpResponse(msg, status=403)
 
     if isinstance(args, ResponseMessage) and 'error' in args:
         return HttpResponse(args.to_json(), status=400)
@@ -303,7 +308,7 @@ def check_session_iframe(request):
 def rp_logout(request):
     _endp = oidcendpoint_app.endpoint_context.endpoint['session']
     _info = _endp.unpack_signed_jwt(request.POST['sjwt'])
-    alla = request.POST.get('logout')
+    alla = None #request.POST.get('logout')
 
     _iframes = _endp.do_verified_logout(alla=alla, **_info)
     if _iframes:
