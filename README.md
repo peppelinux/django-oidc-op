@@ -1,17 +1,17 @@
 # django-oidc-op
 A Django implementation of an **OIDC Provider** built top of [jwtconnect libraries](https://jwtconnect.io/).
-If you are just going to build a standard OIDC Provider you just have to edit the oidcendpoint configuration file.
+To build a standard OIDC Provider you just have to edit the oidcendpoint configuration file.
 See `example/example/oidc_op.conf.yaml` to get in.
 
 This project is based on [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op).
 
-oidcendpoint supports the following standards and draft:
+oidcendpoint supports the following standards and drafts:
 
 - [OpenID Connect Core 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-core-1_0.html)
 - [OpenID Connect Session Management 1.0 - draft 28](https://openid.net/specs/openid-connect-session-1_0.html)
 - [oAuth2 Token introspection](https://tools.ietf.org/html/rfc7662)
 
-It also have an extended support, with add_ons modules, of the following:
+It also have a support, with the help of `add_on` modules, of the followings features:
 
 - Custom scopes, that extends [OIDC standard ScopeClaims](https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims)
 - PKCE, [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
