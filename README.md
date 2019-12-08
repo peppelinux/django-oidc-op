@@ -3,9 +3,7 @@ A Django implementation of an **OIDC Provider** on top of [jwtconnect.io](https:
 To configure a standard OIDC Provider you just have to edit the oidcendpoint configuration file.
 See `example/example/oidc_op.conf.yaml` to get in.
 
-This project is based on [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op).
-
-oidcendpoint supports the following standards and drafts:
+This project is based on [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op), that support the following standards and drafts:
 
 - [OpenID Connect Core 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-core-1_0.html)
 - [OpenID Connect Session Management 1.0 - draft 28](https://openid.net/specs/openid-connect-session-1_0.html)
@@ -44,7 +42,9 @@ gunicorn example.wsgi -b0.0.0.0:8000 --keyfile=./data/oidc_op/certs/key.pem --ce
 
 You can use [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP) as an example RP as follows:
 
-`RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/example/data/oidc_rp/conf.django.yaml`
+
+`cd JWTConnect-Python-OidcRP
+RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/example/data/oidc_rp/conf.django.yaml`
 
 
 ## Configure OIDC endpoint
@@ -54,7 +54,7 @@ You can use [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Pyth
 `OIDC_OP_AUTHN_SALT_SIZE`: Salt size in byte, default: 4 (Integer).
 
 #### Signatures
-These following files needed to be present in `data/oidc_op/private`.
+These following files needed to be present in `data/oidc_op/private` otherwise they Will be created on the first time (see example).
 
 1. session.json (JWK symmetric);
 2. cookie_sign_jwk.json (JWK symmetric);
@@ -71,7 +71,7 @@ jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
 # Django custom implementations
 
 This project rely interely on behaviour and features set provided by oidcendpoint but to get an exaustive integration in Django it
-introduces the following customizations.
+can adopt the following customizations.
 
 #### UserInfo endpoint
 
