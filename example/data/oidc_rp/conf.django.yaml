@@ -31,19 +31,6 @@ RP_KEYS:
     # this will create the jwks files if they absent
     'read_only': False
 
-# PUBLIC_JWKS_PATH: 'https://127.0.0.1:8090/static/jwks.json'
-# PRIVATE_JWKS_PATH: './private/jwks.json'
-
-# information used when registering the client, this may be the same for all OPs
-
-client_preferences: &prefs
-    application_name: rphandler
-    application_type: web
-    contacts: [ops@example.com]
-    response_types: [code]
-    scope: [openid, profile, email, address, phone]
-    token_endpoint_auth_method: [client_secret_basic, client_secret_post]
-
 services: &services
   discovery:
     class: oidcservice.oidc.provider_info_discovery.ProviderInfoDiscovery
@@ -67,18 +54,33 @@ services: &services
     class: oidcservice.oidc.end_session.EndSession
     kwargs: {}
 
+# information used when registering the client, this may be the same for all OPs
+client_preferences: &prefs
+    application_name: rphandler
+    application_type: web
+    contacts: [ops@example.com]
+    response_types: [code]
+    scope: [openid, profile, email, address, phone]
+    token_endpoint_auth_method: [client_secret_basic, client_secret_post]
+
 
 CLIENTS:
   # The ones that support webfinger, OP discovery and client registration
   # This is the default, any client that is not listed here is expected to
   # support dynamic discovery and registration.
-  "": 
+  "":
     client_preferences: *prefs
     redirect_uris: None
     services: *services
 
   django_oidc_op:
     client_preferences: *prefs
+
+    # if you create a client through ADMIN UI ...
+    # client_id: z9wUOttmF3qc
+    # client_secret: 01a7c8f6b9aa16985c3f57b50082cc3211c58acf639caa590f6ea5fd
+    # token_endpoint_auth_method: client_secret_basic
+
     issuer: https://127.0.0.1:8000/
     jwks_uri: https://127.0.0.1:8099/static/jwks.json
     redirect_uris: ['https://127.0.0.1:8099/authz_cb/django_oidc_op']

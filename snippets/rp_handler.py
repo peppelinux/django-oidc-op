@@ -17,10 +17,8 @@ def init_oidc_rp_handler(app):
     if rp_keys_conf:
         _kj = init_key_jar(**rp_keys_conf)
         _path = rp_keys_conf['public_path']
-        if _path.startswith('./'):
-            _path = _path[2:]
-        elif _path.startswith('/'):
-            _path = _path[1:]
+        # replaces ./ and / from the begin of the string
+        _path = re.sub('^(.)/', '', _path)
     else:
         _kj = KeyJar()
         _path = ''
@@ -50,7 +48,7 @@ def fancy_print(msg, dict_obj):
           json.dumps(dict_obj, indent=2))
 
 
-def start_rp_session(rph, issuer_id, username, password):
+def run_rp_session(rph, issuer_id, username, password):
     # register client (provider info and client registration)
     info = rph.begin(issuer_id)
 
@@ -85,6 +83,8 @@ def start_rp_session(rph, issuer_id, username, password):
                         allow_redirects=False)
 
     # req is a 302, a redirect to the https://127.0.0.1:8099/authz_cb/django_oidc_op
+    if req.status_code != 302:
+        raise Exception(req.content)
     rp_final_url = req.headers['Location']
 
     fancy_print("The Authorization returns a "
@@ -138,4 +138,4 @@ if __name__ == '__main__':
 
     # select the OP you want to, example: "django_oidc_op"
     issuer_id = args.iss
-    start_rp_session(rph, issuer_id, args.u, args.p)
+    run_rp_session(rph, issuer_id, args.u, args.p)
