@@ -14,7 +14,8 @@ from oidcendpoint.util import importer
 from urllib.parse import urlparse
 
 from . configure import Configuration
-from . db_interfaces import OidcClientDatabase
+from . db_interfaces import (OidcClientDatabase,
+                             OidcSSOdb)
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ def init_oidc_op_endpoints(app):
         ses_kwargs = _config["session_db"].get('kwargs', {})
         session_db = importer(_config["session_db"]['class'])(**ses_kwargs)
 
-    sso_db = None
+    sso_db = None # OidcSSOdb()
     if _config.get("sso_db"):
         ssodb_kwargs = _config["sso_db"].get('kwargs', {})
         sso_db = importer(_config["sso_db"]['class'])(**ssodb_kwargs)

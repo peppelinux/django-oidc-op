@@ -6,3 +6,5 @@ __pycache__/*
 *.pyc
 example/data/oidc_op/private/*
 !example/data/oidc_op/private/README.md
+snippets/private
+snippets/static

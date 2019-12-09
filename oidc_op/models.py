@@ -2,10 +2,12 @@ import datetime
 import json
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 from oidcendpoint.sso_db import SSODb
 
 from . configure import Configuration
+
 
 OIDC_OP_CONFIG = Configuration.\
                   create_from_config_file(settings.OIDCENDPOINT_CONFIG)
@@ -248,7 +250,28 @@ class OidcRPRedirectUri(TimeStampedModel):
                                    self.type)
 
 
-class OidcEndpointSSOdb(TimeStampedModel, SSODb):
+class OidcSession(TimeStampedModel):
+    """
+    {'__state__3N8x7eNOm4DxGwowPyMvjv2UB8f3UjZr': '759ad168230cddb812e27a7fe03a7403dc9860b6f49814a32afd2bc8',
+     '759ad168230cddb812e27a7fe03a7403dc9860b6f49814a32afd2bc8':
+      '{"code": "Z0FBQUFBQmQ3blBaY1ZYaFBoRnJleUpCRUJGMm5yTm1wRUhaZDhjWnJvYUpxM29OXzVNVUM3TGllamg5T0dXSFhna0k0WU51VE53RTJTZ2xwelNEbkRhb0VzeVJoNWx2MTN6M2xDaDd1cGF6REROVFB6Qk55SC1qdlVzNFJoRlFyTlRPQmhoMjdCUFFTRi1PaHhBeUlqbGp2OEFXLW5leG9TbVJNaHloN3ZsdGRJYmJiaEh4cFRURlpKczg1RVFzVF84akFGam1IbUxtMWgxaUJIS1lkcUpoX3FlbzVYSFpZNXB6NnJadHMyb1BTZ1BpOVdiZnNmRT0=", "oauth_state": "authz", "client_id": "z9wUOttmF3qc", "authn_req": {"redirect_uri": "https://127.0.0.1:8099/authz_cb/django_oidc_op", "scope": "openid profile email address phone", "response_type": "code", "nonce": "1q31VJnMKqS5wZF7BJicbyjT", "state": "3N8x7eNOm4DxGwowPyMvjv2UB8f3UjZr", "code_challenge": "nBtIxE0UQz640Wr_BGaEG_oF2QDmGX0bZESxoW-9VlY", "code_challenge_method": "S256", "client_id": "z9wUOttmF3qc"}, "authn_event": {"uid": "wert", "salt": "Rx5T5w==", "authn_info": "oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD", "authn_time": 1575908305, "valid_until": 1575911905}}'
+      }
+    """
+    state = models.CharField(max_length=255,
+                             blank=False, null=False)
+    sid = models.CharField(max_length=255,
+                           blank=False, null=False, unique=True)
+    session_info = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = ('SSO Session')
+        verbose_name_plural = ('SSO Sessions')
+
+    def __str__(self):
+        return 'state: {} - sid: {}'.format(self.state, self.sid)
+
+
+class OidcSessionSso(TimeStampedModel):
     """
     SSODb is
     sso_db._db.db.items()
@@ -260,5 +283,20 @@ class OidcEndpointSSOdb(TimeStampedModel, SSODb):
      ]
     """
 
-    # TO BE IMPLEMENTED OR NOT [WiP]
-    pass
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE,
+                             blank=True, null=True)
+    sid = models.CharField(max_length=255,
+                           blank=False, null=False, unique=True)
+    sub = models.CharField(max_length=255,
+                           blank=True, null=True)
+    sub_clean = models.CharField(max_length=255,
+                                 blank=True, null=True)
+
+    class Meta:
+        verbose_name = ('SSO Session SSO')
+        verbose_name_plural = ('SSO Sessions SSO')
+
+    def __str__(self):
+        return '{} - sid: {} - sub: {}'.format(self.user.username,
+                                               self.sid,
+                                               self.sub)
