@@ -3,18 +3,22 @@ import os
 
 from cryptojwt.key_jar import init_key_jar
 from django.conf import settings
+from oidcendpoint import token_handler
 from oidcendpoint.endpoint_context import (EndpointContext,
                                            get_token_handlers,
                                            )
 from oidcendpoint.in_memory_db import InMemoryDataBase
-from oidcendpoint.session import create_session_db
+from oidcendpoint.session import (create_session_db,
+                                  SessionDB)
 from oidcendpoint.sso_db import SSODb
 from oidcendpoint.util import importer
 
 from urllib.parse import urlparse
 
 from . configure import Configuration
-from . db_interfaces import OidcClientDatabase
+from . db_interfaces import (OidcClientDatabase,
+                             OidcSSOdb,
+                             OidcSessiondb)
 
 logger = logging.getLogger(__name__)
 
@@ -38,24 +42,25 @@ def init_oidc_op_endpoints(app):
         cdb_kwargs = _config["client_db"].get('kwargs', {})
         client_db = importer(_config["client_db"]['class'])(**cdb_kwargs)
 
-    session_db = None
-    if _config.get("session_db"):
-        ses_kwargs = _config["session_db"].get('kwargs', {})
-        session_db = importer(_config["session_db"]['class'])(**ses_kwargs)
-
-    sso_db = None
+    sso_db = None # OidcSSOdb()
     if _config.get("sso_db"):
         ssodb_kwargs = _config["sso_db"].get('kwargs', {})
         sso_db = importer(_config["sso_db"]['class'])(**ssodb_kwargs)
 
+    db = OidcSessiondb(sso_db=sso_db)
     endpoint_context = EndpointContext(_server_info_config,
                                        client_db=OidcClientDatabase(),
-                                       session_db=session_db,
+                                       session_db=db,
                                        sso_db=sso_db,
                                        keyjar=_kj,
                                        cwd=settings.BASE_DIR)
 
-    # endpoint_context.client_db = OidcClientDatabase()
+    # custom session_db
+    # th_handl = get_token_handlers(_config)
+    # handler = token_handler.factory(endpoint_context, **th_handl)
+    # db = OidcSessiondb(sso_db=sso_db)
+    # session_db = SessionDB(db, handler, sso_db)
+    # endpoint_context.set_session_db(sso_db=sso_db, db=session_db)
     return endpoint_context
 
 

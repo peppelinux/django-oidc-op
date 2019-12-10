@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib import admin
 from django.contrib import messages
+from django.contrib.sessions.models import Session
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from . models import *
@@ -89,14 +90,6 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
 
                                 },
              ),
-             # ('URIs', {
-                         # 'classes': ('collapse',),
-                         # 'fields' : ('jwks_uri',
-                                     # 'post_logout_redirect_uris',
-                                     # 'redirect_uris'
-                                    # )
-                        # },
-              # ),
         )
 
     # def save_model(self, request, obj, form, change):
@@ -118,3 +111,25 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
                      # "If local: at least a file or a valid path").format(obj.name)
             # if msg: _msg = _msg + '. ' + msg
             # messages.add_message(request, messages.ERROR, _msg)
+
+
+@admin.register(Session)
+class SessionAdmin(admin.ModelAdmin):
+    def _session_data(self, obj):
+        return obj.get_decoded()
+    list_display = ['session_key', '_session_data', 'expire_date']
+
+
+@admin.register(OidcSession)
+class OidcSessionAdmin(admin.ModelAdmin):
+    list_filter = ('created', 'modified')
+    list_display = ('state', 'sid', 'created')
+    search_fields = ('state', 'sid')
+
+
+@admin.register(OidcSessionSso)
+class OidcSessionSsoAdmin(admin.ModelAdmin):
+    list_filter = ('created', 'modified')
+    list_display = ('user', 'sid',
+                    'sub', 'sub_clean', 'created')
+    search_fields = ('user',)

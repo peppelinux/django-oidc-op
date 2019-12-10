@@ -2,10 +2,12 @@ import datetime
 import json
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.db import models
 from oidcendpoint.sso_db import SSODb
 
 from . configure import Configuration
+
 
 OIDC_OP_CONFIG = Configuration.\
                   create_from_config_file(settings.OIDCENDPOINT_CONFIG)
@@ -248,9 +250,32 @@ class OidcRPRedirectUri(TimeStampedModel):
                                    self.type)
 
 
-class OidcEndpointSSOdb(TimeStampedModel, SSODb):
+class OidcSession(TimeStampedModel):
     """
-    SSODb is
+    Store the session information in this model
+    """
+    state = models.CharField(max_length=255,
+                             blank=False, null=False)
+    sid = models.CharField(max_length=255,
+                           blank=False, null=False, unique=True)
+    session_info = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = ('SSO Session')
+        verbose_name_plural = ('SSO Sessions')
+
+    def copy(self):
+        return dict(sid = self.sid,
+                    state = self.state,
+                    session_info = self.session_info)
+
+    def __str__(self):
+        return 'state: {} - sid: {}'.format(self.state, self.sid)
+
+
+class OidcSessionSso(TimeStampedModel):
+    """
+    Original SSODb is
     sso_db._db.db.items()
 
     [('__sid2uid__2b84eccdcd4b077e074c72bdc540625063fac770d1176789afc07647', ['wert']),
@@ -260,5 +285,20 @@ class OidcEndpointSSOdb(TimeStampedModel, SSODb):
      ]
     """
 
-    # TO BE IMPLEMENTED OR NOT [WiP]
-    pass
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE,
+                             blank=True, null=True)
+    sid = models.CharField(max_length=255,
+                           blank=False, null=False, unique=True)
+    sub = models.CharField(max_length=255,
+                           blank=True, null=True)
+    sub_clean = models.CharField(max_length=255,
+                                 blank=True, null=True)
+
+    class Meta:
+        verbose_name = ('SSO Session SSO')
+        verbose_name_plural = ('SSO Sessions SSO')
+
+    def __str__(self):
+        return '{} - sid: {} - sub: {}'.format(self.user.username,
+                                               self.sid,
+                                               self.sub)

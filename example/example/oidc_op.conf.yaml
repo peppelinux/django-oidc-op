@@ -25,9 +25,9 @@ op:
   client_db:
     class: oidc_op.db_interfaces.OidcClientDatabase
   # session_db:
-    # class: oidcendpoint.in_memory_db.InMemoryDataBase
-  # sso_db:
-    # class: oidcendpoint.sso_db.SSODb
+    # class: oidc_op.db_interfaces.OidcSessiondb
+  sso_db:
+    class: oidc_op.db_interfaces.OidcSSOdb
   server_info:
     issuer: *base_url
     verify_ssl: False
