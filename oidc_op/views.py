@@ -284,11 +284,10 @@ def session_endpoint(request):
 def check_session_iframe(request):
     if request.method == 'GET':
         req_args = request.GET
+    elif request.method == 'POST':
+        req_args = json.loads(request.POST)
     else:
-        if request.method == 'POST':
-            req_args = json.loads(request.POST)
-        else:
-            req_args = dict([(k, v) for k, v in request.BODY.items()])
+        req_args = dict([(k, v) for k, v in request.body.items()])
 
     if req_args:
         # will contain client_id and origin
@@ -298,8 +297,7 @@ def check_session_iframe(request):
             return 'error'
         return 'OK'
 
-    oidcendpoint_app.srv_config.logger.debug(
-        'check_session_iframe: {}'.format(req_args))
+    logger.debug('check_session_iframe: {}'.format(req_args))
     res = render(request, template_name='check_session_iframe.html')
     return res
 

@@ -48,6 +48,7 @@ def init_oidc_op_endpoints(app):
         sso_db = importer(_config["sso_db"]['class'])(**ssodb_kwargs)
 
     db = OidcSessiondb(sso_db=sso_db)
+
     endpoint_context = EndpointContext(_server_info_config,
                                        client_db=OidcClientDatabase(),
                                        session_db=db,
@@ -55,7 +56,7 @@ def init_oidc_op_endpoints(app):
                                        keyjar=_kj,
                                        cwd=settings.BASE_DIR)
 
-    # custom session_db
+    # custom session_db overload ...
     # th_handl = get_token_handlers(_config)
     # handler = token_handler.factory(endpoint_context, **th_handl)
     # db = OidcSessiondb(sso_db=sso_db)
