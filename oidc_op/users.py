@@ -6,7 +6,8 @@ from django.template.loader import render_to_string
 
 from oidcendpoint.util import instantiate
 from oidcendpoint.user_authn.user import (create_signed_jwt,
-                                          verify_signed_jwt)
+                                          verify_signed_jwt,
+                                          LABELS)
 from oidcendpoint.user_authn.user import UserAuthnMethod
 
 
@@ -62,13 +63,9 @@ class UserPassDjango(UserAuthnMethod):
         _kwargs = self.kwargs.copy()
         for attr in ['policy', 'tos', 'logo']:
             _uri = '{}_uri'.format(attr)
-            try:
-                _kwargs[_uri] = kwargs[_uri]
-            except KeyError:
-                pass
-            else:
-                _label = '{}_label'.format(attr)
-                _kwargs[_label] = LABELS[_uri]
+            _kwargs[_uri] = kwargs.get(_uri)
+            _label = '{}_label'.format(attr)
+            _kwargs[_label] = LABELS[_uri]
 
         return self.template_handler(self.template, _kwargs)
 
@@ -76,7 +73,8 @@ class UserPassDjango(UserAuthnMethod):
         username = kwargs["username"]
         password = kwargs["password"]
 
-        user = authenticate(username=username, password=password)
+        user = authenticate(username=username,
+                            password=password)
 
         if username:
             return user
@@ -112,7 +110,8 @@ class UserInfo(object):
             for key, restr in user_info_claims.items():
                 if key in self.claims_map:
                     # manage required and optional: TODO extends this approach
-                    if not hasattr(user, self.claims_map[key]) and restr == {"essential": True}:
+                    if not hasattr(user, self.claims_map.get(key)) and \
+                           restr == {"essential": True}:
                         missing.append(key)
                         continue
                     else:
@@ -123,7 +122,8 @@ class UserInfo(object):
                     result[key] = uattr() if callable(uattr) else uattr
             return result
 
-    def __call__(self, user_id, client_id, user_info_claims=None, **kwargs):
+    def __call__(self, user_id, client_id,
+                 user_info_claims=None, **kwargs):
         """
         user_id = username
         client_id = client id, ex: 'mHwpZsDeWo5g'
@@ -133,10 +133,7 @@ class UserInfo(object):
             # Todo: raise exception here, this wouldn't be possible.
             return {}
 
-        try:
-            return self.filter(user, user_info_claims)
-        except KeyError:
-            return {}
+        return self.filter(user, user_info_claims)
 
     def search(self, **kwargs):
         for uid, args in self.db.items():

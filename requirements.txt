@@ -1,4 +1,4 @@
-Django>=2.2.4
+Django>=2.2.7,<4.0
 oidcop
 gunicorn
 
@@ -7,3 +7,4 @@ git+https://github.com/openid/JWTConnect-Python-OidcMsg
 git+https://github.com/openid/JWTConnect-Python-OidcService
 git+https://github.com/openid/JWTConnect-Python-OidcMsg
 git+https://github.com/IdentityPython/oidcendpoint.git
+git+https://github.com/openid/JWTConnect-Python-OidcRP
