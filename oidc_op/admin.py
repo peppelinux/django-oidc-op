@@ -126,6 +126,9 @@ class OidcSessionAdmin(admin.ModelAdmin):
     list_display = ('state', 'sid', 'created')
     search_fields = ('state', 'sid')
 
+    class Media:
+        js = ('js/textarea_autosize.js',)
+        # css = {'default': ('css/textarea_large.css',)}
 
 @admin.register(OidcSessionSso)
 class OidcSessionSsoAdmin(admin.ModelAdmin):

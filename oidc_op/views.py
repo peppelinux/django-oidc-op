@@ -70,17 +70,17 @@ def do_response(endpoint, req_args, error='', **args):
     if error:
         if _response_placement == 'body':
             logger.debug('Error Response [Body]: {}'.format(info_response))
-            resp = HttpResponse(info['response'], status=400)
+            resp = HttpResponse(info_response, status=400)
         else:  # _response_placement == 'url':
             logger.debug('Redirect to: {}'.format(info_response))
-            resp = HttpResponseRedirect(info['response'])
+            resp = HttpResponseRedirect(info_response)
     else:
         if _response_placement == 'body':
             #logger.debug('Response [Body]: {}'.format(info_response))
-            resp = HttpResponse(info['response'], status=200)
+            resp = HttpResponse(info_response, status=200)
         else:  # _response_placement == 'url':
             #logger.debug('Redirect to: {}'.format(info_response))
-            resp = HttpResponseRedirect(info['response'])
+            resp = HttpResponseRedirect(info_response)
 
     for key, value in info['http_headers']:
         # set response headers

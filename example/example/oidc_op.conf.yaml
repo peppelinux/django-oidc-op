@@ -24,8 +24,6 @@ OIDC_KEYS: &oidc_keys
 op:
   client_db:
     class: oidc_op.db_interfaces.OidcClientDatabase
-  # session_db:
-    # class: oidc_op.db_interfaces.OidcSessiondb
   sso_db:
     class: oidc_op.db_interfaces.OidcSSOdb
   server_info:

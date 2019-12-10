@@ -1,4 +1,5 @@
 import datetime
+import json
 import logging
 import re
 import pytz
@@ -85,6 +86,12 @@ class OidcClientDatabase(object):
 
 
 class OidcSessiondb(SessionDB):
+    """
+    Adaptation of a Django model as if it were a dict
+
+    This class acts like a NoSQL storage but stores informations
+    into a pure Django DB model
+    """
 
     def __init__(self, sso_db=None):
         # self._db = self
@@ -141,7 +148,7 @@ class OidcSessiondb(SessionDB):
         # '1c45f0adfde9c93b21114e0d4e8499bfcc4494318115a602077079d7' : json session info
         else:
             entry = self.db.objects.filter(sid=key).first()
-            entry.session_info = value
+            entry.session_info = json.dumps(json.loads(value), indent=2)
             entry.save()
         logger.debug('Session DB - set - {}'.format(entry.copy()))
 
@@ -190,6 +197,12 @@ class OidcSessiondb(SessionDB):
 
 
 class OidcSSOdb(object):
+    """
+    Adaptation of a Django model as if it were a dict
+
+    This class acts like a NoSQL storage but stores informations
+    into a pure Django DB model
+    """
     def __init__(self, db=None):
         self._db = db or OidcSessionSso
 
