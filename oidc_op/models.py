@@ -267,6 +267,11 @@ class OidcSession(TimeStampedModel):
         verbose_name = ('SSO Session')
         verbose_name_plural = ('SSO Sessions')
 
+    def copy(self):
+        return dict(sid = self.sid,
+                    state = self.state,
+                    session_info = self.session_info)
+
     def __str__(self):
         return 'state: {} - sid: {}'.format(self.state, self.sid)
 

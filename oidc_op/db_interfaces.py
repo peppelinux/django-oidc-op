@@ -1,10 +1,15 @@
 import datetime
 import logging
-import urllib
+import re
 import pytz
+import urllib
+
 
 from django.contrib.auth import get_user_model
-from oidcendpoint.session import SessionDB
+from django.db.models import Q
+from oidcendpoint.session import (SessionDB,
+                                  public_id,
+                                  pairwise_id)
 from . models import (OidcRelyingParty,
                       OidcRPResponseType,
                       OidcRPGrantType,
@@ -80,25 +85,83 @@ class OidcClientDatabase(object):
 
 
 class OidcSessiondb(SessionDB):
-    def __init__(self, db=None):
-        self._db = db or OidcSession
+
+    def __init__(self, sso_db=None):
+        # self._db = self
+        self.db = OidcSession
+        self.sso_db = OidcSSOdb
+
+    def _get_q(self, item):
+        return Q(state=item)|Q(sid=item)
 
     def _get_or_create(self, sid):
-        ses = self._db.objects.filter(sid=sid).first()
+        ses = self.db.objects.filter(sid=sid).first()
         if not ses:
-            ses = self._db.objects.create(sid=sid)
+            ses = self.db.objects.create(sid=sid)
         return ses
 
-    def __getitem__(self, item):
-        _info = self._db.get(item)
+    def __contains__(self, key):
+        q = _get_q(key)
+        if self.db.objects.filter(q).first():
+            return 1
 
-        if _info is None:
+    def __iter__(self):
+        self.elems = self.keys()
+        for value in (self.elems):
+            yield value
+
+    def get(self, key, excp=None):
+        q = self._get_q(key)
+        elem = self.db.objects.filter(q).first()
+        if not elem:
+            return excp
+        if elem.sid == key:
+            return elem.session_info
+        elif elem.state == key:
+            return elem.sid
+
+    def _extract_state(self, key):
+        state_reg = '__state__(?P<state>[a-zA-Z0-9]*)'
+        match = re.match(state_reg, key)
+        if match:
+            return match.groupdict()
+
+
+    def set(self, key, value):
+        state_dict = self._extract_state(key)
+        # something:
+        # '__state__bC1KBCEVrxbJTQeHW1SGaS233TewkLBn' : '1c45f0adfde9c93b21114e0d4e8499bfcc4494318115a602077079d7'
+        if state_dict:
+            entry = self.db.objects.filter(**state_dict).first()
+            if not entry:
+                entry = self.db.objects.create(**state_dict)
+            entry.sid = value
+            entry.save()
+        # otherwise:
+        # '1c45f0adfde9c93b21114e0d4e8499bfcc4494318115a602077079d7' : json session info
+        else:
+            entry = self.db.objects.filter(sid=key).first()
+            entry.session_info = value
+            entry.save()
+        logger.debug('Session DB - set - {}'.format(entry.copy()))
+
+
+    def delete(self, key):
+        state_dict = self._extract_state(key)
+        if state_dict:
+            self.db.objects.filter(**state_dict).delete()
+        else:
+            self.db.objects.filter(sid=key).delete()
+
+    def __getitem__(self, item):
+        q = _get_q(item)
+        _info = self.db.objects.filter(q).first()
+        if not _info:
             sid = self.handler.sid(item)
-            _info = self._db.get(sid)
+            _info = self.db.objectsget(sid)
 
         if _info:
-            _si = SessionInfo().from_json(_info)
-            return _si
+            return SessionInfo().from_json(_info.session_info)
         else:
             return None
 
@@ -113,47 +176,22 @@ class OidcSessiondb(SessionDB):
         ses.save()
 
     def __delitem__(self, key):
-        ses = self._db.objects.filter(sid=key)
+        q = _get_q(key)
+        ses = self.db.objects.filter(q)
         if ses:
             ses.delete()
-        # self._db.delete(key)
 
     def keys(self):
-        return self._db.keys()
+        elems = self.db.objects.all()
+        states = elems.values_list('state')
+        sids = elems.values_list('sid')
+        return [el[0] for el in states+sids]
+
 
 
 class OidcSSOdb(object):
     def __init__(self, db=None):
         self._db = db or OidcSessionSso
-
-    # def set(self, label, key, value):
-        # logger.debug("SSODb set {} - {}: {}".format(label, key, value))
-        # _key = KEY_FORMAT.format(label, key)
-        # _values = self._db.get(_key)
-        # if not _values:
-            # self._db.set(_key, [value])
-        # else:
-            # _values.append(value)
-            # self._db.set(_key, _values)
-
-    # def get(self, label, key):
-        # _key = KEY_FORMAT.format(label, key)
-        # value = self._db.get(_key)
-        # logger.debug("SSODb get {} - {}: {}".format(label, key, value))
-        # return value
-
-    # def delete(self, label, key):
-        # _key = KEY_FORMAT.format(label, key)
-        # return self._db.delete(_key)
-
-    # def remove(self, label, key, value):
-        # _key = KEY_FORMAT.format(label, key)
-        # _values = self._db.get(_key)
-        # if _values:
-            # _values.remove(value)
-        # else:
-            # self._db.set(_key, _values)
-            # self._db.delete(_key)
 
     def _get_or_create(self, sid):
         sso = self._db.objects.filter(sid=sid).first()
