@@ -85,7 +85,7 @@ class OidcClientDatabase(object):
         return self.__dict__
 
 
-class OidcSessiondb(SessionDB):
+class OidcSessionDb(SessionDB):
     """
     Adaptation of a Django model as if it were a dict
 
@@ -99,12 +99,13 @@ class OidcSessiondb(SessionDB):
         self.sso_db = OidcSSOdb
 
     def _get_q(self, item):
-        return Q(state=item)|Q(sid=item)
+        return Q(state=item)|Q(sso__sid=item)
 
     def _get_or_create(self, sid):
-        ses = self.db.objects.filter(sid=sid).first()
+        ses = self.db.objects.filter(sso__sid=sid).first()
         if not ses:
-            ses = self.db.objects.create(sid=sid)
+            sso = self.sso_db.objects.get(sso__sid=sid)
+            ses = self.db.objects.create(sso=sso)
         return ses
 
     def __contains__(self, key):
@@ -122,10 +123,10 @@ class OidcSessiondb(SessionDB):
         elem = self.db.objects.filter(q).first()
         if not elem:
             return excp
-        if elem.sid == key:
+        if elem.sso.sid == key:
             return elem.session_info
         elif elem.state == key:
-            return elem.sid
+            return elem.sso.sid
 
     def _extract_state(self, key):
         state_reg = '__state__(?P<state>[a-zA-Z0-9]*)'
@@ -136,19 +137,26 @@ class OidcSessiondb(SessionDB):
 
     def set(self, key, value):
         state_dict = self._extract_state(key)
+
         # something:
         # '__state__bC1KBCEVrxbJTQeHW1SGaS233TewkLBn' : '1c45f0adfde9c93b21114e0d4e8499bfcc4494318115a602077079d7'
         if state_dict:
             entry = self.db.objects.filter(**state_dict).first()
             if not entry:
+                sso = OidcSessionSso.objects.get_or_create(sid=value)
+                state_dict['sso'] = sso[0]
                 entry = self.db.objects.create(**state_dict)
-            entry.sid = value
-            entry.save()
         # otherwise:
         # '1c45f0adfde9c93b21114e0d4e8499bfcc4494318115a602077079d7' : json session info
         else:
-            entry = self.db.objects.filter(sid=key).first()
-            entry.session_info = json.dumps(json.loads(value), indent=2)
+            entry = self.db.objects.filter(sso__sid=key).first()
+            info_dict = json.loads(value)
+            entry.session_info = json.dumps(info_dict, indent=2)
+            authn_event = info_dict.get('authn_event')
+            valid_until = authn_event.get('valid_until')
+            if valid_until:
+                dt = datetime.datetime.fromtimestamp(valid_until)
+                entry.valid_until = pytz.utc.localize(dt)
             entry.save()
         logger.debug('Session DB - set - {}'.format(entry.copy()))
 
@@ -158,19 +166,17 @@ class OidcSessiondb(SessionDB):
         if state_dict:
             self.db.objects.filter(**state_dict).delete()
         else:
-            self.db.objects.filter(sid=key).delete()
+            self.db.objects.filter(sso__sid=key).delete()
 
     def __getitem__(self, item):
         q = _get_q(item)
         _info = self.db.objects.filter(q).first()
         if not _info:
             sid = self.handler.sid(item)
-            _info = self.db.objectsget(sid)
+            _info = self.db.objects.get(sso__sid=sid)
 
         if _info:
             return SessionInfo().from_json(_info.session_info)
-        else:
-            return None
 
     def __setitem__(self, sid, instance):
         try:
@@ -191,7 +197,7 @@ class OidcSessiondb(SessionDB):
     def keys(self):
         elems = self.db.objects.all()
         states = elems.values_list('state')
-        sids = elems.values_list('sid')
+        sids = elems.values_list('sso__sid')
         return [el[0] for el in states+sids]
 
 

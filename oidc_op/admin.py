@@ -123,8 +123,9 @@ class SessionAdmin(admin.ModelAdmin):
 @admin.register(OidcSession)
 class OidcSessionAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified')
-    list_display = ('state', 'sid', 'created')
-    search_fields = ('state', 'sid')
+    list_display = ('state', 'sso', 'created')
+    search_fields = ('state', 'sso__user__username')
+    readonly_fields = ('sso',)
 
     class Media:
         js = ('js/textarea_autosize.js',)

@@ -25,7 +25,6 @@ OIDC_GRANT_TYPES = OIDC_OP_CONFIG.conf['op']\
 TIMESTAMP_FIELDS = ['client_id_issued_at', 'client_secret_expires_at']
 
 
-
 class TimeStampedModel(models.Model):
     """
     An abstract base class model that provides self-updating
@@ -52,7 +51,8 @@ class OidcRelyingParty(TimeStampedModel):
     client_id = models.CharField(max_length=255,
                                  blank=False, null=False, unique=True)
     client_salt = models.CharField(max_length=255, blank=True, null=True)
-    registration_access_token = models.CharField(max_length=255, blank=True,
+    registration_access_token = models.CharField(max_length=255,
+                                                 blank=True,
                                                  null=True)
     registration_client_uri = models.URLField(max_length=255,
                                               blank=True, null=True)
@@ -65,12 +65,13 @@ class OidcRelyingParty(TimeStampedModel):
     client_secret_expires_at = models.DateTimeField(blank=True, null=True,
                                 help_text=('REQUIRED if client_secret is issued'))
     application_type = models.CharField(max_length=255, blank=True,
-                                        null=True)
+                                        null=True, default='web')
     token_endpoint_auth_method = models.CharField(choices=[(i, i)
                                                            for i in
                                                            OIDC_TOKEN_AUTHN_METHODS],
                                                   max_length=33,
-                                                  blank=True, null=True)
+                                                  blank=True, null=True,
+                                                  default="client_secret_basic")
     jwks_uri = models.URLField(max_length=255, blank=True, null=True)
     post_logout_redirect_uris = models.CharField(max_length=254,
                                                  blank=True, null=True)
@@ -79,15 +80,14 @@ class OidcRelyingParty(TimeStampedModel):
     is_active = models.BooleanField(('active'), default=True)
     last_seen = models.DateTimeField(blank=True, null=True)
 
-
     @property
     def contacts(self):
         return [elem.contact
-                for elem in self.oidcrpcontact_set.filter(client = self)]
+                for elem in self.oidcrpcontact_set.filter(client=self)]
 
     @contacts.setter
     def contacts(self, values):
-        old = self.oidcrpcontact_set.filter(client = self)
+        old = self.oidcrpcontact_set.filter(client=self)
         old.delete()
         if isinstance(values, str):
             value = [values]
@@ -98,7 +98,8 @@ class OidcRelyingParty(TimeStampedModel):
     @property
     def grant_types(self):
         return [elem.grant_type
-                for elem in self.oidcrpgranttype_set.filter(client = self)]
+                for elem in
+                self.oidcrpgranttype_set.filter(client=self)]
 
     @grant_types.setter
     def grant_types(self, values):
@@ -113,7 +114,8 @@ class OidcRelyingParty(TimeStampedModel):
     @property
     def response_types(self):
         return [elem.response_type
-                for elem in self.oidcrpresponsetype_set.filter(client = self)]
+                for elem in
+                self.oidcrpresponsetype_set.filter(client=self)]
 
     @response_types.setter
     def response_types(self, values):
@@ -128,8 +130,8 @@ class OidcRelyingParty(TimeStampedModel):
     @property
     def post_logout_redirect_uris(self):
         l = []
-        for elem in self.oidcrpredirecturi_set.filter(client = self,
-                                                      type='post_logout_redirect_uris'):
+        for elem in self.oidcrpredirecturi_set.\
+          filter(client = self, type='post_logout_redirect_uris'):
             l.append((elem.uri, json.loads(elem.values)))
         return l
 
@@ -142,8 +144,7 @@ class OidcRelyingParty(TimeStampedModel):
             self.oidcrpredirecturi_set.create(client=self,
                                               uri=value[0],
                                               values=args,
-                                              type='post_logout_redirect_uris'
-                                              )
+                                              type='post_logout_redirect_uris')
 
     @property
     def redirect_uris(self):
@@ -205,8 +206,10 @@ class OidcRPResponseType(TimeStampedModel):
 
 
 class OidcRPGrantType(TimeStampedModel):
-    client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE)
-    grant_type = models.CharField(choices=[(i,i) for i in OIDC_GRANT_TYPES],
+    client = models.ForeignKey(OidcRelyingParty,
+                               on_delete=models.CASCADE)
+    grant_type = models.CharField(choices=[(i,i)
+                                           for i in OIDC_GRANT_TYPES],
                                   max_length=60)
     class Meta:
         verbose_name = ('Relying Party GrantType')
@@ -218,7 +221,8 @@ class OidcRPGrantType(TimeStampedModel):
 
 
 class OidcRPContact(TimeStampedModel):
-    client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE)
+    client = models.ForeignKey(OidcRelyingParty,
+                               on_delete=models.CASCADE)
     contact = models.CharField(max_length=254,
                                blank=True, null=True,)
     class Meta:
@@ -231,11 +235,12 @@ class OidcRPContact(TimeStampedModel):
 
 
 class OidcRPRedirectUri(TimeStampedModel):
-    client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE)
+    client = models.ForeignKey(OidcRelyingParty,
+                               on_delete=models.CASCADE)
     uri = models.CharField(max_length=254,
-                           blank=True, null=True,)
+                           blank=True, null=True)
     values = models.CharField(max_length=254,
-                           blank=True, null=True,)
+                           blank=True, null=True)
     type = models.CharField(choices=(('redirect_uris', 'redirect_uris'),
                                      ('post_logout_redirect_uris',
                                       'post_logout_redirect_uris')),
@@ -248,29 +253,6 @@ class OidcRPRedirectUri(TimeStampedModel):
         return '{} [{}] {}'.format(self.client,
                                    self.uri,
                                    self.type)
-
-
-class OidcSession(TimeStampedModel):
-    """
-    Store the session information in this model
-    """
-    state = models.CharField(max_length=255,
-                             blank=False, null=False)
-    sid = models.CharField(max_length=255,
-                           blank=False, null=False, unique=True)
-    session_info = models.TextField(blank=True, null=True)
-
-    class Meta:
-        verbose_name = ('SSO Session')
-        verbose_name_plural = ('SSO Sessions')
-
-    def copy(self):
-        return dict(sid = self.sid,
-                    state = self.state,
-                    session_info = self.session_info)
-
-    def __str__(self):
-        return 'state: {} - sid: {}'.format(self.state, self.sid)
 
 
 class OidcSessionSso(TimeStampedModel):
@@ -299,6 +281,31 @@ class OidcSessionSso(TimeStampedModel):
         verbose_name_plural = ('SSO Sessions SSO')
 
     def __str__(self):
-        return '{} - sid: {} - sub: {}'.format(self.user.username,
-                                               self.sid,
-                                               self.sub)
+        return '{} - sub: {}'.format(self.user.username if self.user else '',
+                                     #self.sid,
+                                     self.sub)
+
+
+class OidcSession(TimeStampedModel):
+    """
+    Store the session information in this model
+    """
+    state = models.CharField(max_length=255,
+                             blank=False, null=False)
+    sso = models.ForeignKey(OidcSessionSso, on_delete=models.CASCADE,
+                            blank=True, null=True)
+    session_info = models.TextField(blank=True, null=True)
+    valid_until = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = ('SSO Session')
+        verbose_name_plural = ('SSO Sessions')
+
+    def copy(self):
+        return dict(sid = self.sso.sid,
+                    state = self.state,
+                    session_info = self.session_info)
+
+    def __str__(self):
+        return 'state: {} - sid: {}'.format(self.state,
+                                            self.sso.sid if self.sso else '')
