@@ -120,6 +120,9 @@ See `oidc_op.models` and `oidc_op.admin`, an UI was built to configure new RP vi
 ![Alt text](images/rp.png)
 
 
+#### Session management and token preview
+![Alt text](images/ses1.png)
+
 ## OIDC endpoint url prefix
 Can be configured in `urls.py` and also in oidc_op `conf.yaml`.
 
