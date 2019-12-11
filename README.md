@@ -35,7 +35,7 @@ pip install -r requirements.txt
 ./manage.py createsuperuser
 ./manage.py collectstatic
 
-# debug server
+## debug server
 gunicorn example.wsgi -b0.0.0.0:8000 --keyfile=./data/oidc_op/certs/key.pem --certfile=./data/oidc_op/certs/cert.pem --reload --timeout 3600 --capture-output --enable-stdio-inheritance
 ````
 
@@ -69,7 +69,7 @@ A JWK creation example would be:
 jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
 ````
 
-# Django specific implementation
+## Django specific implementation
 
 This project rely interely on behaviour and features provided by oidcendpoint, to get an exaustive integration in Django it
 adopt the following customizations.
@@ -92,7 +92,7 @@ op:
     class: oidc_op.db_interfaces.OidcSessionDb
   sso_db:
     class: oidc_op.db_interfaces.OidcSSOdb
-```` 
+````
 
 #### UserInfo endpoint
 
