@@ -2,10 +2,11 @@ from django import forms
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.sessions.models import Session
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from . models import *
-
+from . utils import decode_token
 
 class OidcRPContactModelForm(forms.ModelForm):
     class Meta:
@@ -125,15 +126,59 @@ class OidcSessionAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified')
     list_display = ('state', 'sso', 'created')
     search_fields = ('state', 'sso__user__username')
-    readonly_fields = ('sso',)
+    readonly_fields = ('sso', 'state', 'valid_until',
+                       'access_token_preview', 'id_token_preview')
+
+    fieldsets = (
+             (None, {
+                        'fields' : (
+                                      ('sso', ),
+                                      ('state',),
+                                      ('valid_until',),
+                                    )
+                       },
+             ),
+             ('Session info',
+                                {
+                                'classes': ('collapse',),
+                                'fields' : ('session_info',),
+                                }
+             ),
+
+             ('Token previews',
+                                {
+                                'classes': ('collapse',),
+                                'fields' : (
+                                            ('access_token_preview'),
+                                            ('id_token_preview'),
+                                            )
+
+                                },
+             ),
+        )
+
+
+    def access_token_preview(self, obj):
+        msg = decode_token(obj.session_info, 'access_token')
+        dumps = json.dumps(msg.to_dict(), indent=2)
+        return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+    access_token_preview.short_description = 'Access Token preview'
+
+    def id_token_preview(self, obj):
+        msg = decode_token(obj.session_info, 'id_token')
+        dumps = json.dumps(msg.to_dict(), indent=2)
+        return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+    id_token_preview.short_description = 'ID Token preview'
 
     class Media:
         js = ('js/textarea_autosize.js',)
         # css = {'default': ('css/textarea_large.css',)}
 
+
 @admin.register(OidcSessionSso)
 class OidcSessionSsoAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified')
     list_display = ('user', 'sid',
-                    'sub', 'sub_clean', 'created')
+                    'sub', 'created')
     search_fields = ('user',)
+    readonly_fields = ('sid', 'sub', 'user')

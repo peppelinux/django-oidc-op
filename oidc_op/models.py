@@ -273,17 +273,16 @@ class OidcSessionSso(TimeStampedModel):
                            blank=False, null=False, unique=True)
     sub = models.CharField(max_length=255,
                            blank=True, null=True)
-    sub_clean = models.CharField(max_length=255,
-                                 blank=True, null=True)
+    # sub_clean = models.CharField(max_length=255,
+                                 # blank=True, null=True)
 
     class Meta:
         verbose_name = ('SSO Session SSO')
         verbose_name_plural = ('SSO Sessions SSO')
 
     def __str__(self):
-        return '{} - sub: {}'.format(self.user.username if self.user else '',
-                                     #self.sid,
-                                     self.sub)
+        return '{} - sid: {}'.format(self.user.username if self.user else '',
+                                     self.sid)
 
 
 class OidcSession(TimeStampedModel):

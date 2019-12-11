@@ -1,5 +1,11 @@
 import datetime
+import json
 import pytz
+
+from oidcmsg.message import Message
+from cryptojwt.key_jar import KeyJar
+
+from . views import oidcendpoint_app
 
 
 def timestamp2dt(value):
@@ -7,3 +13,18 @@ def timestamp2dt(value):
 
 def dt2timestamp(value):
     ts = pytz.utc.localize(datetime.datetime.fromtimestamp(value))
+
+def decode_token(txt, attr_name='access_token'):
+    issuer = oidcendpoint_app.srv_config.conf['op']['server_info']['issuer']
+    jwks_path = oidcendpoint_app.srv_config.conf['OIDC_KEYS']['private_path']
+    jwks = json.loads(open(jwks_path).read())
+
+    key_jar = KeyJar()
+    key_jar.import_jwks(jwks, issuer=issuer)
+
+    verify_sign = 0
+    jwt = json.loads(txt)
+    msg = Message().from_jwt(jwt.get(attr_name, ''),
+                             keyjar=key_jar,
+                             verify=verify_sign)
+    return msg
