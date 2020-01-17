@@ -44,6 +44,10 @@ op:
         - implicit
         - urn:ietf:params:oauth:grant-type:jwt-bearer
         - refresh_token
+      service_documentation: https://that.url.org/service_documentation
+      ui_locales_supported: [en-US, it-IT]
+      op_policy_uri: https://that.url.org/op_policy_uri
+      op_tos_uri: https://that.url.org/op_tos_uri
     id_token:
       class: oidcendpoint.id_token.IDToken
       kwargs:

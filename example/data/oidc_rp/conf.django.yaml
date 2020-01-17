@@ -77,9 +77,9 @@ CLIENTS:
     client_preferences: *prefs
 
     # if you create a client through ADMIN UI ...
-    client_id: z9wUOttmF3qc
-    client_secret: 01a7c8f6b9aa16985c3f57b50082cc3211c58acf639caa590f6ea5fd
-    token_endpoint_auth_method: client_secret_basic
+    # client_id: z9wUOttmF3qc
+    # client_secret: 01a7c8f6b9aa16985c3f57b50082cc3211c58acf639caa590f6ea5fd
+    # token_endpoint_auth_method: client_secret_basic
 
     issuer: https://127.0.0.1:8000/
     jwks_uri: https://127.0.0.1:8099/static/jwks.json
