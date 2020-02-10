@@ -154,6 +154,7 @@ op:
           path: token
           class: oidcendpoint.oidc.token.AccessToken
           kwargs:
+            allow_refresh: False
             client_authn_method:
               - client_secret_post
               - client_secret_basic
