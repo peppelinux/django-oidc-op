@@ -1,6 +1,7 @@
 # TODO: the following four should be handled in settings.py
 session_cookie_name: django_oidc_op
 base_url: &base_url 'https://127.0.0.1:8000'
+#base_data_path: 'data/oidc_op/'
 
 key_def: &key_def
   -
@@ -30,7 +31,8 @@ op:
     class: oidc_op.db_interfaces.OidcSSOdb
   server_info:
     issuer: *base_url
-    verify_ssl: False
+    http_params:
+      verify_ssl: False
     session_key:
       filename: data/oidc_op/private/session_jwks.json
       type: OCT
@@ -179,7 +181,7 @@ op:
               frontchannel_logout_session_supported: True
               backchannel_logout_supported: True
               backchannel_logout_session_supported: True
-              check_session_iframe: https://127.0.0.1:8000/check_session_iframe
+              check_session_iframe: 'check_session_iframe'
     userinfo:
       class: oidc_op.users.UserInfo
       kwargs:
@@ -222,8 +224,8 @@ op:
       kwargs:
         # these should be updated...
         sign_jwk:
-          filename: data/oidc_op/private/cookie_sign_jwk.json
-          sign_alg: 'SHA256'
+          filename: 'data/oidc_op/private/cookie_sign_jwk.json'
+          #sign_alg: 'SHA256'
           type: OCT
           kid: cookie_sign_key_id
         enc_jwk:
@@ -274,3 +276,13 @@ op:
             - sub
             - iss
             - eduperson_scoped_affiliation
+
+# not used with gunicorn or any other production server ...
+# webserver:
+  # cert: 'certs/that.cert'
+  # key: 'certs/that.key'
+  # ca_bundle: null
+  # verify_user: false
+  # port: '{port}'
+  # domain: 0.0.0.0
+  # debug: true

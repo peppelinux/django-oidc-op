@@ -35,14 +35,14 @@ def init_oidc_op_endpoints(app):
 
     # make sure I have a set of keys under my 'real' name
     _kj.import_jwks_as_json(_kj.export_jwks_as_json(True, ''), iss)
-    _kj.verify_ssl = _config['server_info'].get('verify_ssl', False)
+    _kj.verify_ssl = _config['server_info'].get('http_params', {}).get('verify_ssl', False)
 
     # set session, client and ssodb
     client_db = None
     if _config.get("client_db"):
         cdb_kwargs = _config["client_db"].get('kwargs', {})
         client_db = importer(_config["client_db"]['class'])(**cdb_kwargs)
-        
+
     sso_db = None # OidcSSOdb()
     if _config.get("sso_db"):
         ssodb_kwargs = _config["sso_db"].get('kwargs', {})
