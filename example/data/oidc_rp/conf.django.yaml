@@ -23,7 +23,7 @@ logging:
       format: '%(asctime)s %(name)s %(levelname)s %(message)s'
 
 port: 8099
-base_url: "https://127.0.0.1:{port}"
+base_url: "https://127.0.0.1:8099"
 
 # If BASE is https these has to be specified
 webserver:
