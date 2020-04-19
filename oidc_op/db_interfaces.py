@@ -81,6 +81,9 @@ class OidcClientDatabase(object):
 
         client.save()
 
+    def keys(self):
+        return (i.client_id for i in self.model.objects.filter(is_active=True))
+    
     def __str__(self):
         return self.__dict__
 
