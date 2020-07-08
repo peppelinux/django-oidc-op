@@ -11,11 +11,12 @@ from cryptojwt.key_jar import init_key_jar
 from oidcrp import RPHandler
 from oidcrp.util import load_yaml_config
 
+
 def init_oidc_rp_handler(app):
-    rp_keys_conf = app.config.get('RP_KEYS') or \
-                   app.config.get('OIDC_KEYS')
+    rp_keys_conf = app.config.get('rp_keys')
     if rp_keys_conf:
         _kj = init_key_jar(**rp_keys_conf)
+
         _path = rp_keys_conf['public_path']
         # replaces ./ and / from the begin of the string
         _path = re.sub('^(.)/', '', _path)
@@ -23,15 +24,15 @@ def init_oidc_rp_handler(app):
         _kj = KeyJar()
         _path = ''
 
-    verify_ssl = app.config.get('VERIFY_SSL')
+    verify_ssl = app.config.get('httpc_params')['verify_ssl']
     _kj.verify_ssl = verify_ssl
-    hash_seed = app.config.get('HASH_SEED', "BabyHoldOn")
+    hash_seed = app.config.get('hash_seed', "BabyHoldOn")
 
-    rph = RPHandler(base_url=app.config.get('BASEURL'),
+    rph = RPHandler(base_url=app.config.get('base_url'),
                     hash_seed=hash_seed,
                     keyjar=_kj, jwks_path=_path,
-                    client_configs=app.config.get('CLIENTS'),
-                    services=app.config.get('SERVICES'),
+                    client_configs=app.config.get('clients'),
+                    services=app.config.get('services'),
                     verify_ssl=verify_ssl)
     return rph
 
@@ -133,9 +134,12 @@ if __name__ == '__main__':
     config_file = args.conf
     rph = get_rph(config_file)
 
+    rph.verify_ssl = rph.httpc_params['verify']
     if not rph.verify_ssl:
         urllib3.disable_warnings()
 
     # select the OP you want to, example: "django_oidc_op"
     issuer_id = args.iss
     run_rp_session(rph, issuer_id, args.u, args.p)
+
+# python3 snippets/rp_handler.py -conf example/data/oidc_rp/conf.django.yaml -u user -p pass -iss django_oidc_op

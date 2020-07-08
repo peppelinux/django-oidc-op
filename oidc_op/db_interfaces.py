@@ -53,7 +53,13 @@ class OidcClientDatabase(object):
             raise KeyError
         return value
 
+    def keys(self):
+        return self.model.objects.values_list('client_id', flat=True)
+
     def __setitem__(self, key, value):
+        return self.set(self, key, value)
+
+    def set(self, key, value):
         dv = value.copy()
 
         for k,v in dv.items():

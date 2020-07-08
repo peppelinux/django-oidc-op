@@ -8,18 +8,22 @@ Oidcendpoint supports the following standards and drafts:
 
 - [OpenID Connect Core 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-core-1_0.html)
 - [OpenID Connect Session Management 1.0 - draft 28](https://openid.net/specs/openid-connect-session-1_0.html)
-- [oAuth2 Token introspection](https://tools.ietf.org/html/rfc7662)
+- [OAuth2 Token introspection](https://tools.ietf.org/html/rfc7662)
 
-It also supports the followings features, with the help of the `add_ons` modules.
+It also supports the followings `add_ons` modules.
 
 - Custom scopes, that extends [OIDC standard ScopeClaims](https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims)
 - PKCE, [Proof Key for Code Exchange by OAuth Public Clients](https://tools.ietf.org/html/rfc7636)
 
 ## Status
 
-- Relying-Parties Admin UI completed, unit tests included
-- Session management completed
-- Cookies: work in progress, probably will not be implemented.
+The development status of this project is *experimental*, something was broken from the latest oidcendpoint releases.
+The following features, regarding a pure django modeladmin integration and their
+status, worked until oidcendpoint was at its v0.13.0 release.
+
+- Relying-Parties Admin UI completed, unit tests included (works v1.0.1)
+- Session and SSO management completed (TODO with a full abstorage integration)
+- KeyJAR and default storage (issuer, keybundles) (TODO with a full abstorage integration)
 
 ## Run the example demo
 
@@ -40,20 +44,16 @@ gunicorn example.wsgi -b0.0.0.0:8000 --keyfile=./data/oidc_op/certs/key.pem --ce
 ````
 
 You can use [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP) as follow:
-
-
 ```
 cd JWTConnect-Python-OidcRP
 RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/example/data/oidc_rp/conf.django.yaml
 ```
-
 
 ## Configure OIDC endpoint
 
 #### Django settings.py parameters
 
 `OIDCENDPOINT_CONFIG`: The path containing the oidc-op configuration file.
-
 `OIDC_OP_AUTHN_SALT_SIZE`: Salt size in byte, default: 4 (Integer).
 
 #### JWKs
@@ -77,24 +77,8 @@ This project rely interely on behaviour and features provided by oidcendpoint, t
 adopt the following customizations.
 
 #### DataStore management
-Oidcendpoint have three storage:
-
-- client_db
-- session_db
-- sso_db
-
-You can use oidcendpoint's standard InMemory Storage or Django models.
-In the example configuration is configured these latter, commenting out the following definitions you will rely on oidcendpoint standard storages.
-
-````
-op:
-  client_db:
-    class: oidc_op.db_interfaces.OidcClientDatabase
-  session_db:
-    class: oidc_op.db_interfaces.OidcSessionDb
-  sso_db:
-    class: oidc_op.db_interfaces.OidcSSOdb
-````
+Oidcendpoint have some data persistence:
+You can use oidcendpoint's standard `oidcmsg.storage.abfile.AbstractFileSystem` or Django models (Work in Progress).
 
 #### UserInfo endpoint
 

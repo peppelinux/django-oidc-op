@@ -23,15 +23,15 @@ OIDC_KEYS: &oidc_keys
     'uri_path': 'static/jwks.json'
 
 op:
-  client_db:
-    class: oidc_op.db_interfaces.OidcClientDatabase
-  session_db:
-    class: oidc_op.db_interfaces.OidcSessionDb
-  sso_db:
-    class: oidc_op.db_interfaces.OidcSSOdb
+  # client_db:
+    # class: oidc_op.db_interfaces.OidcClientDatabase
+  # session_db:
+    # class: oidc_op.db_interfaces.OidcSessionDb
+  # sso_db:
+    # class: oidc_op.db_interfaces.OidcSSOdb
   server_info:
     issuer: *base_url
-    http_params:
+    httpc_params:
       verify_ssl: False
     session_key:
       filename: data/oidc_op/private/session_jwks.json
@@ -90,7 +90,7 @@ op:
           - *base_url
       refresh:
         lifetime: 86400
-    jwks:
+    keys:
       *oidc_keys
 
     template_dir: oidc_op/templates
@@ -279,12 +279,48 @@ op:
             - iss
             - eduperson_scoped_affiliation
 
+    db_conf:
+      abstract_storage_cls: oidcmsg.storage.extension.LabeledAbstractStorage
+      keyjar:
+        handler: oidcmsg.storage.abfile.AbstractFileSystem
+        fdir: storage/keyjar
+        key_conv: oidcmsg.storage.converter.QPKey
+        value_conv: cryptojwt.serialize.item.KeyIssuer
+        label: 'keyjar'
+      default:
+        handler: oidcmsg.storage.abfile.AbstractFileSystem
+        fdir: storage/default
+        key_conv: oidcmsg.storage.converter.QPKey
+        value_conv: oidcmsg.storage.converter.JSON
+      client:
+        handler: oidc_op.db_interfaces.OidcClientDatabase
+      state:
+        handler: oidcmsg.storage.abfile.AbstractFileSystem
+        fdir: storage/state
+        key_conv: oidcmsg.storage.converter.QPKey
+        value_conv: oidcmsg.storage.converter.JSON
+      jti:
+        handler: oidcmsg.storage.abfile.AbstractFileSystem
+        fdir: storage/jti
+        key_conv: oidcmsg.storage.converter.QPKey
+        value_conv: oidcmsg.storage.converter.JSON
+      session:
+        handler: oidcmsg.storage.abfile.AbstractFileSystem
+        fdir: storage/session
+        key_conv: oidcmsg.storage.converter.QPKey
+        value_conv: oidcmsg.storage.converter.JSON
+      sso:
+        handler: oidcmsg.storage.abfile.AbstractFileSystem
+        fdir: storage/sso
+        key_conv: oidcmsg.storage.converter.QPKey
+        value_conv: oidcmsg.storage.converter.JSON
+
 # not used with gunicorn or any other production server ...
 # webserver:
-  # cert: 'certs/that.cert'
-  # key: 'certs/that.key'
+  # server_cert: 'certs/89296913_127.0.0.1.cert'
+  # server_key: 'certs/89296913_127.0.0.1.key'
   # ca_bundle: null
   # verify_user: false
-  # port: '{port}'
-  # domain: 0.0.0.0
+  # port: *port
+  # domain: *domain
   # debug: true
