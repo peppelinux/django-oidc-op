@@ -1,10 +1,14 @@
 Django>=3.0,<4.0
-oidcop
 gunicorn
 
+#oidcendpoint==0.13.0
+#git+https://github.com/peppelinux/oidc-op
+#oidcrp==0.6.6
+
+oidcop
 git+https://github.com/IdentityPython/JWTConnect-Python-CryptoJWT
 git+https://github.com/IdentityPython/JWTConnect-Python-OidcMsg
 git+https://github.com/IdentityPython/JWTConnect-Python-OidcService
-git+https://github.com/IdentityPython/JWTConnect-Python-OidcMsg
 git+https://github.com/IdentityPython/oidcendpoint.git
 git+https://github.com/IdentityPython/JWTConnect-Python-OidcRP
+

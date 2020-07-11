@@ -90,7 +90,7 @@ op:
           - *base_url
       refresh:
         lifetime: 86400
-    jwks:
+    keys:
       *oidc_keys
 
     template_dir: oidc_op/templates

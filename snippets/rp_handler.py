@@ -133,8 +133,8 @@ if __name__ == '__main__':
     config_file = args.conf
     rph = get_rph(config_file)
 
-    if not rph.verify_ssl:
-        urllib3.disable_warnings()
+    #if not rph.verify_ssl:
+    #    urllib3.disable_warnings()
 
     # select the OP you want to, example: "django_oidc_op"
     issuer_id = args.iss

@@ -28,14 +28,14 @@ def init_oidc_op_endpoints(app):
     _config = app.srv_config.op
     _server_info_config = _config['server_info']
 
-    _kj_args = {k:v for k,v in _server_info_config['jwks'].items()
+    _kj_args = {k:v for k,v in _server_info_config['keys'].items()
                 if k != 'uri_path'}
     _kj = init_key_jar(**_kj_args)
     iss = _server_info_config['issuer']
 
     # make sure I have a set of keys under my 'real' name
     _kj.import_jwks_as_json(_kj.export_jwks_as_json(True, ''), iss)
-    _kj.verify_ssl = _config['server_info'].get('http_params', {}).get('verify_ssl', False)
+    _kj.verify_ssl = _config['server_info'].get('httpc_params', {}).get('verify_ssl', False)
 
     # set session, client and ssodb
     client_db = None
