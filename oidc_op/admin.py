@@ -8,6 +8,7 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from . models import *
 from . utils import decode_token
 
+
 class OidcRPContactModelForm(forms.ModelForm):
     class Meta:
         model = OidcRPContact
@@ -178,7 +179,7 @@ class OidcSessionAdmin(admin.ModelAdmin):
 @admin.register(OidcSessionSso)
 class OidcSessionSsoAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified')
-    list_display = ('user', 'sid',
+    list_display = ('user',
                     'sub', 'created')
     search_fields = ('user',)
-    readonly_fields = ('sid', 'sub', 'user')
+    readonly_fields = ('sub', 'user')

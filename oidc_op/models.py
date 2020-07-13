@@ -24,6 +24,26 @@ OIDC_GRANT_TYPES = OIDC_OP_CONFIG.conf['op']\
 
 TIMESTAMP_FIELDS = ['client_id_issued_at', 'client_secret_expires_at']
 
+# configured in oidcendpoint
+OIDC_OP_STATE_VALUE_LEN = 32
+OIDC_OP_SID_VALUE_LEN = 56
+OIDC_OP_SUB_VALUE_LEN = 64
+
+
+# TODO: these test should be improved once oidcendpoint will have specialized objects as values instead of simple strings
+def is_state(value):
+    return len(value) == OIDC_OP_STATE_VALUE_LEN
+
+def is_sid(value):
+    return len(value) == OIDC_OP_SID_VALUE_LEN
+
+def is_sub(value):
+    return len(value) == OIDC_OP_SUB_VALUE_LEN
+
+def is_code(value):
+    # Z0FBQUFBQmZEc1Z5Z1dMRVptX1J6d3AwTDVMdkVtbU1Rcm41VkVVbm03N3pwY21qYlpXc1M0ME1TU25fVlZMdm9MVnFKSW1zb3E4TW1aS0MzeVk4OWF2VjYtZ3FmZ0FXQkluUnVuSEJyWFhtcDFhOEdpTnFiVTdJME1qTFZoWWM2X3lQaGY0VGI0QWZNVUNJc3p6RnRMMWlOUUZzc0gtV3BsdVJvcTBIR3hsbk5SSmV1NVJ0M1N0UXcwV3JLeUR3N1NHYU54U21XVEFpYnBCSnBjN0dYeXFETVByT0J3YnZTSmlqblZSb3JXQmtuazFYdkU3cnNMaz0=
+    return len(value) > 256
+
 
 class TimeStampedModel(models.Model):
     """
@@ -245,44 +265,121 @@ class OidcRPRedirectUri(TimeStampedModel):
                                      ('post_logout_redirect_uris',
                                       'post_logout_redirect_uris')),
                             max_length=33)
+
     class Meta:
         verbose_name = ('Relying Party URI')
         verbose_name_plural = ('Relying Parties URIs')
 
     def __str__(self):
-        return '{} [{}] {}'.format(self.client,
-                                   self.uri,
-                                   self.type)
+        return '{} [{}] {}'.format(self.client, self.uri, self.type)
 
 
 class OidcSessionSso(TimeStampedModel):
     """
-    Original SSODb is
-    sso_db._db.db.items()
-
-    [('__sid2uid__2b84eccdcd4b077e074c72bdc540625063fac770d1176789afc07647', ['wert']),
-     ('__uid2sid__wert', ['2b84eccdcd4b077e074c72bdc540625063fac770d1176789afc07647']),
-     ('__sid2sub__2b84eccdcd4b077e074c72bdc540625063fac770d1176789afc07647', ['80327042b96b9f1c00d9d04db816e84af4e3616db1d0694b13ab86f49fd251bf']),
-     ('__sub2sid__80327042b96b9f1c00d9d04db816e84af4e3616db1d0694b13ab86f49fd251bf', ['2b84eccdcd4b077e074c72bdc540625063fac770d1176789afc07647'])
-     ]
     """
 
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE,
                              blank=True, null=True)
-    sid = models.CharField(max_length=255,
-                           blank=False, null=False, unique=True)
     sub = models.CharField(max_length=255,
                            blank=True, null=True)
-    # sub_clean = models.CharField(max_length=255,
-                                 # blank=True, null=True)
 
     class Meta:
         verbose_name = ('SSO Session SSO')
         verbose_name_plural = ('SSO Sessions SSO')
 
+    def get_session(self):
+        return OidcSession.objects.filter(sso=self).first()
+
+    @property
+    def state(self):
+        session = self.get_session()
+        if session:
+            return session.state or ''
+        return ''
+
+    @property
+    def username(self):
+        if self.user:
+            return self.user.username or ''
+        return ''
+
+    def __contains__(self, k):
+        if getattr(self, k, None):
+            return True
+        else:
+            return False
+
+    def _get_session_by_sid(self):
+        sid = OidcSessionSid.objects.filter(session__sso=self).first()
+        if sid:
+            return sid.session
+
+    def __getitem__(self, name):
+        if is_state(name):
+            if OidcSession.objects.filter(state=name, sso=self):
+                return self
+        elif is_sid(name):
+            if OidcSession.objects.filter(sid=name, sso=self):
+                return self
+        elif name == 'sid':
+            return self._get_session_by_sid()
+        else:
+            return getattr(self, name)
+
+    def get(self, name, default=None):
+        return self.__getattribute__(name)
+
+    def __getattribute__(self, name):
+        if name == 'state':
+            return self
+        elif name == 'uid':
+            return self.user.username
+        elif name == 'sid':
+            return self._get_session_by_sid()
+        else:
+            return models.Model.__getattribute__(self, name)
+
+    def __setattribute__(self, name, value):
+        if name == 'state':
+            self.sid = value
+            return
+        elif name == 'uid':
+            user = get_user_model().objects.filter(username=value[0]).first()
+            self.user = user
+            self.save()
+            return
+        elif name == 'sub':
+            self.sub = value[0]
+            self.save()
+        else:
+            return models.Model.__setattribute__(self, name, value)
+
+    def __setitem__(self, key, value):
+        return self.__setattribute__(key, value)
+
+    def append(self, value):
+        """multiple sid to a sso
+        """
+        if is_sid(value):
+            if not isinstance(value, list):
+                value = [value]
+
+            session=self.get_session()
+            for ele in value:
+                sid_entry = OidcSessionSid.objects.filter(session=session,
+                                                          sid=ele)
+                if not sid_entry:
+                    OidcSessionSid.objects.create(session=session,
+                                                  sid=ele)
+        else:
+            #  import pdb; pdb.set_trace()
+            _msg =  '{} .append({}) with missing handler!'
+            logger.warn(_msg.format(self.__class__.name, value))
+
+
     def __str__(self):
-        return '{} - sid: {}'.format(self.user.username if self.user else '',
-                                     self.sid)
+        return 'user: {} - sub: {}'.format(self.username,
+                                           self.sub)
 
 
 class OidcSession(TimeStampedModel):
@@ -293,6 +390,8 @@ class OidcSession(TimeStampedModel):
                              blank=False, null=False)
     sso = models.ForeignKey(OidcSessionSso, on_delete=models.CASCADE,
                             blank=True, null=True)
+    code = models.CharField(max_length=1024,
+                            blank=True, null=True)
     session_info = models.TextField(blank=True, null=True)
     valid_until = models.DateTimeField(blank=True, null=True)
 
@@ -300,11 +399,42 @@ class OidcSession(TimeStampedModel):
         verbose_name = ('SSO Session')
         verbose_name_plural = ('SSO Sessions')
 
+    @property
+    def sid(self):
+        values = OidcSessionSid.objects.filter(session=self).\
+                    values_list('sid', flat=True)
+        return [i for i in values]
+
+    @sid.setter
+    def sid(self, value):
+        res = OidcSessionSid.objects.filter(session=self, sid=value)
+        if not res:
+            OidcSessionSid.objects.create(session=self, sid=value)
+
+    @staticmethod
+    def get_by_sid(value):
+        sids = OidcSessionSid.objects.filter(sid=value)
+        if sids:
+            return sids.last().session
+
     def copy(self):
-        return dict(sid = self.sso.sid,
-                    state = self.state,
+        return dict(sid = self.sid or [],
+                    state = self.state or '',
                     session_info = self.session_info)
 
+    def append(self, value):
+        """Not used, only back compatibility
+        """
+        pass
+
     def __str__(self):
-        return 'state: {} - sid: {}'.format(self.state,
-                                            self.sso.sid if self.sso else '')
+        return 'state: {}'.format(self.state or '')
+
+
+class OidcSessionSid(models.Model):
+    session = models.ForeignKey(OidcSession, on_delete=models.CASCADE)
+    sid = models.CharField(max_length=255,
+                           blank=False, null=False, unique=True)
+
+    def __str__(self):
+        return '{} {}'.format(self.session, self.sid)

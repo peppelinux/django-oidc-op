@@ -23,12 +23,6 @@ OIDC_KEYS: &oidc_keys
     'uri_path': 'static/jwks.json'
 
 op:
-  # client_db:
-    # class: oidc_op.db_interfaces.OidcClientDatabase
-  # session_db:
-    # class: oidc_op.db_interfaces.OidcSessionDb
-  # sso_db:
-    # class: oidc_op.db_interfaces.OidcSSOdb
   server_info:
     issuer: *base_url
     httpc_params:
@@ -293,7 +287,7 @@ op:
         key_conv: oidcmsg.storage.converter.QPKey
         value_conv: oidcmsg.storage.converter.JSON
       client:
-        handler: oidc_op.db_interfaces.OidcClientDatabase
+        handler: oidc_op.db_interfaces.OidcClientDb
       state:
         handler: oidcmsg.storage.abfile.AbstractFileSystem
         fdir: storage/state
@@ -305,12 +299,14 @@ op:
         key_conv: oidcmsg.storage.converter.QPKey
         value_conv: oidcmsg.storage.converter.JSON
       session:
-        handler: oidcmsg.storage.abfile.AbstractFileSystem
+        # handler: oidcmsg.storage.abfile.AbstractFileSystem
+        handler: oidc_op.db_interfaces.OidcSessionDb
         fdir: storage/session
         key_conv: oidcmsg.storage.converter.QPKey
         value_conv: oidcmsg.storage.converter.JSON
       sso:
-        handler: oidcmsg.storage.abfile.AbstractFileSystem
+        # handler: oidcmsg.storage.abfile.AbstractFileSystem
+        handler: oidc_op.db_interfaces.OidcSsoDb
         fdir: storage/sso
         key_conv: oidcmsg.storage.converter.QPKey
         value_conv: oidcmsg.storage.converter.JSON

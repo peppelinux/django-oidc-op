@@ -6,8 +6,7 @@ from cryptojwt.key_jar import init_key_jar
 from django.conf import settings
 from oidcendpoint import token_handler
 from oidcendpoint.endpoint_context import (EndpointContext,
-                                           get_token_handlers,
-                                           )
+                                           get_token_handlers)
 from oidcendpoint.in_memory_db import InMemoryDataBase
 from oidcendpoint.session import (create_session_db,
                                   SessionDB)
@@ -17,8 +16,8 @@ from oidcendpoint.util import importer
 from urllib.parse import urlparse
 
 from . configure import Configuration
-from . db_interfaces import (OidcClientDatabase,
-                             OidcSSOdb,
+from . db_interfaces import (OidcClientDb,
+                             OidcSsoDb,
                              OidcSessionDb)
 
 logger = logging.getLogger(__name__)

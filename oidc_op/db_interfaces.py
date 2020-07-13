@@ -18,13 +18,17 @@ from . models import (OidcRelyingParty,
                       OidcRPRedirectUri,
                       OidcSession,
                       OidcSessionSso,
-                      TIMESTAMP_FIELDS)
+                      TIMESTAMP_FIELDS,
+                      is_state,
+                      is_sid,
+                      is_sub,
+                      is_code)
 
 
 logger = logging.getLogger(__name__)
 
 
-class OidcClientDatabase(object):
+class OidcClientDb(object):
     """
     Adaptation of a Django model as if it were a dict
     """
@@ -99,13 +103,23 @@ class OidcSessionDb(SessionDB):
     into a pure Django DB model
     """
 
-    def __init__(self, sso_db=None):
-        # self._db = self
-        self.db = OidcSession
-        self.sso_db = OidcSSOdb
+    def __init__(self, conf_db=None, session_db=None, sso_db=None):
+        self.conf_db = conf_db
+        self.db = session_db or OidcSession
+        self.sso_db = sso_db or OidcSessionSso
 
-    def _get_q(self, item):
-        return Q(state=item)|Q(sso__sid=item)
+    def get_by_sid(self, value):
+        session = self.db.get_by_sid(value)
+        if session:
+            return session
+
+    def get_by_state(self, value):
+        session = self.db.objects.filter(state=value)
+        if session:
+            return session.last()
+
+    def create_by_state(self, state):
+        return self.db.objects.create(state=state)
 
     def _get_or_create(self, sid):
         ses = self.db.objects.filter(sso__sid=sid).first()
@@ -115,8 +129,8 @@ class OidcSessionDb(SessionDB):
         return ses
 
     def __contains__(self, key):
-        q = _get_q(key)
-        if self.db.objects.filter(q).first():
+        query = self._get_q(key)
+        if self.db.objects.filter(query).first():
             return 1
 
     def __iter__(self):
@@ -125,46 +139,38 @@ class OidcSessionDb(SessionDB):
             yield value
 
     def get(self, key, excp=None):
-        q = self._get_q(key)
-        elem = self.db.objects.filter(q).first()
+        if is_sid(key):
+            elem = self.db.get_by_sid(key)
+        elif is_state(key):
+            elem = self.db.objects.filter(state=key).last()
+        elif is_code(key):
+            elem = self.db.objects.filter(code=key).last()
+        else:
+            # find missing search keys!
+            import pdb; pdb.set_trace()
+            pass
         if not elem:
-            return excp
-        if elem.sso.sid == key:
-            return elem.session_info
+            return
+        if elem.sid and elem.sid[-1] == key:
+            return json.loads(elem.session_info)
         elif elem.state == key:
             return elem.sso.sid
 
-    def _extract_state(self, key):
-        state_reg = '__state__(?P<state>[a-zA-Z0-9]*)'
-        match = re.match(state_reg, key)
-        if match:
-            return match.groupdict()
-
 
     def set(self, key, value):
-        state_dict = self._extract_state(key)
-
-        # something:
-        # '__state__bC1KBCEVrxbJTQeHW1SGaS233TewkLBn' : '1c45f0adfde9c93b21114e0d4e8499bfcc4494318115a602077079d7'
-        if state_dict:
-            entry = self.db.objects.filter(**state_dict).first()
-            if not entry:
-                sso = OidcSessionSso.objects.get_or_create(sid=value)
-                state_dict['sso'] = sso[0]
-                entry = self.db.objects.create(**state_dict)
-        # otherwise:
-        # '1c45f0adfde9c93b21114e0d4e8499bfcc4494318115a602077079d7' : json session info
-        else:
-            entry = self.db.objects.filter(sso__sid=key).first()
-            info_dict = json.loads(value)
-            entry.session_info = json.dumps(info_dict, indent=2)
+        if is_sid(key):
+            # info_dict = {'code': 'Z0FBQUFBQmZESFowazFBWWJteTNMOTZQa25KZmV0N1U1VzB4VEZCVEN3SThQVnVFRWlSQ2FrODhpb3Yyd3JMenJQT01QWGpuMnJZQmQ4YVh3bF9sbUxqMU43VG1RQ01BbW9JdV8tbTNNSzREMUk2U2N4YXVwZ3ZWQ1ZvbXdFanRsbWJIaWQyVWZON0N5LU9mUlhZUGgwdFRDQkpRZ3dSR0lVQjBBT0s4OHc3REJOdUlPUGVOUU9ZRlZvU3FBdVU2LThUUWNhRDVocl9QWEswMmo3Y2VtLUNvWklsX0ViN1NfWFRJWksxSXhxNVVNQW9ySngtc2RCST0=', 'oauth_state': 'authz', 'client_id': 'Mz2LUfvqCbRQ', 'authn_req': {'redirect_uri': 'https://127.0.0.1:8099/authz_cb/django_oidc_op', 'scope': 'openid profile email address phone', 'response_type': 'code', 'nonce': 'mpuLL5IxgDvFDGAqlE05LwHO', 'state': 'eOzFkkGFHLT16zO6SqpOmc2rv6DZmf3g', 'code_challenge': 'lAs7I04g1Qh8mhTG8wxV0BfmrhzrSrl1ASp04C3Zmog', 'code_challenge_method': 'S256', 'client_id': 'Mz2LUfvqCbRQ'}, 'authn_event': {'uid': 'wert', 'salt': 'fc7AGQ==', 'authn_info': 'oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD', 'authn_time': 1594652276, 'valid_until': 1594655876}}
+            info_dict = value
+            session = self.db.objects.get(state=info_dict['authn_req']['state'])
+            session.session_info = json.dumps(info_dict)
+            session.code = info_dict.get('code')
             authn_event = info_dict.get('authn_event')
             valid_until = authn_event.get('valid_until')
             if valid_until:
                 dt = datetime.datetime.fromtimestamp(valid_until)
-                entry.valid_until = pytz.utc.localize(dt)
-            entry.save()
-        logger.debug('Session DB - set - {}'.format(entry.copy()))
+                session.valid_until = pytz.utc.localize(dt)
+            session.save()
+        logger.debug('Session DB - set - {}'.format(session.copy()))
 
 
     def delete(self, key):
@@ -175,6 +181,7 @@ class OidcSessionDb(SessionDB):
             self.db.objects.filter(sso__sid=key).delete()
 
     def __getitem__(self, item):
+        #  import pdb; pdb.set_trace()
         q = _get_q(item)
         _info = self.db.objects.filter(q).first()
         if not _info:
@@ -185,6 +192,7 @@ class OidcSessionDb(SessionDB):
             return SessionInfo().from_json(_info.session_info)
 
     def __setitem__(self, sid, instance):
+        #  import pdb; pdb.set_trace()
         try:
             _info = instance.to_json()
         except ValueError:
@@ -201,22 +209,24 @@ class OidcSessionDb(SessionDB):
             ses.delete()
 
     def keys(self):
+        #  import pdb; pdb.set_trace()
         elems = self.db.objects.all()
         states = elems.values_list('state')
         sids = elems.values_list('sso__sid')
         return [el[0] for el in states+sids]
 
 
-
-class OidcSSOdb(object):
+class OidcSsoDb(object):
     """
     Adaptation of a Django model as if it were a dict
 
     This class acts like a NoSQL storage but stores informations
     into a pure Django DB model
     """
-    def __init__(self, db=None):
+    def __init__(self, db_conf={}, db=None, session_handler=None):
         self._db = db or OidcSessionSso
+        self._db_conf = db_conf
+        self.session_handler = session_handler or db_conf.get('session_hanlder') or OidcSessionDb()
 
     def _get_or_create(self, sid):
         sso = self._db.objects.filter(sid=sid).first()
@@ -224,6 +234,34 @@ class OidcSSOdb(object):
             sso = self._db.objects.create(sid=sid)
         return sso
 
+    def set(self, k, v):
+        logging.info('{}:{} - already there'.format(k, v))
+
+    def get(self, k, default):
+        #  session = None
+        if is_state(k):
+            # state
+            session = self.session_handler.get_by_state(k)
+            if not session:
+                session = self.session_handler.create_by_state(k)
+                sso = self._db.objects.create()
+                session.sso = sso
+                session.save()
+                return sso
+        elif is_sub(k):
+            # sub
+            return self._db.objects.filter(sub=k).last()
+        elif is_sid(k):
+            # sid
+            session = self.session_handler.get_by_sid(k)
+            return session.sso
+        else:
+            logger.debug(("{} can't find any attribute "
+                          "with this name as attribute: {}").format(self, k))
+            user = get_user_model().objects.filter(username=k).first()
+            if user:
+                logger.debug('Tryng to match to a username: Found {}'.format(user))
+                return self._db.objects.filter(user=user).last()
 
     def map_sid2uid(self, sid, uid):
         """
