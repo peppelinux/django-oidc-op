@@ -314,6 +314,10 @@ class OidcSessionSso(TimeStampedModel):
         if sid:
             return sid.session
 
+    def __delitem__(self, name):
+        OidcSession.objects.filter(sso=self).delete()
+        self.delete()
+
     def __getitem__(self, name):
         if is_state(name):
             if OidcSession.objects.filter(state=name, sso=self):
@@ -426,6 +430,10 @@ class OidcSession(TimeStampedModel):
         """Not used, only back compatibility
         """
         pass
+
+    def __iter__(self):
+        for sid in OidcSessionSid.objects.filter(session=self):
+            yield sid.sid
 
     def __str__(self):
         return 'state: {}'.format(self.state or '')

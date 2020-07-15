@@ -174,11 +174,17 @@ class OidcSessionDb(SessionDB):
 
 
     def delete(self, key):
-        state_dict = self._extract_state(key)
-        if state_dict:
-            self.db.objects.filter(**state_dict).delete()
+        """already called in its childs, here for debugging purpose
+        """
+        if is_state(key):
+            pass
+            #  self.db.objects.filter(**state_dict).delete()
+        elif is_sid(key):
+            #  self.db.objects.filter(sso__sid=key).delete()
+            pass
         else:
-            self.db.objects.filter(sso__sid=key).delete()
+            #  import pdb; pdb.set_trace()
+            pass
 
     def __getitem__(self, item):
         #  import pdb; pdb.set_trace()
@@ -248,13 +254,15 @@ class OidcSsoDb(object):
                 session.sso = sso
                 session.save()
                 return sso
+            else:
+                return session.sso if session else {}
         elif is_sub(k):
             # sub
-            return self._db.objects.filter(sub=k).last()
+            return self._db.objects.filter(sub=k).last() or {}
         elif is_sid(k):
             # sid
             session = self.session_handler.get_by_sid(k)
-            return session.sso
+            return session.sso if session else {}
         else:
             logger.debug(("{} can't find any attribute "
                           "with this name as attribute: {}").format(self, k))
@@ -262,123 +270,131 @@ class OidcSsoDb(object):
             if user:
                 logger.debug('Tryng to match to a username: Found {}'.format(user))
                 return self._db.objects.filter(user=user).last()
+            else:
+                return {}
 
-    def map_sid2uid(self, sid, uid):
-        """
-        Store the connection between a Session ID and a User ID
+    def delete(self, name):
+        if is_sid(name):
+            session = self.session_handler.get_by_sid(name)
+            if session: session.delete()
 
-        :param sid: Session ID
-        :param uid: User ID
-        """
-        sso = self._get_or_create(sid)
-        sso.user = get_user_model().objects.get(username=uid)
-        sso.save()
+    # DEPRECATED from v0.13.0 - to be removed
+    #  def map_sid2uid(self, sid, uid):
+        #  """
+        #  Store the connection between a Session ID and a User ID
 
-    def map_sid2sub(self, sid, sub):
-        """
-        Store the connection between a Session ID and a subject ID.
+        #  :param sid: Session ID
+        #  :param uid: User ID
+        #  """
+        #  sso = self._get_or_create(sid)
+        #  sso.user = get_user_model().objects.get(username=uid)
+        #  sso.save()
 
-        :param sid: Session ID
-        :param sub: subject ID
-        """
-        sso = self._get_or_create(sid)
-        sso.sub = sub
-        sso.save()
+    #  def map_sid2sub(self, sid, sub):
+        #  """
+        #  Store the connection between a Session ID and a subject ID.
 
-    def get_sids_by_uid(self, uid):
-        """
-        Return the session IDs that this user is connected to.
+        #  :param sid: Session ID
+        #  :param sub: subject ID
+        #  """
+        #  sso = self._get_or_create(sid)
+        #  sso.sub = sub
+        #  sso.save()
 
-        :param uid: The subject ID
-        :return: list of session IDs
-        """
-        sso = self._db.objects.filter(user__username=uid).first()
-        if sso:
-            return [sso.sid]
-        return []
+    #  def get_sids_by_uid(self, uid):
+        #  """
+        #  Return the session IDs that this user is connected to.
 
-    def get_sids_by_sub(self, sub):
-        sso = self._db.objects.filter(sub=sub).first()
-        if sso:
-            return [sso.sid]
-        return []
+        #  :param uid: The subject ID
+        #  :return: list of session IDs
+        #  """
+        #  sso = self._db.objects.filter(user__username=uid).first()
+        #  if sso:
+            #  return [sso.sid]
+        #  return []
 
-    def get_sub_by_sid(self, sid):
-        sso = self._db.objects.filter(sid=sid).first()
-        if sso:
-            return sso.sub
+    #  def get_sids_by_sub(self, sub):
+        #  sso = self._db.objects.filter(sub=sub).first()
+        #  if sso:
+            #  return [sso.sid]
+        #  return []
 
-    def get_uid_by_sid(self, sid):
-        """
-        Find the User ID that is connected to a Session ID.
+    #  def get_sub_by_sid(self, sid):
+        #  sso = self._db.objects.filter(sid=sid).first()
+        #  if sso:
+            #  return sso.sub
 
-        :param sid: A Session ID
-        :return: A User ID, always just one
-        """
-        sso = self._db.objects.filter(sid=sid).first()
-        if sso and sso.user:
-            return sso.user.username
+    #  def get_uid_by_sid(self, sid):
+        #  """
+        #  Find the User ID that is connected to a Session ID.
 
-    def get_subs_by_uid(self, uid):
-        """
-        Find all subject identifiers that is connected to a User ID.
+        #  :param sid: A Session ID
+        #  :return: A User ID, always just one
+        #  """
+        #  sso = self._db.objects.filter(sid=sid).first()
+        #  if sso and sso.user:
+            #  return sso.user.username
 
-        :param uid: A User ID
-        :return: A set of subject identifiers
-        """
-        sso = self._db.objects.filter(user__username=uid).first()
-        if sso and sso.sub:
-            return [sso.sub]
-        return []
+    #  def get_subs_by_uid(self, uid):
+        #  """
+        #  Find all subject identifiers that is connected to a User ID.
 
-    def remove_sid2sub(self, sid, sub):
-        """
-        Remove the connection between a session ID and a Subject
+        #  :param uid: A User ID
+        #  :return: A set of subject identifiers
+        #  """
+        #  sso = self._db.objects.filter(user__username=uid).first()
+        #  if sso and sso.sub:
+            #  return [sso.sub]
+        #  return []
 
-        :param sid: Session ID
-        :param sub: Subject identifier
-´       """
-        sso = self._db.objects.filter(sub=sub, sid=sid)
-        if sso:
-            sso.delete()
+    #  def remove_sid2sub(self, sid, sub):
+        #  """
+        #  Remove the connection between a session ID and a Subject
 
-    def remove_sid2uid(self, sid, uid):
-        """
-        Remove the connection between a session ID and a Subject
+        #  :param sid: Session ID
+        #  :param sub: Subject identifier
+#  ´       """
+        #  sso = self._db.objects.filter(sub=sub, sid=sid)
+        #  if sso:
+            #  sso.delete()
 
-        :param sid: Session ID
-        :param uid: User identifier
-´       """
-        sso = self._db.objects.filter(user__username=uid, sid=sid)
-        if sso:
-            sso.delete()
+    #  def remove_sid2uid(self, sid, uid):
+        #  """
+        #  Remove the connection between a session ID and a Subject
 
-    def remove_session_id(self, sid):
-        """
-        Remove all references to a specific Session ID
+        #  :param sid: Session ID
+        #  :param uid: User identifier
+#  ´       """
+        #  sso = self._db.objects.filter(user__username=uid, sid=sid)
+        #  if sso:
+            #  sso.delete()
 
-        :param sid: A Session ID
-        """
-        sso = self._db.objects.filter(sid=sid)
-        if sso:
-            sso.delete()
+    #  def remove_session_id(self, sid):
+        #  """
+        #  Remove all references to a specific Session ID
 
-    def remove_uid(self, uid):
-        """
-        Remove all references to a specific User ID
+        #  :param sid: A Session ID
+        #  """
+        #  sso = self._db.objects.filter(sid=sid)
+        #  if sso:
+            #  sso.delete()
 
-        :param uid: A User ID
-        """
-        sso = self._db.objects.filter(user__username=uid)
-        if sso:
-            sso.delete()
+    #  def remove_uid(self, uid):
+        #  """
+        #  Remove all references to a specific User ID
 
-    def remove_sub(self, sub):
-        """
-        Remove all references to a specific Subject ID
+        #  :param uid: A User ID
+        #  """
+        #  sso = self._db.objects.filter(user__username=uid)
+        #  if sso:
+            #  sso.delete()
 
-        :param sub: A Subject ID
-        """
-        sso = self._db.objects.filter(sub=sub)
-        if sso:
-            sso.delete()
+    #  def remove_sub(self, sub):
+        #  """
+        #  Remove all references to a specific Subject ID
+
+        #  :param sub: A Subject ID
+        #  """
+        #  sso = self._db.objects.filter(sub=sub)
+        #  if sso:
+            #  sso.delete()

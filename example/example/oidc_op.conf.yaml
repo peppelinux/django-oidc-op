@@ -26,7 +26,7 @@ op:
   server_info:
     issuer: *base_url
     httpc_params:
-      verify_ssl: False
+      verify: False
     session_key:
       filename: data/oidc_op/private/session_jwks.json
       type: OCT

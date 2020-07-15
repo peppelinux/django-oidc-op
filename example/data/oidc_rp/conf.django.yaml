@@ -34,7 +34,7 @@ webserver:
 
 # This is just for testing an local usage. In all other cases it MUST be True
 httpc_params:
-  verify_ssl: False
+  verify: False
 
 key_defs: &keydef
   -

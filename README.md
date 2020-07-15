@@ -22,8 +22,14 @@ The following features, regarding a pure django modeladmin integration and their
 status, worked until oidcendpoint was at its v0.13.0 release.
 
 - Relying-Parties Admin UI completed, unit tests included (works v1.0.1)
-- Session and SSO management completed (TODO with a full abstorage integration)
+- Session and SSO management completed (works)
+
+Work in progress:
+
+- Logout session handler
 - KeyJAR and default storage (issuer, keybundles) (TODO with a full abstorage integration)
+
+
 
 ## Run the example demo
 

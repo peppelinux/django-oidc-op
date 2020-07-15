@@ -13,27 +13,22 @@ from oidcrp.util import load_yaml_config
 
 
 def init_oidc_rp_handler(app):
-    rp_keys_conf = app.config.get('rp_keys')
-    if rp_keys_conf:
-        _kj = init_key_jar(**rp_keys_conf)
+    _rp_conf = app.config
 
-        _path = rp_keys_conf['public_path']
-        # replaces ./ and / from the begin of the string
+    if _rp_conf.get('rp_keys'):
+        _kj = init_key_jar(**_rp_conf['rp_keys'])
+        _path = _rp_conf['rp_keys']['public_path']
+        # removes ./ and / from the begin of the string
         _path = re.sub('^(.)/', '', _path)
     else:
         _kj = KeyJar()
         _path = ''
-
-    verify_ssl = app.config.get('httpc_params')['verify_ssl']
-    _kj.verify_ssl = verify_ssl
+    _kj.httpc_params = _rp_conf['httpc_params']
     hash_seed = app.config.get('hash_seed', "BabyHoldOn")
+    rph = RPHandler(_rp_conf['base_url'], _rp_conf['clients'], services=_rp_conf['services'],
+                    hash_seed=hash_seed, keyjar=_kj, jwks_path=_path,
+                    httpc_params=_rp_conf['httpc_params']) #, verify_ssl=False)
 
-    rph = RPHandler(base_url=app.config.get('base_url'),
-                    hash_seed=hash_seed,
-                    keyjar=_kj, jwks_path=_path,
-                    client_configs=app.config.get('clients'),
-                    services=app.config.get('services'),
-                    verify_ssl=verify_ssl)
     return rph
 
 
