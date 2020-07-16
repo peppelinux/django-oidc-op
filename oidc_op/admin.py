@@ -127,7 +127,7 @@ class OidcSessionAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified')
     list_display = ('state', 'sso', 'created')
     search_fields = ('state', 'sso__user__username')
-    readonly_fields = ('sso', 'state', 'valid_until',
+    readonly_fields = ('sso', 'state', 'valid_until', 'info_session_preview',
                        'access_token_preview', 'id_token_preview')
 
     fieldsets = (
@@ -142,7 +142,7 @@ class OidcSessionAdmin(admin.ModelAdmin):
              ('Session info',
                                 {
                                 'classes': ('collapse',),
-                                'fields' : ('session_info',),
+                                'fields' : ('info_session_preview',),
                                 }
              ),
 
@@ -158,6 +158,11 @@ class OidcSessionAdmin(admin.ModelAdmin):
              ),
         )
 
+    def info_session_preview(self, obj):
+        msg = json.loads(obj.session_info)
+        dumps = json.dumps(msg, indent=2)
+        return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+    info_session_preview.short_description = 'Info Session preview'
 
     def access_token_preview(self, obj):
         msg = decode_token(obj.session_info, 'access_token')

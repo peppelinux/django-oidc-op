@@ -21,14 +21,15 @@ The development status of this project is *experimental*, something was broken f
 The following features, regarding a pure django modeladmin integration and their
 status, worked until oidcendpoint was at its v0.13.0 release.
 
+Works:
+
 - Relying-Parties Admin UI completed, unit tests included (works v1.0.1)
-- Session and SSO management completed (works)
+- Session and SSO management completed (works v1.0.1)
 
 Work in progress:
 
 - Logout session handler
 - KeyJAR and default storage (issuer, keybundles) (TODO with a full abstorage integration)
-
 
 
 ## Run the example demo
@@ -106,14 +107,16 @@ Configuration Example:
             verified_email: email
 ````
 
-#### Relying-Party Registration
+#### Relying-Party search panel
 
 See `oidc_op.models` and `oidc_op.admin`, an UI was built to configure new RP via Django admin backend.
+![Alt text](images/rp_search.png)
+
+#### Relying-Party Registration
 ![Alt text](images/rp.png)
 
-
 #### Session management and token preview
-![Alt text](images/ses1.png)
+![Alt text](images/oidc_session.png)
 
 ## OIDC endpoint url prefix
 Can be configured in `urls.py` and also in oidc_op `conf.yaml`.
