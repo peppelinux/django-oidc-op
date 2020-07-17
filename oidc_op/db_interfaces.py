@@ -34,6 +34,9 @@ class OidcClientDb(object):
     """
     model = OidcRelyingParty
 
+    def __init__(self, *args, **kwargs):
+        pass
+
     def __contains__(self, key):
         if self.model.objects.filter(client_id=key).first():
             return 1
@@ -61,7 +64,7 @@ class OidcClientDb(object):
         return self.model.objects.values_list('client_id', flat=True)
 
     def __setitem__(self, key, value):
-        return self.set(self, key, value)
+        return self.set(key, value)
 
     def set(self, key, value):
         dv = value.copy()
@@ -122,10 +125,10 @@ class OidcSessionDb(SessionDB):
         return self.db.objects.create(state=state)
 
     def _get_or_create(self, sid):
-        ses = self.db.objects.filter(sso__sid=sid).first()
-        if not ses:
-            sso = self.sso_db.objects.get(sso__sid=sid)
-            ses = self.db.objects.create(sso=sso)
+        ses = self.db.get_by_sid(sid)
+        #  if not ses:
+            #  sso = self.sso_db.objects.get(sso__sid=sid)
+            #  ses = self.db.objects.create(sso=sso)
         return ses
 
     def __contains__(self, key):
@@ -198,21 +201,25 @@ class OidcSessionDb(SessionDB):
             return SessionInfo().from_json(_info.session_info)
 
     def __setitem__(self, sid, instance):
-        #  import pdb; pdb.set_trace()
         try:
             _info = instance.to_json()
-        except ValueError:
+        except ValueError as e:
             _info = json.dumps(instance)
+        except AttributeError as e:
+            # it's a dict
+            _info = instance
 
         ses = self._get_or_create(sid)
+        if isinstance(_info, dict):
+            _info = json.dumps(_info)
         ses.session_info = _info
         ses.save()
 
     def __delitem__(self, key):
-        q = _get_q(key)
-        ses = self.db.objects.filter(q)
-        if ses:
-            ses.delete()
+        if is_sid(key):
+            ses = self.db.get_by_sid(key)
+            if ses:
+                ses.delete()
 
     def keys(self):
         #  import pdb; pdb.set_trace()
@@ -239,6 +246,12 @@ class OidcSsoDb(object):
         if not sso:
             sso = self._db.objects.create(sid=sid)
         return sso
+
+    def __setitem__(self, key, value):
+        if is_state(key):
+            session = self.session_handler.get_by_state(key)
+            if session:
+                assert session.sso == value
 
     def set(self, k, v):
         logging.info('{}:{} - already there'.format(k, v))
@@ -272,6 +285,9 @@ class OidcSsoDb(object):
                 return self._db.objects.filter(user=user).last()
             else:
                 return {}
+
+    def __delitem__(self, name):
+        self.delete(name)
 
     def delete(self, name):
         if is_sid(name):
