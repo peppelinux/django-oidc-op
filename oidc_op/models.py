@@ -101,6 +101,12 @@ class OidcRelyingParty(TimeStampedModel):
     last_seen = models.DateTimeField(blank=True, null=True)
 
     @property
+    def allowed_scopes(self):
+        scopes = self.oidcrpscopes_set.filter(client=self)
+        if scopes:
+            return [i.scope for i in scopes]
+
+    @property
     def contacts(self):
         return [elem.contact
                 for elem in self.oidcrpcontact_set.filter(client=self)]
@@ -272,6 +278,20 @@ class OidcRPRedirectUri(TimeStampedModel):
 
     def __str__(self):
         return '{} [{}] {}'.format(self.client, self.uri, self.type)
+
+
+class OidcRPScope(TimeStampedModel):
+    client = models.ForeignKey(OidcRelyingParty,
+                               on_delete=models.CASCADE)
+    scope = models.CharField(max_length=254,
+                             blank=True, null=True,)
+    class Meta:
+        verbose_name = ('Relying Party Scope')
+        verbose_name_plural = ('Relying Parties Scopes')
+        unique_together = ('client', 'scope')
+
+    def __str__(self):
+        return '{}, [{}]'.format(self.client, self.scope)
 
 
 class OidcSessionSso(TimeStampedModel):

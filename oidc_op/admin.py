@@ -57,6 +57,18 @@ class OidcRPResponseTypeInline(admin.TabularInline):
     extra = 0
 
 
+class OidcRPScopeModelForm(forms.ModelForm):
+    class Meta:
+        model = OidcRPScope
+        fields = ('__all__')
+
+
+class OidcRPScopeInline(admin.TabularInline):
+    model = OidcRPScope
+    form = OidcRPScopeModelForm
+    extra = 0
+
+
 @admin.register(OidcRelyingParty)
 class OidcRelyingPartyAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified', 'is_active')
@@ -64,7 +76,8 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
                     'last_seen', 'is_active')
     search_fields = ('client_id',)
     list_editable = ('is_active',)
-    inlines = (OidcRPResponseTypeInline,
+    inlines = (OidcRPScopeInline,
+               OidcRPResponseTypeInline,
                OidcRPGrantTypeInline,
                OidcRPContactInline,
                OidcRPRedirectUriInline)
