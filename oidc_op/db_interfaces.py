@@ -8,6 +8,7 @@ import urllib
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from django.utils import timezone
 from oidcendpoint.session import (SessionDB,
                                   public_id,
                                   pairwise_id)
@@ -52,6 +53,11 @@ class OidcClientDb(object):
                                            is_active=True).first()
         if not client:
             return excp
+
+        # set last_seen
+        client.last_seen = timezone.localtime()
+        client.save()
+
         return client.copy()
 
     def __getitem__(self, key):
