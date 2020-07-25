@@ -144,35 +144,36 @@ class OidcSessionDb(SessionDB):
     def get(self, key, excp=None):
         if is_sid(key):
             elem = self.db.get_by_sid(key)
-        elif is_state(key):
-            elem = self.db.objects.filter(state=key).last()
         elif is_code(key):
             elem = self.db.objects.filter(code=key).last()
         else:
-            # find missing search keys!
-            import pdb; pdb.set_trace()
-            pass
+            # state is unpredictable, it's client side.
+            elem = self.db.objects.filter(state=key).last()
+
         if not elem:
             return
-        if elem.sid and elem.sid[-1] == key:
+        elif elem.sid and elem.sid[-1] == key:
             return json.loads(elem.session_info)
         elif elem.state == key:
             return elem.sso.sid
+
+    def set_session_info(self, info_dict):
+        session = self.db.objects.get(state=info_dict['authn_req']['state'])
+        session.session_info = json.dumps(info_dict)
+        session.code = info_dict.get('code')
+        authn_event = info_dict.get('authn_event')
+        valid_until = authn_event.get('valid_until')
+        if valid_until:
+            dt = datetime.datetime.fromtimestamp(valid_until)
+            session.valid_until = pytz.utc.localize(dt)
+        session.save()
 
 
     def set(self, key, value):
         if is_sid(key):
             # info_dict = {'code': 'Z0FBQUFBQmZESFowazFBWWJteTNMOTZQa25KZmV0N1U1VzB4VEZCVEN3SThQVnVFRWlSQ2FrODhpb3Yyd3JMenJQT01QWGpuMnJZQmQ4YVh3bF9sbUxqMU43VG1RQ01BbW9JdV8tbTNNSzREMUk2U2N4YXVwZ3ZWQ1ZvbXdFanRsbWJIaWQyVWZON0N5LU9mUlhZUGgwdFRDQkpRZ3dSR0lVQjBBT0s4OHc3REJOdUlPUGVOUU9ZRlZvU3FBdVU2LThUUWNhRDVocl9QWEswMmo3Y2VtLUNvWklsX0ViN1NfWFRJWksxSXhxNVVNQW9ySngtc2RCST0=', 'oauth_state': 'authz', 'client_id': 'Mz2LUfvqCbRQ', 'authn_req': {'redirect_uri': 'https://127.0.0.1:8099/authz_cb/django_oidc_op', 'scope': 'openid profile email address phone', 'response_type': 'code', 'nonce': 'mpuLL5IxgDvFDGAqlE05LwHO', 'state': 'eOzFkkGFHLT16zO6SqpOmc2rv6DZmf3g', 'code_challenge': 'lAs7I04g1Qh8mhTG8wxV0BfmrhzrSrl1ASp04C3Zmog', 'code_challenge_method': 'S256', 'client_id': 'Mz2LUfvqCbRQ'}, 'authn_event': {'uid': 'wert', 'salt': 'fc7AGQ==', 'authn_info': 'oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD', 'authn_time': 1594652276, 'valid_until': 1594655876}}
             info_dict = value
-            session = self.db.objects.get(state=info_dict['authn_req']['state'])
-            session.session_info = json.dumps(info_dict)
-            session.code = info_dict.get('code')
-            authn_event = info_dict.get('authn_event')
-            valid_until = authn_event.get('valid_until')
-            if valid_until:
-                dt = datetime.datetime.fromtimestamp(valid_until)
-                session.valid_until = pytz.utc.localize(dt)
-            session.save()
+            self.set_session_info(info_dict)
         logger.debug('Session DB - set - {}'.format(session.copy()))
 
 
@@ -198,22 +199,25 @@ class OidcSessionDb(SessionDB):
             _info = self.db.objects.get(sso__sid=sid)
 
         if _info:
+            import pdb; pdb.set_trace()
             return SessionInfo().from_json(_info.session_info)
 
     def __setitem__(self, sid, instance):
-        try:
-            _info = instance.to_json()
-        except ValueError as e:
-            _info = json.dumps(instance)
-        except AttributeError as e:
-            # it's a dict
-            _info = instance
+        if is_sid(sid):
+            try:
+                _info = instance.to_json()
+            except ValueError as e:
+                _info = json.dumps(instance)
+            except AttributeError as e:
+                # it's a dict
+                _info = instance
 
-        ses = self._get_or_create(sid)
-        if isinstance(_info, dict):
-            _info = json.dumps(_info)
-        ses.session_info = _info
-        ses.save()
+            ses = self._get_or_create(sid)
+            self.set_session_info(instance)
+        else:
+            logger.error('{} tries __setitem__ {} in {}'.format(sid,
+                                                                instance,
+                                                                self.__class__.__name__))
 
     def __delitem__(self, key):
         if is_sid(key):
@@ -247,29 +251,31 @@ class OidcSsoDb(object):
             sso = self._db.objects.create(sid=sid)
         return sso
 
-    def __setitem__(self, key, value):
-        if is_state(key):
-            session = self.session_handler.get_by_state(key)
-            if session:
-                assert session.sso == value
+    def __setitem__(self, k, value):
+        if isinstance(value, dict):
+            if value.get('state'):
+                session = self.session_handler.create_by_state(k)
+                sid = session.oidcsessionsid_set.create(session=session,
+                                                        sid=value['state'][0] \
+                                                        if isinstance(value['state'], list) else value)
+                sso = self._db.objects.create()
+                session.sso = sso
+                session.save()
+        else:
+            # it would be quite useless for this implementation ...
+            # k = '81c58c4037ab1939423ab4fb8b472fdd5fc3a3939e4debc81f52ed37'
+            # value = <OidcSessionSso: user: wert - sub: None>
+            pass
 
     def set(self, k, v):
         logging.info('{}:{} - already there'.format(k, v))
 
     def get(self, k, default):
-        #  session = None
-        if is_state(k):
-            # state
-            session = self.session_handler.get_by_state(k)
-            if not session:
-                session = self.session_handler.create_by_state(k)
-                sso = self._db.objects.create()
-                session.sso = sso
-                session.save()
-                return sso
-            else:
-                return session.sso if session else {}
-        elif is_sub(k):
+        session = self.session_handler.get_by_state(k)
+        if session:
+            return session
+
+        if is_sub(k):
             # sub
             return self._db.objects.filter(sub=k).last() or {}
         elif is_sid(k):
