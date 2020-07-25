@@ -216,7 +216,7 @@ class OidcRelyingParty(TimeStampedModel):
         return d
 
     def __str__(self):
-        return '{}, [{}]'.format(self.client_id, self.is_active)
+        return '{}'.format(self.client_id)
 
 
 class OidcRPResponseType(TimeStampedModel):
@@ -417,6 +417,8 @@ class OidcSession(TimeStampedModel):
                             blank=True, null=True)
     code = models.CharField(max_length=1024,
                             blank=True, null=True)
+    client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE,
+                               blank=True, null=True)
     session_info = models.TextField(blank=True, null=True)
     valid_until = models.DateTimeField(blank=True, null=True)
 

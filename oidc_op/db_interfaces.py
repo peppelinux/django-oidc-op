@@ -48,7 +48,7 @@ class OidcClientDb(object):
         for value in (self.clients):
             yield value
 
-    def get(self, key, excp=None):
+    def get(self, key, excp=None, as_obj=False):
         client = self.model.objects.filter(client_id=key,
                                            is_active=True).first()
         if not client:
@@ -57,7 +57,7 @@ class OidcClientDb(object):
         # set last_seen
         client.last_seen = timezone.localtime()
         client.save()
-
+        if as_obj: return client
         return client.copy()
 
     def __getitem__(self, key):
@@ -112,10 +112,11 @@ class OidcSessionDb(SessionDB):
     into a pure Django DB model
     """
 
-    def __init__(self, conf_db=None, session_db=None, sso_db=None):
+    def __init__(self, conf_db=None, session_db=None, sso_db=None, cdb=None):
         self.conf_db = conf_db
         self.db = session_db or OidcSession
         self.sso_db = sso_db or OidcSessionSso
+        self.cdb = cdb or OidcClientDb()
 
     def get_by_sid(self, value):
         session = self.db.get_by_sid(value)
@@ -172,6 +173,9 @@ class OidcSessionDb(SessionDB):
         if valid_until:
             dt = datetime.datetime.fromtimestamp(valid_until)
             session.valid_until = pytz.utc.localize(dt)
+
+        client_id = info_dict.get('client_id')
+        session.client = self.cdb.get(key=client_id, as_obj=True)
         session.save()
 
 

@@ -138,14 +138,15 @@ class SessionAdmin(admin.ModelAdmin):
 @admin.register(OidcSession)
 class OidcSessionAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified')
-    list_display = ('state', 'sso', 'created')
+    list_display = ('client', 'state', 'sso', 'created')
     search_fields = ('state', 'sso__user__username')
-    readonly_fields = ('sso', 'state', 'valid_until', 'info_session_preview',
+    readonly_fields = ('client', 'sso', 'state', 'valid_until', 'info_session_preview',
                        'access_token_preview', 'id_token_preview')
 
     fieldsets = (
              (None, {
                         'fields' : (
+                                      ('client', ),
                                       ('sso', ),
                                       ('state',),
                                       ('valid_until',),
