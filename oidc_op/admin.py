@@ -184,8 +184,8 @@ class OidcSessionAdmin(admin.ModelAdmin):
             msg = decode_token(obj.session_info or {}, 'access_token')
             dumps = json.dumps(msg.to_dict(), indent=2)
             return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
-        except:
-            pass
+        except Exception as e:
+            logger.tracelog(e)
     access_token_preview.short_description = 'Access Token preview'
 
     def id_token_preview(self, obj):
@@ -193,8 +193,8 @@ class OidcSessionAdmin(admin.ModelAdmin):
             msg = decode_token(obj.session_info or {}, 'id_token')
             dumps = json.dumps(msg.to_dict(), indent=2)
             return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
-        except:
-            pass
+        except Exception as e:
+            logger.tracelog(e)
     id_token_preview.short_description = 'ID Token preview'
 
     class Media:
