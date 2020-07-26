@@ -7,7 +7,10 @@ This project is based on [Roland Hedberg's oidc-op](https://github.com/rohe/oidc
 Oidcendpoint supports the following standards and drafts:
 
 - [OpenID Connect Core 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-core-1_0.html)
-- [OpenID Connect Session Management 1.0 - draft 28](https://openid.net/specs/openid-connect-session-1_0.html)
+- [OpenID Connect Discovery 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-discovery-1_0.html)
+- [OpenID Connect Dynamic Client Registration 1.0 incorporating errata set 1](https://openid.net/specs/openid-connect-registration-1_0.html)
+- [OpenID Connect Session Management 1.0](https://openid.net/specs/openid-connect-session-1_0.html)
+- [OpenID Connect Back-Channel Logout 1.0](https://openid.net/specs/openid-connect-backchannel-1_0.html)
 - [OAuth2 Token introspection](https://tools.ietf.org/html/rfc7662)
 
 It also supports the followings `add_ons` modules.
@@ -17,20 +20,20 @@ It also supports the followings `add_ons` modules.
 
 ## Status
 
-The development status of this project is *experimental*, something was broken from the latest oidcendpoint releases.
-The following features, regarding a pure django modeladmin integration and their
-status, worked until oidcendpoint was at its v0.13.0 release.
+The development status of this project is *experimental*, something goes wrong following latest oidcendpoint releases.
+A roadmap for a stable release is still in progress.
+
 
 Works:
 
 - Relying-Parties Admin UI completed, unit tests included (works v1.0.1)
 - Session and SSO management completed (works v1.0.1)
+- Logout session handler
 
 Work in progress:
-
-- Logout session handler
-- KeyJAR and default storage (issuer, keybundles) (TODO with a full abstorage integration)
-
+- KeyJAR and default storage (issuer, keybundles) (TODO with a full storage handler integration)
+- Cookie handling, at this time we do not use cookies
+- Custom scopes
 
 ## Run the example demo
 
@@ -116,7 +119,7 @@ See `oidc_op.models` and `oidc_op.admin`, an UI was built to configure new RP vi
 ![Alt text](images/rp.png)
 
 #### Session management and token preview
-![Alt text](images/oidc_session.png)
+![Alt text](images/oidc_session2.png)
 
 ## OIDC endpoint url prefix
 Can be configured in `urls.py` and also in oidc_op `conf.yaml`.
