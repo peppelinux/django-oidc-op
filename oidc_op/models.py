@@ -330,25 +330,19 @@ class OidcSessionSso(TimeStampedModel):
         else:
             return False
 
-    def _get_session_by_sid(self):
-        sid = OidcSessionSid.objects.filter(session__sso=self).first()
-        if sid:
-            return sid.session
-
     def __delitem__(self, name):
         OidcSession.objects.filter(sso=self).delete()
         self.delete()
 
     def __getitem__(self, name):
-        if is_state(name):
-            if OidcSession.objects.filter(state=name, sso=self):
-                return self
-        elif is_sid(name):
+        if is_sid(name):
             if OidcSession.objects.filter(sid=name, sso=self):
                 return self
         elif name == 'sid':
-            return self._get_session_by_sid()
+            return self.sid
         else:
+            if OidcSession.objects.filter(state=name, sso=self):
+                return self
             return getattr(self, name)
 
     def get(self, name, default=None):
@@ -360,7 +354,7 @@ class OidcSessionSso(TimeStampedModel):
         elif name == 'uid':
             return self.user.username
         elif name == 'sid':
-            return self._get_session_by_sid()
+            return self
         else:
             return models.Model.__getattribute__(self, name)
 
@@ -390,12 +384,8 @@ class OidcSessionSso(TimeStampedModel):
                 value = [value]
 
             session=self.get_session()
-            for ele in value:
-                sid_entry = OidcSessionSid.objects.filter(session=session,
-                                                          sid=ele)
-                if not sid_entry:
-                    OidcSessionSid.objects.create(session=session,
-                                                  sid=ele)
+            session.sid = value[0] if isinstance(value, list) else value
+            session.save()
         else:
             #  import pdb; pdb.set_trace()
             _msg =  '{} .append({}) with missing handler!'
@@ -417,6 +407,8 @@ class OidcSession(TimeStampedModel):
                             blank=True, null=True)
     code = models.CharField(max_length=1024,
                             blank=True, null=True)
+    sid = models.CharField(max_length=255,
+                           blank=True, null=True)
     client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE,
                                blank=True, null=True)
     session_info = models.TextField(blank=True, null=True)
@@ -426,23 +418,11 @@ class OidcSession(TimeStampedModel):
         verbose_name = ('SSO Session')
         verbose_name_plural = ('SSO Sessions')
 
-    @property
-    def sid(self):
-        values = OidcSessionSid.objects.filter(session=self).\
-                    values_list('sid', flat=True)
-        return [i for i in values]
-
-    @sid.setter
-    def sid(self, value):
-        res = OidcSessionSid.objects.filter(session=self, sid=value)
-        if not res:
-            OidcSessionSid.objects.create(session=self, sid=value)
-
-    @staticmethod
-    def get_by_sid(value):
-        sids = OidcSessionSid.objects.filter(sid=value)
+    @classmethod
+    def get_by_sid(cls, value):
+        sids = cls.objects.filter(sid=value)
         if sids:
-            return sids.last().session
+            return sids.last()
 
     def copy(self):
         return dict(sid = self.sid or [],
@@ -455,17 +435,7 @@ class OidcSession(TimeStampedModel):
         pass
 
     def __iter__(self):
-        for sid in OidcSessionSid.objects.filter(session=self):
-            yield sid.sid
+        yield self.sid
 
     def __str__(self):
         return 'state: {}'.format(self.state or '')
-
-
-class OidcSessionSid(models.Model):
-    session = models.ForeignKey(OidcSession, on_delete=models.CASCADE)
-    sid = models.CharField(max_length=255,
-                           blank=False, null=False, unique=True)
-
-    def __str__(self):
-        return '{} {}'.format(self.session, self.sid)

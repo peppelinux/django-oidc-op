@@ -140,7 +140,7 @@ class OidcSessionAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified')
     list_display = ('client', 'state', 'sso', 'created')
     search_fields = ('state', 'sso__user__username')
-    readonly_fields = ('client', 'sso', 'state', 'valid_until', 'info_session_preview',
+    readonly_fields = ('sid', 'client', 'sso', 'state', 'valid_until', 'info_session_preview',
                        'access_token_preview', 'id_token_preview')
 
     fieldsets = (
@@ -149,6 +149,7 @@ class OidcSessionAdmin(admin.ModelAdmin):
                                       ('client', ),
                                       ('sso', ),
                                       ('state',),
+                                      ('sid',),
                                       ('valid_until',),
                                     )
                        },
@@ -173,21 +174,27 @@ class OidcSessionAdmin(admin.ModelAdmin):
         )
 
     def info_session_preview(self, obj):
-        msg = json.loads(obj.session_info)
+        msg = json.loads(obj.session_info or {})
         dumps = json.dumps(msg, indent=2)
         return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
     info_session_preview.short_description = 'Info Session preview'
 
     def access_token_preview(self, obj):
-        msg = decode_token(obj.session_info, 'access_token')
-        dumps = json.dumps(msg.to_dict(), indent=2)
-        return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+        try:
+            msg = decode_token(obj.session_info or {}, 'access_token')
+            dumps = json.dumps(msg.to_dict(), indent=2)
+            return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+        except:
+            pass
     access_token_preview.short_description = 'Access Token preview'
 
     def id_token_preview(self, obj):
-        msg = decode_token(obj.session_info, 'id_token')
-        dumps = json.dumps(msg.to_dict(), indent=2)
-        return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+        try:
+            msg = decode_token(obj.session_info or {}, 'id_token')
+            dumps = json.dumps(msg.to_dict(), indent=2)
+            return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+        except:
+            pass
     id_token_preview.short_description = 'ID Token preview'
 
     class Media:
