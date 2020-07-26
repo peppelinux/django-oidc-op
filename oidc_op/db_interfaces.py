@@ -5,7 +5,6 @@ import re
 import pytz
 import urllib
 
-
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils import timezone
@@ -131,18 +130,6 @@ class OidcSessionDb(SessionDB):
     def create_by_state(self, state):
         return self.db.objects.create(state=state)
 
-    def _get_or_create(self, sid):
-        ses = self.db.get_by_sid(sid)
-        #  if not ses:
-            #  sso = self.sso_db.objects.get(sso__sid=sid)
-            #  ses = self.db.objects.create(sso=sso)
-        return ses
-
-    def __contains__(self, key):
-        query = self._get_q(key)
-        if self.db.objects.filter(query).first():
-            return 1
-
     def __iter__(self):
         self.elems = self.keys()
         for value in (self.elems):
@@ -187,31 +174,6 @@ class OidcSessionDb(SessionDB):
         logger.debug('Session DB - set - {}'.format(session.copy()))
 
 
-    def delete(self, key):
-        """already called in its childs, here for debugging purpose
-        """
-        if is_state(key):
-            pass
-            #  self.db.objects.filter(**state_dict).delete()
-        elif is_sid(key):
-            #  self.db.objects.filter(sso__sid=key).delete()
-            pass
-        else:
-            #  import pdb; pdb.set_trace()
-            pass
-
-    def __getitem__(self, item):
-        #  import pdb; pdb.set_trace()
-        q = _get_q(item)
-        _info = self.db.objects.filter(q).first()
-        if not _info:
-            sid = self.handler.sid(item)
-            _info = self.db.objects.get(sso__sid=sid)
-
-        if _info:
-            import pdb; pdb.set_trace()
-            return SessionInfo().from_json(_info.session_info)
-
     def __setitem__(self, sid, instance):
         if is_sid(sid):
             try:
@@ -222,7 +184,6 @@ class OidcSessionDb(SessionDB):
                 # it's a dict
                 _info = instance
 
-            ses = self._get_or_create(sid)
             self.set_session_info(instance)
         else:
             logger.error('{} tries __setitem__ {} in {}'.format(sid,
@@ -233,14 +194,8 @@ class OidcSessionDb(SessionDB):
         if is_sid(key):
             ses = self.db.get_by_sid(key)
             if ses:
+                ses.sso.delete()
                 ses.delete()
-
-    def keys(self):
-        #  import pdb; pdb.set_trace()
-        elems = self.db.objects.all()
-        states = elems.values_list('state')
-        sids = elems.values_list('sso__sid')
-        return [el[0] for el in states+sids]
 
 
 class OidcSsoDb(object):
@@ -305,6 +260,12 @@ class OidcSsoDb(object):
         self.delete(name)
 
     def delete(self, name):
+        session = self.session_handler.get_by_state(name)
+
         if is_sid(name):
             session = self.session_handler.get_by_sid(name)
-            if session: session.delete()
+        elif is_sub(name):
+            sso = self._db.objects.filter(sub=name)
+            sso.delete()
+        if session:
+            session.delete()

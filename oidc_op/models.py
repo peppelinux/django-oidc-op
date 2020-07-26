@@ -324,6 +324,10 @@ class OidcSessionSso(TimeStampedModel):
             return self.user.username or ''
         return ''
 
+    def __iter__(self):
+        session = self.get_session()
+        yield session.sid
+
     def __contains__(self, k):
         if getattr(self, k, None):
             return True
@@ -383,7 +387,7 @@ class OidcSessionSso(TimeStampedModel):
             if not isinstance(value, list):
                 value = [value]
 
-            session=self.get_session()
+            session = self.get_session()
             session.sid = value[0] if isinstance(value, list) else value
             session.save()
         else:
@@ -435,7 +439,8 @@ class OidcSession(TimeStampedModel):
         pass
 
     def __iter__(self):
-        yield self.sid
+        for i in (self.sid,):
+            yield i
 
     def __str__(self):
         return 'state: {}'.format(self.state or '')
