@@ -262,6 +262,8 @@ op:
       claims:
         function: oidcendpoint.oidc.add_on.custom_scopes.add_custom_scopes
         kwargs:
+          that_scope:
+            - email
           research_and_scholarship:
             - name
             - given_name

@@ -25,7 +25,7 @@ OIDC_GRANT_TYPES = OIDC_OP_CONFIG.conf['op']\
 TIMESTAMP_FIELDS = ['client_id_issued_at', 'client_secret_expires_at']
 
 # configured in oidcendpoint
-OIDC_OP_STATE_VALUE_LEN = 32
+OIDC_OP_STATE_VALUE_LEN = 32 # it's not a fixed value, it depends by clients. Here it just references JWTConnect-Python-OidcRP
 OIDC_OP_SID_VALUE_LEN = 56
 OIDC_OP_SUB_VALUE_LEN = 64
 
@@ -103,7 +103,7 @@ class OidcRelyingParty(TimeStampedModel):
 
     @property
     def allowed_scopes(self):
-        scopes = self.oidcrpscopes_set.filter(client=self)
+        scopes = self.oidcrpscope_set.filter(client=self)
         if scopes:
             return [i.scope for i in scopes]
 
@@ -213,6 +213,7 @@ class OidcRelyingParty(TimeStampedModel):
         d['response_types'] = self.response_types
         d['post_logout_redirect_uris'] = self.post_logout_redirect_uris
         d['redirect_uris'] = self.redirect_uris
+        d['allowed_scopes'] = self.allowed_scopes
         return d
 
     def __str__(self):

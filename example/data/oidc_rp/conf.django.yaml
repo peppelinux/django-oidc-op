@@ -68,6 +68,7 @@ client_preferences: &prefs
         - code
     scope:
         - openid
+        - that_scope
         - profile
         - email
         - address
