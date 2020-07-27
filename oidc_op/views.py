@@ -16,6 +16,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from oidcendpoint.authn_event import create_authn_event
 from oidcendpoint.exception import FailedAuthentication
+from oidcendpoint.exception import UnAuthorizedClient
 from oidcendpoint.exception import InvalidClient
 from oidcendpoint.exception import UnknownClient
 from oidcendpoint.oidc.token import AccessToken
@@ -141,7 +142,7 @@ def service_endpoint(request, endpoint):
 
     try:
         req_args = endpoint.parse_request(data, **pr_args)
-    except (InvalidClient, UnknownClient) as err:
+    except (InvalidClient, UnknownClient, UnAuthorizedClient) as err:
         logger.error(err)
         return JsonResponse(json.dumps({
             'error': 'unauthorized_client',

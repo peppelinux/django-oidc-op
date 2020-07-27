@@ -61,8 +61,12 @@ def run_rp_session(rph, issuer_id, username, password):
     res.text
 
     #'<!doctype html>\n\n<html lang="en">\n<head>\n    <meta charset="utf-8">\n    <title>Please login</title>\n</head>\n\n<body>\n<h1>Testing log in</h1>\n\n<form action="verify/oidc_user_login/" method="post">\n    <input type="hidden" name="token" value="eyJhbGciOiJSUzI1NiIsImtpZCI6ImJXdG9SekV4VXkxak9GVXlSV2hwZUdkbFREWlBaME55TW1ka05ERlFaakJSUzJreVQwaExVazVJUVEifQ.eyJhdXRobl9jbGFzc19yZWYiOiAib2lkY2VuZHBvaW50LnVzZXJfYXV0aG4uYXV0aG5fY29udGV4dC5JTlRFUk5FVFBST1RPQ09MUEFTU1dPUkQiLCAicXVlcnkiOiAicmVkaXJlY3RfdXJpPWh0dHBzJTNBJTJGJTJGMTI3LjAuMC4xJTNBODA5OSUyRmF1dGh6X2NiJTJGZGphbmdvX29pZGNfb3Amc2NvcGU9b3BlbmlkK3Byb2ZpbGUrZW1haWwrYWRkcmVzcytwaG9uZSZyZXNwb25zZV90eXBlPWNvZGUmbm9uY2U9SGhER2h2dUlvUTlNYVZMU3FYaTNENnI0JnN0YXRlPUFkZ3FaVlR4d2RIYUU5a2pSVUNMVG5JNzhHcG9RcTkwJmNvZGVfY2hhbGxlbmdlPXYzVURsVGw0cU9yYkExb3dzRUJkS01Id1N1Ym12aGVHcmpVaUJlQ1FxaGsmY29kZV9jaGFsbGVuZ2VfbWV0aG9kPVMyNTYmY2xpZW50X2lkPXNob0luTjRqY3FJZSIsICJyZXR1cm5fdXJpIjogImh0dHBzOi8vMTI3LjAuMC4xOjgwOTkvYXV0aHpfY2IvZGphbmdvX29pZGNfb3AiLCAiaXNzIjogImh0dHBzOi8vMTI3LjAuMC4xOjgwMDAiLCAiaWF0IjogMTU3NTg4Mzk3MX0.LZC8SU-4jN4Ktzdj4lYl-qW5o8uhvA17Pw4l0Ugj0Wg7pBx4ZyjJ_o8PQ_Q1qoOZ-2wpMFgGma1KFbHqHGP0FGDzMErytLiLkLz1dLzXCvKbjtnf9IYRbIIS92e2we68ikC9_H9lPFcs705Egmrq3oRx759VBj-7dD5LOc2qSTMiuLx9EJ8sUFP4lq5nISQw7gueJttPD6YRlZQ4tbJTa2l6afbkoRXUTt411UAVCSROP-9QXhFRdVQgtpg4I7Ndppj2ihPJIqzn5PbH9RcmLkW-tEVAxk7UQH6pEKBgoiouNHmpZjiwza7t41MQuqDJBJJ56o7HGaebd8_L7OGt8w">\n\n    <p>\n        <label for="username">Nickname</label>\n        <input type="text" id="username" name="username" autofocus\n               required>\n    </p>\n\n    <p>\n        <label for="password">Secret sauce</label>\n        <input type="password" id="password" name="password" required>\n    </p>\n\n    <p>\n        <img src="" alt="">\n    </p>\n    <p>\n        <a href=""></a>\n    </p>\n    <p>\n        <a href=""></a>\n    </p>\n\n    <input type="submit" value="Get me in!">\n</form>\n</body>\n</html>\n'
-    access_token = re.search('value="(?P<token>[a-zA-Z\-\.\_0-9]*)"', res.text).groupdict()['token']
-    auth_url = re.search('action="(?P<url>[a-zA-Z0-9\/\-\_\.\:]*)"', res.text).groupdict()['url']
+    try:
+        access_token = re.search('value="(?P<token>[a-zA-Z\-\.\_0-9]*)"', res.text).groupdict()['token']
+        auth_url = re.search('action="(?P<url>[a-zA-Z0-9\/\-\_\.\:]*)"', res.text).groupdict()['url']
+    except Exception as e:
+        print(res.text)
+        raise Exception(res.text)
 
     fancy_print("The Authorization endpoint returns a "
                 "HTML authentication form with a token",
