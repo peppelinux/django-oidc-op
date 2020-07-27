@@ -326,7 +326,10 @@ def rp_logout(request):
 
     else:
         res = HttpResponseRedirect(_info['redirect_uri'])
-        _kakor = _endp.kill_cookies()
+        try:
+            _kakor = _endp.kill_cookies()
+        except AttributeError as e:
+            logger.debug('Cookie not implemented or not working.')
         #_add_cookie(res, _kakor)
 
     return res

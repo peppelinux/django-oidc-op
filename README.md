@@ -32,7 +32,7 @@ Works:
 
 Work in progress:
 - KeyJAR and default storage (issuer, keybundles) (TODO with a full storage handler integration)
-- Cookie handling, at this time we do not use cookies
+- Cookie handling, at this time we do not use cookies (disabled in configuration)
 - Custom scopes
 
 ## Run the example demo
@@ -70,8 +70,10 @@ RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/e
 These following files needed to be present in `data/oidc_op/private` otherwise they will be created on the first time automatically.
 
 1. session.json (JWK symmetric);
-2. cookie_sign_jwk.json (JWK symmetric);
-3. cookie_enc_jwk.json (JWK symmetric), optional, see `conf.yaml`.
+
+These are not used anymore, disabled in op conf.yaml:
+1. cookie_sign_jwk.json (JWK symmetric);
+2. cookie_enc_jwk.json (JWK symmetric), optional, see `conf.yaml`.
 
 To create them by hands comment out `'read_only': False'` in `conf.yaml`,
 otherwise they will be created automatically on each run.

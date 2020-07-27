@@ -1,5 +1,5 @@
 # TODO: the following four should be handled in settings.py
-session_cookie_name: django_oidc_op
+# session_cookie_name: django_oidc_op
 base_url: &base_url 'https://127.0.0.1:8000'
 #base_data_path: 'data/oidc_op/'
 
@@ -215,20 +215,19 @@ op:
         #class: oidcendpoint.user_authn.user.NoAuthn
         #kwargs:
           #user: thatusername
-    cookie_dealer:
-      class: oidcendpoint.cookie.CookieDealer
-      kwargs:
+    # cookie_dealer:
+      # class: oidcendpoint.cookie.CookieDealer
+      # kwargs:
         # these should be updated...
-        sign_jwk:
-          filename: 'data/oidc_op/private/cookie_sign_jwk.json'
-          #sign_alg: 'SHA256'
-          type: OCT
-          kid: cookie_sign_key_id
-        enc_jwk:
+        # sign_jwk:
+          # filename: 'data/oidc_op/private/cookie_sign_jwk.json'
+          # type: OCT
+          # kid: cookie_sign_key_id
+        # enc_jwk:
           ## otherwise do it yourself: jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
-          filename: 'data/oidc_op/private/cookie_enc_jwk.json'
-          type: OCT
-          kid: cookie_enc_key_id
+          # filename: 'data/oidc_op/private/cookie_enc_jwk.json'
+          # type: OCT
+          # kid: cookie_enc_key_id
 
         ## the manual one here...
         # sign_jwk: data/oidc_op/private/cookie_sign_jwk.json
