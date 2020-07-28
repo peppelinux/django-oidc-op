@@ -94,6 +94,7 @@ def do_response(endpoint, req_args, error='', **args):
 
     return resp
 
+
 def fancy_debug(request):
     """
     fancy logging of JWT things
@@ -112,6 +113,7 @@ def fancy_debug(request):
             _post = json.dumps({k:v for k,v in _post.items()},
                                indent=2)
         logger.debug('Request arguments POST: {}\n'.format(_post))
+
 
 def service_endpoint(request, endpoint):
     """
@@ -164,19 +166,11 @@ def service_endpoint(request, endpoint):
     else:
         kwargs = {}
 
-    # try:
     if isinstance(endpoint, AccessToken):
         args = endpoint.process_request(AccessTokenRequest(**req_args),
                                         **kwargs)
     else:
         args = endpoint.process_request(req_args, **kwargs)
-    # except Exception as err:
-        # message = '{}'.format(err)
-        # logger.error(message)
-        # return JsonResponse(json.dumps({
-            # 'error': 'invalid_request',
-            # 'error_description': str(err)
-            # }), safe=False, status=400)
 
     # logger.debug('Response args: {}'.format(args))
     if 'redirect_location' in args:
@@ -193,7 +187,7 @@ def well_known(request, service):
     """
     if service == 'openid-configuration':
         _endpoint = oidcendpoint_app.endpoint_context.endpoint['provider_config']
-    # TODO
+    # TODO fedservice integration here
     # if service == 'openid-federation':
     #     _endpoint = oidcendpoint_app.endpoint_context.endpoint['provider_info']
     elif service == 'webfinger':
@@ -290,6 +284,7 @@ def session_endpoint(request):
     return service_endpoint(request,
         oidcendpoint_app.endpoint_context.endpoint['session'])
 
+
 def check_session_iframe(request):
     if request.method == 'GET':
         req_args = request.GET
@@ -332,8 +327,8 @@ def rp_logout(request):
         except AttributeError as e:
             logger.debug('Cookie not implemented or not working.')
         #_add_cookie(res, _kakor)
-
     return res
+
 
 def verify_logout(request):
     part = urlparse(oidcendpoint_app.endpoint_context.issuer)
