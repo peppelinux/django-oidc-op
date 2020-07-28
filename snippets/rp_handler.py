@@ -8,8 +8,16 @@ import urllib3
 from cryptojwt import KeyJar
 from cryptojwt.key_jar import init_key_jar
 
+from oidcmsg.message import Message
 from oidcrp import RPHandler
 from oidcrp.util import load_yaml_config
+
+
+def decode_token(bearer_token, keyjar, verify_sign=True):
+    msg = Message().from_jwt(bearer_token,
+                             keyjar=keyjar,
+                             verify=verify_sign)
+    return msg.to_dict()
 
 
 def init_oidc_rp_handler(app):
@@ -77,7 +85,9 @@ def run_rp_session(rph, issuer_id, username, password):
                  'password': password,
                  'token': access_token}
 
-    auth_url = '/'.join((rph.hash2issuer[issuer_id], auth_url))
+    issuer_fqdn = rph.hash2issuer[issuer_id]
+
+    auth_url = '/'.join((issuer_fqdn, auth_url))
     req = requests.post(auth_url,
                         data=auth_dict, verify=rph.verify_ssl,
                         allow_redirects=False)
@@ -104,8 +114,16 @@ def run_rp_session(rph, issuer_id, username, password):
     result['token']
     fancy_print("Bearer Access Token", result['token'])
 
+    # get the keyjar related to the issuer
+    #  import pdb; pdb.set_trace()
+    issuer_keyjar = rph.issuer2rp[issuer_fqdn]
+    fancy_print("Access Token", decode_token(result['token'],
+                keyjar=issuer_keyjar.service_context.keyjar))
+
     # id_token
+    #  import pdb; pdb.set_trace()
     result['id_token'].to_dict()
+
     fancy_print("ID Token", result['id_token'].to_dict())
 
     # userinfo
