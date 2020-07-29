@@ -4,6 +4,7 @@ import json
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.utils import timezone
 from oidcendpoint.sso_db import SSODb
 
 from . configure import Configuration
@@ -419,13 +420,16 @@ class OidcSession(TimeStampedModel):
     session_info = models.TextField(blank=True, null=True)
     valid_until = models.DateTimeField(blank=True, null=True)
 
+
     class Meta:
         verbose_name = ('SSO Session')
         verbose_name_plural = ('SSO Sessions')
 
+
     @classmethod
     def get_by_sid(cls, value):
-        sids = cls.objects.filter(sid=value)
+        sids = cls.objects.filter(sid=value,
+                                  valid_until__gt=timezone.localtime())
         if sids:
             return sids.last()
 

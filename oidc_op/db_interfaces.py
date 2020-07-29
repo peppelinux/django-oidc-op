@@ -117,13 +117,16 @@ class OidcSessionDb(SessionDB):
         self.sso_db = sso_db or OidcSessionSso
         self.cdb = cdb or OidcClientDb()
 
+    def get_valid_sessions(self):
+        return self.db.objects.filter().exclude(valid_until__lte=timezone.localtime())
+
     def get_by_sid(self, value):
         session = self.db.get_by_sid(value)
         if session:
             return session
 
     def get_by_state(self, value):
-        session = self.db.objects.filter(state=value)
+        session = self.get_valid_sessions().filter(state=value)
         if session:
             return session.last()
 
@@ -139,10 +142,10 @@ class OidcSessionDb(SessionDB):
         if is_sid(key):
             elem = self.db.get_by_sid(key)
         elif is_code(key):
-            elem = self.db.objects.filter(code=key).last()
+            elem = self.get_valid_sessions().filter(code=key).last()
         else:
             # state is unpredictable, it's client side.
-            elem = self.db.objects.filter(state=key).last()
+            elem = self.get_valid_sessions().filter(state=key).last()
 
         if not elem:
             return
@@ -152,7 +155,7 @@ class OidcSessionDb(SessionDB):
             return elem.sso.sid
 
     def set_session_info(self, info_dict):
-        session = self.db.objects.get(state=info_dict['authn_req']['state'])
+        session = self.get_valid_sessions().get(state=info_dict['authn_req']['state'])
         session.session_info = json.dumps(info_dict)
         session.code = info_dict.get('code')
         authn_event = info_dict.get('authn_event')
