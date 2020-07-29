@@ -142,7 +142,7 @@ class SessionAdmin(admin.ModelAdmin):
 
 @admin.register(OidcSession)
 class OidcSessionAdmin(admin.ModelAdmin):
-    list_filter = ('created', 'modified')
+    list_filter = ('created', 'modified', 'valid_until')
     list_display = ('client', 'state', 'sso', 'created')
     search_fields = ('state', 'sso__user__username')
     readonly_fields = ('sid', 'client', 'sso', 'state', 'valid_until', 'info_session_preview',
