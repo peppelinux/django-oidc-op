@@ -1,3 +1,5 @@
+import logging
+
 from django import forms
 from django.contrib import admin
 from django.contrib import messages
@@ -7,6 +9,9 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 
 from . models import *
 from . utils import decode_token
+
+
+logger = logging.getLogger(__name__)
 
 
 class OidcRPContactModelForm(forms.ModelForm):
@@ -174,7 +179,7 @@ class OidcSessionAdmin(admin.ModelAdmin):
         )
 
     def info_session_preview(self, obj):
-        msg = json.loads(obj.session_info or {})
+        msg = json.loads(obj.session_info or '{}')
         dumps = json.dumps(msg, indent=2)
         return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
     info_session_preview.short_description = 'Info Session preview'
