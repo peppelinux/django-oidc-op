@@ -130,7 +130,6 @@ op:
           path: authorization
           class: oidcendpoint.oidc.authorization.Authorization
           kwargs:
-            # TODO: make a authn method for 'client_authn_method'
             client_authn_method: null
             claims_parameter_supported: True
             request_parameter_supported: True
@@ -236,11 +235,12 @@ op:
         # ## jwkgen --kty SYM > data/oidc_op/private/cookie_enc_jwk.json
         # enc_jwk: 'data/oidc_op/private/cookie_enc_jwk.json'
 
-        default_values:
-            name: oidc_op
-            domain: *base_url
-            path: /
-            max_age: 3600
+        # default_values:
+            # name: oidc_op
+            # domain: *base_url
+            # path: /
+            # max_age: 3600
+
     login_hint2acrs:
       class: oidcendpoint.login_hint.LoginHint2Acrs
       kwargs:
