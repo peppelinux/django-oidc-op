@@ -5,22 +5,19 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
-from oidcendpoint.sso_db import SSODb
-
-from . configure import Configuration
+from oidcop.utils import load_yaml_config
 
 
-OIDC_OP_CONFIG = Configuration.\
-                  create_from_config_file(settings.OIDCENDPOINT_CONFIG)
-OIDC_RESPONSE_TYPES = OIDC_OP_CONFIG.conf['op']\
+OIDC_OP_CONFIG = load_yaml_config(settings.OIDCENDPOINT_CONFIG)
+OIDC_RESPONSE_TYPES = OIDC_OP_CONFIG['op']\
                         ['server_info']['endpoint']['authorization']\
                         ['kwargs']['response_types_supported']
 
-OIDC_TOKEN_AUTHN_METHODS = OIDC_OP_CONFIG.conf['op']\
+OIDC_TOKEN_AUTHN_METHODS = OIDC_OP_CONFIG['op']\
                             ['server_info']['endpoint']['token']\
                             ['kwargs']['client_authn_method']
 
-OIDC_GRANT_TYPES = OIDC_OP_CONFIG.conf['op']\
+OIDC_GRANT_TYPES = OIDC_OP_CONFIG['op']\
                     ['server_info']['capabilities']['grant_types_supported']
 
 TIMESTAMP_FIELDS = ['client_id_issued_at', 'client_secret_expires_at']

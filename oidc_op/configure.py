@@ -44,30 +44,6 @@ class Configuration:
             # self.op['server_info']['password'] = self.session_key
             self.logger.debug("Set server password to %s", self.session_key.key)
 
-        # Not needed anymore cause of automatic builder in oidcendpoint.cookie __init__
-        #
-        # cookie_dealer = self.op['server_info'].get('cookie_dealer')
-        # if cookie_dealer:
-            # ## sign_jwk
-            # cookie_sign_jwk = cookie_dealer.get('kwargs', {}).get('sign_jwk')
-            # if isinstance(cookie_sign_jwk, dict):
-                # self.cookie_sign_jwk = init_key(**cookie_sign_jwk)
-                # self.logger.debug("Set cookie_sign_jwk to %s",
-                                  # self.cookie_sign_jwk)
-            # ## enc_jwk
-            # cookie_enc_jwk = cookie_dealer['kwargs'].get('enc_jwk')
-            # if isinstance(cookie_enc_jwk, dict):
-                # self.cookie_enc_jwk = init_key(**cookie_enc_jwk)
-                # self.logger.debug("Set cookie_enc_jwk to %s",
-                                  # self.cookie_enc_jwk)
-
-        # set OP session key
-        if self.op :
-            if self.op['server_info'].get('password') is None:
-                key = self.session_key.key
-                self.op['server_info']['password'] = key
-                self.logger.debug("Set server password to %s", key)
-
         # templates environment
         self.template_dir = os.path.abspath(conf.get('template_dir', 'templates'))
 
