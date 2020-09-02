@@ -32,6 +32,11 @@ op:
       type: OCT
       use: sig
     capabilities:
+      # indicates that unknow/unavailable scopes requested by a RP
+      # would get a 403 error message instead of be declined implicitly.
+      # If False the op will only release the available scopes and ignoring the missings.
+      # Default to False
+      deny_unknown_scopes: true
       subject_types_supported:
         - public
         - pairwise

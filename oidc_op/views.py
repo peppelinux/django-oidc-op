@@ -17,7 +17,7 @@ from django.utils.translation import gettext as _
 from oidcendpoint.authn_event import create_authn_event
 from oidcendpoint.exception import FailedAuthentication
 from oidcendpoint.exception import UnAuthorizedClient
-from oidcendpoint.exception import UnAuthorizedClientScope
+from oidcendpoint.exception import UnAuthorizedClientScope # experimental
 from oidcendpoint.exception import InvalidClient
 from oidcendpoint.exception import UnknownClient
 from oidcendpoint.oidc.token import AccessToken
@@ -175,8 +175,9 @@ def service_endpoint(request, endpoint):
             args = endpoint.process_request(req_args, **kwargs)
     except UnAuthorizedClientScope as e:
         logger.exception(e)
-        return HttpResponse('UnAuthorized scopes to this RP: {}'.format(req_args['scope']),
-                            status=403)
+        _msg = 'UnAuthorized scopes to this RP: {}'.format(req_args['scope'])
+        return JsonResponse({"error_description": _msg,
+                             "error": "invalid_scope"}, status=400)
     except Exception as e:
         logger.exception(e)
         return HttpResponse('Error', status=500)
