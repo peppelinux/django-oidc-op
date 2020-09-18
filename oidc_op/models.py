@@ -105,6 +105,11 @@ class OidcRelyingParty(TimeStampedModel):
         if scopes:
             return [i.scope for i in scopes]
 
+    @allowed_scopes.setter
+    def allowed_scopes(self, values):
+        for i in values:
+            scope = self.oidcrpscope_set.create(client=self, scope=i)
+
     @property
     def contacts(self):
         return [elem.contact

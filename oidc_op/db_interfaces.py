@@ -93,7 +93,7 @@ class OidcClientDb(object):
         if not client:
             client_id = dv.pop('client_id')
             client = self.model.objects.create(client_id=client_id)
-
+        
         for k,v in dv.items():
             setattr(client, k, v)
 
