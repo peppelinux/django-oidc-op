@@ -59,6 +59,12 @@ cd JWTConnect-Python-OidcRP
 RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/example/data/oidc_rp/conf.django.yaml
 ```
 
+You can also use a scripted RP handler on top of oidc-rp
+````
+python3 snippets/rp_handler.py -c example/data/oidc_rp/conf.django.yaml -u myuser -p mypass -iss django_oidc_op
+````
+
+
 ## Configure OIDC endpoint
 
 #### Django settings.py parameters

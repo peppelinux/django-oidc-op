@@ -110,8 +110,8 @@ clients:
     client_preferences: *prefs
 
     # if you create a client through ADMIN UI ...
-    client_id: 1UUl6cwNigmj
-    client_secret: 78be88872d5877c4ddb209335f4eb2fc5118a481a195a454c8b2ebcb
+    #client_id: 1UUl6cwNigmj
+    #client_secret: 78be88872d5877c4ddb209335f4eb2fc5118a481a195a454c8b2ebcb
     # this redirect_uri must be statically configured in op's rp cdb!
     redirect_uris:
       - https://127.0.0.1:8099/authz_cb/django_oidc_op
