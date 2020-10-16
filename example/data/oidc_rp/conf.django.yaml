@@ -131,3 +131,29 @@ clients:
         kwargs:
           code_challenge_length: 64
           code_challenge_method: S256
+
+  shib_oidc_op:
+    client_preferences: *prefs
+
+    # if you create a client through ADMIN UI ...
+    client_id: demo_rp
+    client_secret: topsecret2020___
+    # this redirect_uri must be statically configured in op's rp cdb!
+    redirect_uris:
+      - https://127.0.0.1:8099/redirect_uri
+    issuer: https://idp.testunical.it/
+    jwks_uri: https://127.0.0.1:8099/static/jwks.json
+
+    services:
+      discovery: *disc
+      registration: *regist
+      authorization: *authz
+      accesstoken: *acctok
+      userinfo: *userinfo
+      end_session: *sess
+    add_ons:
+      pkce:
+        function: oidcservice.oidc.add_on.pkce.add_pkce_support
+        kwargs:
+          code_challenge_length: 64
+          code_challenge_method: S256
