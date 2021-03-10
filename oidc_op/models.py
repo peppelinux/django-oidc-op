@@ -104,6 +104,8 @@ class OidcRelyingParty(TimeStampedModel):
         scopes = self.oidcrpscope_set.filter(client=self)
         if scopes:
             return [i.scope for i in scopes]
+        else:
+            return ['openid']
 
     @allowed_scopes.setter
     def allowed_scopes(self, values):

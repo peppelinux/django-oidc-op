@@ -140,7 +140,7 @@ clients:
     client_secret: topsecret2020___
     # this redirect_uri must be statically configured in op's rp cdb!
     redirect_uris:
-      - https://127.0.0.1:8099/redirect_uri
+      - https://127.0.0.1:8099/authz_cb/shib_oidc_op
     issuer: https://idp.testunical.it/
     jwks_uri: https://127.0.0.1:8099/static/jwks.json
 
