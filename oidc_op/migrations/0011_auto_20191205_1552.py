@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='oidcrpresponsetype',
             name='response_type',
-            field=models.CharField(choices=[('code', 'code'), ('token', 'token'), ('id_token', 'id_token'), ('code token', 'code token'), ('code id_token', 'code id_token'), ('id_token token', 'id_token token'), ('code id_token token', 'code id_token token'), ('none', 'none')], max_length=60),
+            field=models.CharField(choices=[('code', 'code'), ('token', 'token'), ('id_token', 'id_token'), ('code token', 'code token'), (
+                'code id_token', 'code id_token'), ('id_token token', 'id_token token'), ('code id_token token', 'code id_token token'), ('none', 'none')], max_length=60),
         ),
     ]

@@ -18,9 +18,11 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcSessionSid',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('sid', models.CharField(max_length=255, unique=True)),
-                ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='oidc_op.OidcSession')),
+                ('session', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='oidc_op.OidcSession')),
             ],
         ),
     ]

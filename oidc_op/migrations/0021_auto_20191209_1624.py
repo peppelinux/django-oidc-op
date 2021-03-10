@@ -33,19 +33,23 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='oidcsession',
             name='state',
-            field=models.CharField(default='asdasdas asd asd as', max_length=255),
+            field=models.CharField(
+                default='asdasdas asd asd as', max_length=255),
             preserve_default=False,
         ),
         migrations.CreateModel(
             name='OidcSessionSso',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('sid', models.CharField(max_length=255)),
                 ('sub', models.CharField(blank=True, max_length=255, null=True)),
-                ('sub_clean', models.CharField(blank=True, max_length=255, null=True)),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('sub_clean', models.CharField(
+                    blank=True, max_length=255, null=True)),
+                ('user', models.ForeignKey(blank=True, null=True,
+                                           on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'SSO Session SSO',

@@ -14,25 +14,37 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcRelyingParty',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('client_id', models.CharField(max_length=255, unique=True)),
                 ('client_salt', models.CharField(max_length=255)),
-                ('registration_access_token', models.CharField(blank=True, max_length=255, null=True)),
-                ('registration_client_uri', models.URLField(blank=True, max_length=255, null=True)),
+                ('registration_access_token', models.CharField(
+                    blank=True, max_length=255, null=True)),
+                ('registration_client_uri', models.URLField(
+                    blank=True, max_length=255, null=True)),
                 ('client_id_issued_at', models.DateTimeField(blank=True, null=True)),
-                ('client_secret', models.CharField(blank=True, help_text='It is not needed for Clients selecting a token_endpoint_auth_method of private_key_jwt', max_length=255, null=True)),
-                ('client_secret_expires_at', models.DateTimeField(help_text='REQUIRED if client_secret is issued')),
-                ('application_type', models.CharField(blank=True, max_length=255, null=True)),
-                ('response_types', models.CharField(choices=[('code', 'code'), ('token', 'token'), ('id_token', 'id_token'), ('code token', 'code token'), ('code id_token', 'code id_token'), ('id_token token', 'id_token token'), ('code id_token token', 'code id_token token'), ('none', 'none')], max_length=33)),
+                ('client_secret', models.CharField(
+                    blank=True, help_text='It is not needed for Clients selecting a token_endpoint_auth_method of private_key_jwt', max_length=255, null=True)),
+                ('client_secret_expires_at', models.DateTimeField(
+                    help_text='REQUIRED if client_secret is issued')),
+                ('application_type', models.CharField(
+                    blank=True, max_length=255, null=True)),
+                ('response_types', models.CharField(choices=[('code', 'code'), ('token', 'token'), ('id_token', 'id_token'), ('code token', 'code token'), (
+                    'code id_token', 'code id_token'), ('id_token token', 'id_token token'), ('code id_token token', 'code id_token token'), ('none', 'none')], max_length=33)),
                 ('contacts', models.CharField(max_length=254)),
-                ('token_endpoint_auth_method', models.CharField(choices=[('client_secret_post', 'client_secret_post'), ('client_secret_basic', 'client_secret_basic'), ('client_secret_jwt', 'client_secret_jwt'), ('private_key_jwt', 'private_key_jwt')], max_length=33)),
+                ('token_endpoint_auth_method', models.CharField(choices=[('client_secret_post', 'client_secret_post'), (
+                    'client_secret_basic', 'client_secret_basic'), ('client_secret_jwt', 'client_secret_jwt'), ('private_key_jwt', 'private_key_jwt')], max_length=33)),
                 ('jwks_uri', models.URLField(blank=True, max_length=255, null=True)),
-                ('post_logout_redirect_uris', models.CharField(blank=True, max_length=254, null=True)),
-                ('grant_types', models.CharField(choices=[('authorization_code', 'authorization_code'), ('implicit', 'implicit')], max_length=60)),
-                ('redirect_uris', models.CharField(blank=True, max_length=254, null=True)),
-                ('is_active', models.BooleanField(default=True, verbose_name='active')),
+                ('post_logout_redirect_uris', models.CharField(
+                    blank=True, max_length=254, null=True)),
+                ('grant_types', models.CharField(choices=[
+                 ('authorization_code', 'authorization_code'), ('implicit', 'implicit')], max_length=60)),
+                ('redirect_uris', models.CharField(
+                    blank=True, max_length=254, null=True)),
+                ('is_active', models.BooleanField(
+                    default=True, verbose_name='active')),
             ],
             options={
                 'verbose_name': 'Relying Party',

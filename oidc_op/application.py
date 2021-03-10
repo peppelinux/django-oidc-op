@@ -1,13 +1,8 @@
-import importlib
 import logging
 import os
 
-from cryptojwt.key_jar import init_key_jar
 from django.conf import settings
-from oidcendpoint import token_handler
-from oidcendpoint.endpoint_context import (EndpointContext,
-                                           get_token_handlers)
-from oidcendpoint.util import importer
+from oidcendpoint.endpoint_context import EndpointContext
 
 from urllib.parse import urlparse
 from . configure import Configuration

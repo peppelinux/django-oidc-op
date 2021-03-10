@@ -2,10 +2,8 @@ import logging
 
 from django import forms
 from django.contrib import admin
-from django.contrib import messages
 from django.contrib.sessions.models import Session
 from django.utils.safestring import mark_safe
-from django.utils.translation import ugettext, ugettext_lazy as _
 
 from . models import *
 from . utils import decode_token
@@ -87,50 +85,50 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
                OidcRPContactInline,
                OidcRPRedirectUriInline)
     fieldsets = (
-             (None, {
-                        'fields' : (
-                                      ('client_id', 'client_secret',),
-                                      ('client_salt','jwks_uri'),
-                                      ('registration_client_uri',),
-                                      ('registration_access_token',),
-                                      ('application_type',
-                                       'token_endpoint_auth_method'),
-                                      ('is_active', )
-                                    )
-                       },
-             ),
-             ('Temporal values',
-                                {
-                                'fields' : (
-                                            (('client_id_issued_at',
-                                              'client_secret_expires_at',
-                                              'last_seen')),
+        (None, {
+            'fields': (
+                ('client_id', 'client_secret',),
+                ('client_salt', 'jwks_uri'),
+                ('registration_client_uri',),
+                ('registration_access_token',),
+                ('application_type',
+                 'token_endpoint_auth_method'),
+                ('is_active', )
+            )
+        },
+        ),
+        ('Temporal values',
+         {
+             'fields': (
+                 (('client_id_issued_at',
+                   'client_secret_expires_at',
+                   'last_seen')),
 
-                                             ),
-
-                                },
              ),
-        )
+
+         },
+         ),
+    )
 
     # def save_model(self, request, obj, form, change):
-        # res = False
-        # msg = ''
-        # try:
-            # json.dumps(obj.as_pysaml2_mdstore_row())
-            # res = obj.validate()
-            # super(MetadataStoreAdmin, self).save_model(request, obj, form, change)
-        # except Exception as excp:
-            # obj.is_valid = False
-            # obj.save()
-            # msg = str(excp)
+    # res = False
+    # msg = ''
+    # try:
+    # json.dumps(obj.as_pysaml2_mdstore_row())
+    # res = obj.validate()
+    # super(MetadataStoreAdmin, self).save_model(request, obj, form, change)
+    # except Exception as excp:
+    # obj.is_valid = False
+    # obj.save()
+    # msg = str(excp)
 
-        # if not res:
-            # messages.set_level(request, messages.ERROR)
-            # _msg = _("Storage {} is not valid, if 'mdq' at least a "
-                     # "valid url must be inserted. "
-                     # "If local: at least a file or a valid path").format(obj.name)
-            # if msg: _msg = _msg + '. ' + msg
-            # messages.add_message(request, messages.ERROR, _msg)
+    # if not res:
+    # messages.set_level(request, messages.ERROR)
+    # _msg = _("Storage {} is not valid, if 'mdq' at least a "
+    # "valid url must be inserted. "
+    # "If local: at least a file or a valid path").format(obj.name)
+    # if msg: _msg = _msg + '. ' + msg
+    # messages.add_message(request, messages.ERROR, _msg)
 
 
 @admin.register(Session)
@@ -149,46 +147,46 @@ class OidcSessionAdmin(admin.ModelAdmin):
                        'access_token_preview', 'id_token_preview')
 
     fieldsets = (
-             (None, {
-                        'fields' : (
-                                      ('client', ),
-                                      ('sso', ),
-                                      ('state',),
-                                      ('sid',),
-                                      ('valid_until',),
-                                    )
-                       },
-             ),
-             ('Session info',
-                                {
-                                'classes': ('collapse',),
-                                'fields' : ('info_session_preview',),
-                                }
-             ),
+        (None, {
+            'fields': (
+                ('client', ),
+                ('sso', ),
+                ('state',),
+                ('sid',),
+                ('valid_until',),
+            )
+        },
+        ),
+        ('Session info',
+         {
+             'classes': ('collapse',),
+             'fields': ('info_session_preview',),
+         }
+         ),
 
-             ('Token previews',
-                                {
-                                'classes': ('collapse',),
-                                'fields' : (
-                                            ('access_token_preview'),
-                                            ('id_token_preview'),
-                                            )
+        ('Token previews',
+         {
+             'classes': ('collapse',),
+             'fields': (
+                 ('access_token_preview'),
+                 ('id_token_preview'),
+             )
 
-                                },
-             ),
-        )
+         },
+         ),
+    )
 
     def info_session_preview(self, obj):
         msg = json.loads(obj.session_info or '{}')
         dumps = json.dumps(msg, indent=2)
-        return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+        return mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
     info_session_preview.short_description = 'Info Session preview'
 
     def access_token_preview(self, obj):
         try:
             msg = decode_token(obj.session_info or {}, 'access_token')
             dumps = json.dumps(msg.to_dict(), indent=2)
-            return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+            return mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
         except Exception as e:
             logger.tracelog(e)
     access_token_preview.short_description = 'Access Token preview'
@@ -197,7 +195,7 @@ class OidcSessionAdmin(admin.ModelAdmin):
         try:
             msg = decode_token(obj.session_info or {}, 'id_token')
             dumps = json.dumps(msg.to_dict(), indent=2)
-            return  mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+            return mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
         except Exception as e:
             logger.tracelog(e)
     id_token_preview.short_description = 'ID Token preview'

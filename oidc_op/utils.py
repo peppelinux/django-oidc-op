@@ -11,8 +11,10 @@ from . views import oidcendpoint_app
 def timestamp2dt(value):
     return int(datetime.datetime.timestamp(value))
 
+
 def dt2timestamp(value):
-    ts = pytz.utc.localize(datetime.datetime.fromtimestamp(value))
+    pytz.utc.localize(datetime.datetime.fromtimestamp(value))
+
 
 def decode_token(txt, attr_name='access_token', verify_sign=True):
     issuer = oidcendpoint_app.srv_config.conf['op']['server_info']['issuer']

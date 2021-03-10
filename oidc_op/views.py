@@ -12,22 +12,18 @@ from django.http import (HttpResponse,
 from django.http.request import QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
-from django.urls import reverse
-from django.utils.translation import gettext as _
 from oidcendpoint.authn_event import create_authn_event
-from oidcendpoint.exception import FailedAuthentication
 from oidcendpoint.exception import UnAuthorizedClient
-from oidcendpoint.exception import UnAuthorizedClientScope # experimental
+from oidcendpoint.exception import UnAuthorizedClientScope  # experimental
 from oidcendpoint.exception import InvalidClient
 from oidcendpoint.exception import UnknownClient
-from oidcendpoint.oidc.token import AccessToken
+from oidcendpoint.session.token import AccessToken
 from oidcmsg.oauth2 import ResponseMessage
 from oidcmsg.oidc import AccessTokenRequest
 from oidcmsg.oidc import AuthorizationRequest
 from urllib import parse as urlib_parse
 from urllib.parse import urlparse
 
-from pprint import pformat
 
 from . application import oidcendpoint_application
 oidcendpoint_app = oidcendpoint_application()
@@ -37,20 +33,20 @@ logger = logging.getLogger(__name__)
 
 # to be evaluated in a pure Django Session
 # def _add_cookie(resp, cookie_spec):
-    # for key, _morsel in cookie_spec.items():
-        # kwargs = {'value': _morsel.value}
-        # for param in ['expires', 'path', 'comment', 'domain', 'max-age',
-                      # 'secure',
-                      # 'version']:
-            # if _morsel[param]:
-                # kwargs[param] = _morsel[param]
-        # resp.set_cookie(key, **kwargs)
+# for key, _morsel in cookie_spec.items():
+# kwargs = {'value': _morsel.value}
+# for param in ['expires', 'path', 'comment', 'domain', 'max-age',
+# 'secure',
+# 'version']:
+# if _morsel[param]:
+# kwargs[param] = _morsel[param]
+# resp.set_cookie(key, **kwargs)
 
 
 # def add_cookie(resp, cookie_spec):
-    # if isinstance(cookie_spec, list):
-        # for _spec in cookie_spec:
-            # _add_cookie(resp, _spec)
+# if isinstance(cookie_spec, list):
+# for _spec in cookie_spec:
+# _add_cookie(resp, _spec)
 
 
 def do_response(endpoint, req_args, error='', **args):
@@ -111,7 +107,7 @@ def fancy_debug(request):
         if isinstance(_post, bytes):
             _post = json.dumps(json.loads(_post.decode()), indent=2)
         elif isinstance(_post, QueryDict):
-            _post = json.dumps({k:v for k,v in _post.items()},
+            _post = json.dumps({k: v for k, v in _post.items()},
                                indent=2)
         logger.debug('Request arguments POST: {}\n'.format(_post))
 
@@ -120,7 +116,8 @@ def service_endpoint(request, endpoint):
     """
     TODO: documentation here
     """
-    logger.info('\n\nRequest at the "{}" endpoint'.format(endpoint.endpoint_name))
+    logger.info('\n\nRequest at the "{}" endpoint'.format(
+        endpoint.endpoint_name))
     if logger.level == 0:
         fancy_debug(request)
 
@@ -128,16 +125,16 @@ def service_endpoint(request, endpoint):
     pr_args = {'auth': authn}
 
     if request.method == 'GET':
-        data = {k:v for k,v in request.GET.items()}
+        data = {k: v for k, v in request.GET.items()}
     elif request.body:
         data = request.body \
-               if isinstance(request.body, str) else \
-               request.body.decode()
-        #<oidcendpoint.oidc.token.AccessToken object at 0x7fd626329d68>
+            if isinstance(request.body, str) else \
+            request.body.decode()
+        # <oidcendpoint.oidc.token.AccessToken object at 0x7fd626329d68>
         if authn:
-            data = {k:v[0] for k,v in urlib_parse.parse_qs(data).items()}
+            data = {k: v[0] for k, v in urlib_parse.parse_qs(data).items()}
     else:
-        data = {k:v for k,v in request.POST.items()}
+        data = {k: v for k, v in request.POST.items()}
 
     # for .well-known resources like provider-config no data are submitted
     # if not data:
@@ -150,14 +147,14 @@ def service_endpoint(request, endpoint):
         return JsonResponse(json.dumps({
             'error': 'unauthorized_client',
             'error_description': str(err)
-            }), safe=False, status=400)
+        }), safe=False, status=400)
     except Exception as err:
         logger.error(err)
         return JsonResponse(json.dumps({
             'error': 'invalid_request',
             'error_description': str(err),
             'method': request.method
-            }), safe=False, status=400)
+        }), safe=False, status=400)
 
     if isinstance(req_args, ResponseMessage) and 'error' in req_args:
         return JsonResponse(req_args.__dict__, status=400)
@@ -219,7 +216,7 @@ def registration(request):
 def registration_api():
     logger.info('registration API')
     return service_endpoint(request,
-        oidcendpoint_app.endpoint_context.endpoint['registration_api'])
+                            oidcendpoint_app.endpoint_context.endpoint['registration_api'])
 
 
 def authorization(request):
@@ -236,7 +233,7 @@ def verify_user(request):
         return HttpResponse('Access forbidden: invalid token.', status=403)
 
     authn_method = oidcendpoint_app.endpoint_context.\
-                   authn_broker.get_method_by_id('user')
+        authn_broker.get_method_by_id('user')
 
     kwargs = dict([(k, v) for k, v in request.POST.items()])
     user = authn_method.verify(**kwargs)
@@ -282,7 +279,7 @@ def userinfo(request):
     logger.info('userinfo request')
     _endpoint = oidcendpoint_app.endpoint_context.endpoint['userinfo']
     # if not hasattr(request, 'debug'):
-        # request.debug = 0
+    # request.debug = 0
     # request.debug +=1
     return service_endpoint(request, _endpoint)
 
@@ -292,7 +289,7 @@ def userinfo(request):
 ########
 def session_endpoint(request):
     return service_endpoint(request,
-        oidcendpoint_app.endpoint_context.endpoint['session'])
+                            oidcendpoint_app.endpoint_context.endpoint['session'])
 
 
 def check_session_iframe(request):
@@ -320,7 +317,7 @@ def check_session_iframe(request):
 def rp_logout(request):
     _endp = oidcendpoint_app.endpoint_context.endpoint['session']
     _info = _endp.unpack_signed_jwt(request.POST['sjwt'])
-    alla = None #request.POST.get('logout')
+    alla = None  # request.POST.get('logout')
 
     _iframes = _endp.do_verified_logout(alla=alla, **_info)
     if _iframes:
@@ -333,8 +330,8 @@ def rp_logout(request):
     else:
         res = HttpResponseRedirect(_info['redirect_uri'])
         try:
-            _kakor = _endp.kill_cookies()
-        except AttributeError as e:
+            _endp.kill_cookies()
+        except AttributeError:
             logger.debug('Cookie not implemented or not working.')
         #_add_cookie(res, _kakor)
     return res

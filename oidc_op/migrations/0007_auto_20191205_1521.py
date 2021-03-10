@@ -18,11 +18,14 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcRPGrantType',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
-                ('grant_type', models.CharField(choices=[('authorization_code', 'authorization_code'), ('implicit', 'implicit'), ('urn:ietf:params:oauth:grant-type:jwt-bearer', 'urn:ietf:params:oauth:grant-type:jwt-bearer'), ('refresh_token', 'refresh_token')], max_length=60)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='oidc_op.OidcRelyingParty')),
+                ('grant_type', models.CharField(choices=[('authorization_code', 'authorization_code'), ('implicit', 'implicit'), (
+                    'urn:ietf:params:oauth:grant-type:jwt-bearer', 'urn:ietf:params:oauth:grant-type:jwt-bearer'), ('refresh_token', 'refresh_token')], max_length=60)),
+                ('client', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='oidc_op.OidcRelyingParty')),
             ],
             options={
                 'verbose_name': 'Relying Party GrantType',

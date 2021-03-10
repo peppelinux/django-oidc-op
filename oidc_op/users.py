@@ -4,9 +4,7 @@ from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
 
-from oidcendpoint.util import instantiate
 from oidcendpoint.user_authn.user import (create_signed_jwt,
-                                          verify_signed_jwt,
                                           LABELS)
 from oidcendpoint.user_authn.user import UserAuthnMethod
 
@@ -20,7 +18,6 @@ class UserPassDjango(UserAuthnMethod):
 
     # TODO: get this though settings conf
     url_endpoint = "/verify/user_pass_django"
-
 
     def __init__(self,
                  # template_handler=render_to_string,
@@ -50,7 +47,6 @@ class UserPassDjango(UserAuthnMethod):
 
         self.action = verify_endpoint or self.url_endpoint
         self.kwargs['action'] = self.action
-
 
     def __call__(self, **kwargs):
         _ec = self.endpoint_context
@@ -111,14 +107,15 @@ class UserInfo(object):
                 if key in self.claims_map:
                     # manage required and optional: TODO extends this approach
                     if not hasattr(user, self.claims_map.get(key)) and \
-                           restr == {"essential": True}:
+                            restr == {"essential": True}:
                         missing.append(key)
                         continue
                     else:
                         optional.append(key)
                     #
                     uattr = getattr(user, self.claims_map[key], None)
-                    if not uattr: continue
+                    if not uattr:
+                        continue
                     result[key] = uattr() if callable(uattr) else uattr
             return result
 

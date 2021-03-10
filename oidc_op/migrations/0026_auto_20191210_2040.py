@@ -13,11 +13,13 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='oidcrelyingparty',
             name='application_type',
-            field=models.CharField(blank=True, default='web', max_length=255, null=True),
+            field=models.CharField(
+                blank=True, default='web', max_length=255, null=True),
         ),
         migrations.AlterField(
             model_name='oidcrelyingparty',
             name='token_endpoint_auth_method',
-            field=models.CharField(blank=True, choices=[('client_secret_post', 'client_secret_post'), ('client_secret_basic', 'client_secret_basic'), ('client_secret_jwt', 'client_secret_jwt'), ('private_key_jwt', 'private_key_jwt')], default='client_secret_basic', max_length=33, null=True),
+            field=models.CharField(blank=True, choices=[('client_secret_post', 'client_secret_post'), ('client_secret_basic', 'client_secret_basic'), (
+                'client_secret_jwt', 'client_secret_jwt'), ('private_key_jwt', 'private_key_jwt')], default='client_secret_basic', max_length=33, null=True),
         ),
     ]

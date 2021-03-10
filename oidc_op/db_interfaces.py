@@ -1,16 +1,11 @@
 import datetime
 import json
 import logging
-import re
 import pytz
-import urllib
 
 from django.contrib.auth import get_user_model
-from django.db.models import Q
 from django.utils import timezone
-from oidcendpoint.session import (SessionDB,
-                                  public_id,
-                                  pairwise_id)
+from oidcendpoint.session.database import Database
 from . models import (OidcRelyingParty,
                       OidcRPResponseType,
                       OidcRPGrantType,
@@ -56,7 +51,8 @@ class OidcClientDb(object):
         # set last_seen
         client.last_seen = timezone.localtime()
         client.save()
-        if as_obj: return client
+        if as_obj:
+            return client
         return client.copy()
 
     def __getitem__(self, key):
@@ -74,7 +70,7 @@ class OidcClientDb(object):
     def set(self, key, value):
         dv = value.copy()
 
-        for k,v in dv.items():
+        for k, v in dv.items():
             if isinstance(v, int) or isinstance(v, float):
                 if k in TIMESTAMP_FIELDS:
                     dt = datetime.datetime.fromtimestamp(v)
@@ -84,17 +80,17 @@ class OidcClientDb(object):
         # if the client already exists
         if dv.get('id'):
             client = self.model.objects.\
-                        filter(pk=dv['id']).first()
+                filter(pk=dv['id']).first()
 
         if dv.get('client_id'):
             client = self.model.objects.\
-                        filter(client_id=dv['client_id']).first()
+                filter(client_id=dv['client_id']).first()
 
         if not client:
             client_id = dv.pop('client_id')
             client = self.model.objects.create(client_id=client_id)
-        
-        for k,v in dv.items():
+
+        for k, v in dv.items():
             setattr(client, k, v)
 
         client.save()
@@ -103,7 +99,7 @@ class OidcClientDb(object):
         return self.__dict__
 
 
-class OidcSessionDb(SessionDB):
+class OidcSessionDb(Database):
     """
     Adaptation of a Django model as if it were a dict
 
@@ -155,7 +151,8 @@ class OidcSessionDb(SessionDB):
             return elem.sso.sid
 
     def set_session_info(self, info_dict):
-        session = self.get_valid_sessions().get(state=info_dict['authn_req']['state'])
+        session = self.get_valid_sessions().get(
+            state=info_dict['authn_req']['state'])
         session.session_info = json.dumps(info_dict)
         session.code = info_dict.get('code')
         authn_event = info_dict.get('authn_event')
@@ -168,7 +165,6 @@ class OidcSessionDb(SessionDB):
         session.client = self.cdb.get(key=client_id, as_obj=True)
         session.save()
 
-
     def set(self, key, value):
         if is_sid(key):
             # info_dict = {'code': 'Z0FBQUFBQmZESFowazFBWWJteTNMOTZQa25KZmV0N1U1VzB4VEZCVEN3SThQVnVFRWlSQ2FrODhpb3Yyd3JMenJQT01QWGpuMnJZQmQ4YVh3bF9sbUxqMU43VG1RQ01BbW9JdV8tbTNNSzREMUk2U2N4YXVwZ3ZWQ1ZvbXdFanRsbWJIaWQyVWZON0N5LU9mUlhZUGgwdFRDQkpRZ3dSR0lVQjBBT0s4OHc3REJOdUlPUGVOUU9ZRlZvU3FBdVU2LThUUWNhRDVocl9QWEswMmo3Y2VtLUNvWklsX0ViN1NfWFRJWksxSXhxNVVNQW9ySngtc2RCST0=', 'oauth_state': 'authz', 'client_id': 'Mz2LUfvqCbRQ', 'authn_req': {'redirect_uri': 'https://127.0.0.1:8099/authz_cb/django_oidc_op', 'scope': 'openid profile email address phone', 'response_type': 'code', 'nonce': 'mpuLL5IxgDvFDGAqlE05LwHO', 'state': 'eOzFkkGFHLT16zO6SqpOmc2rv6DZmf3g', 'code_challenge': 'lAs7I04g1Qh8mhTG8wxV0BfmrhzrSrl1ASp04C3Zmog', 'code_challenge_method': 'S256', 'client_id': 'Mz2LUfvqCbRQ'}, 'authn_event': {'uid': 'wert', 'salt': 'fc7AGQ==', 'authn_info': 'oidcendpoint.user_authn.authn_context.INTERNETPROTOCOLPASSWORD', 'authn_time': 1594652276, 'valid_until': 1594655876}}
@@ -176,16 +172,15 @@ class OidcSessionDb(SessionDB):
             self.set_session_info(info_dict)
         logger.debug('Session DB - set - {}'.format(session.copy()))
 
-
     def __setitem__(self, sid, instance):
         if is_sid(sid):
             try:
-                _info = instance.to_json()
-            except ValueError as e:
-                _info = json.dumps(instance)
-            except AttributeError as e:
+                instance.to_json()
+            except ValueError:
+                json.dumps(instance)
+            except AttributeError:
                 # it's a dict
-                _info = instance
+                pass
 
             self.set_session_info(instance)
         else:
@@ -208,10 +203,12 @@ class OidcSsoDb(object):
     This class acts like a NoSQL storage but stores informations
     into a pure Django DB model
     """
+
     def __init__(self, db_conf={}, db=None, session_handler=None):
         self._db = db or OidcSessionSso
         self._db_conf = db_conf
-        self.session_handler = session_handler or db_conf.get('session_hanlder') or OidcSessionDb()
+        self.session_handler = session_handler or db_conf.get(
+            'session_hanlder') or OidcSessionDb()
 
     def _get_or_create(self, sid):
         sso = self._db.objects.filter(sid=sid).first()
@@ -223,8 +220,8 @@ class OidcSsoDb(object):
         if isinstance(value, dict):
             if value.get('state'):
                 session = self.session_handler.create_by_state(k)
-                session.sid =value['state'][0] \
-                             if isinstance(value['state'], list) else value
+                session.sid = value['state'][0] \
+                    if isinstance(value['state'], list) else value
                 sso = self._db.objects.create()
                 session.sso = sso
                 session.save()
@@ -254,7 +251,8 @@ class OidcSsoDb(object):
                           "with this name as attribute: {}").format(self, k))
             user = get_user_model().objects.filter(username=k).first()
             if user:
-                logger.debug('Tryng to match to a username: Found {}'.format(user))
+                logger.debug(
+                    'Tryng to match to a username: Found {}'.format(user))
                 return self._db.objects.filter(user=user).last()
             else:
                 return {}

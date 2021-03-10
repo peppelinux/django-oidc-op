@@ -18,7 +18,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='oidcsession',
             name='sso',
-            field=models.ForeignKey(default=45, on_delete=django.db.models.deletion.CASCADE, to='oidc_op.OidcSessionSso'),
+            field=models.ForeignKey(
+                default=45, on_delete=django.db.models.deletion.CASCADE, to='oidc_op.OidcSessionSso'),
             preserve_default=False,
         ),
     ]

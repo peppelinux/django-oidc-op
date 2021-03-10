@@ -14,12 +14,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcRPRedirectUris',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('uri', models.CharField(blank=True, max_length=254, null=True)),
-                ('type', models.CharField(choices=[('redirect_uris', 'redirect_uris'), ('post_logout_redirect_uris', 'post_logout_redirect_uris')], max_length=33)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='oidc_op.OidcRelyingParty')),
+                ('type', models.CharField(choices=[('redirect_uris', 'redirect_uris'), (
+                    'post_logout_redirect_uris', 'post_logout_redirect_uris')], max_length=33)),
+                ('client', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='oidc_op.OidcRelyingParty')),
             ],
             options={
                 'verbose_name': 'Relying Party URI',

@@ -15,7 +15,8 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='oidcendpointssodb',
-            options={'verbose_name': 'SSO Session', 'verbose_name_plural': 'SSO Sessions'},
+            options={'verbose_name': 'SSO Session',
+                     'verbose_name_plural': 'SSO Sessions'},
         ),
         migrations.AddField(
             model_name='oidcendpointssodb',
@@ -30,7 +31,8 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='oidcendpointssodb',
             name='user',
-            field=models.ForeignKey(default='', on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(
+                default='', on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL),
             preserve_default=False,
         ),
     ]

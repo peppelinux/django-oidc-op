@@ -21,6 +21,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='oidcrelyingparty',
             name='client_secret_expires_at',
-            field=models.DateTimeField(blank=True, help_text='REQUIRED if client_secret is issued', null=True),
+            field=models.DateTimeField(
+                blank=True, help_text='REQUIRED if client_secret is issued', null=True),
         ),
     ]
