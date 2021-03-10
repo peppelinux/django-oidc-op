@@ -249,12 +249,28 @@ def verify_user(request):
         uid=user.username,
         salt=base64.b64encode(os.urandom(salt_size)).decode(),
         authn_info=auth_args['authn_class_ref'],
-        authn_time=auth_args['iat'])
+        authn_time=auth_args['iat']
+    )
 
     endpoint = oidcendpoint_app.endpoint_context.endpoint['authorization']
-
+    # cinfo = endpoint.endpoint_context.cdb[authz_request["client_id"]]
+                                       
+    # {'session_id': 'diana;;client_3;;38044288819611eb905343ee297b1c98', 'identity': {'uid': 'diana'}, 'user': 'diana'}
+    client_id = authz_request["client_id"]
+    _token_usage_rules = endpoint.endpoint_context.authz.usage_rules(client_id)
+        
+    _session_id = endpoint.endpoint_context.session_manager.create_session(
+                                authn_event=authn_event, 
+                                auth_req=authz_request,
+                                user_id=user.username, 
+                                client_id=client_id,
+                                token_usage_rules=_token_usage_rules
+    )
+    
     try:
-        args = endpoint.authz_part2(user=user.username, request=authz_request,
+        args = endpoint.authz_part2(user=user.username, 
+                                    session_id = _session_id,
+                                    request=authz_request,
                                     authn_event=authn_event)
     except ValueError as excp:
         msg = 'Something wrong with your Session ... {}'.format(excp)
@@ -262,7 +278,8 @@ def verify_user(request):
 
     if isinstance(args, ResponseMessage) and 'error' in args:
         return HttpResponse(args.to_json(), status=400)
-
+    
+    
     response = do_response(endpoint, request, **args)
     return response
 

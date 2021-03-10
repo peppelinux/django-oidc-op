@@ -15,7 +15,7 @@ def init_oidc_op_endpoints(app):
     _server_info_config = _config['server_info']
 
     folder = os.path.dirname(os.path.realpath(__file__))
-    #  import pdb; pdb.set_trace()
+    #  breakpoint()
     endpoint_context = EndpointContext(_server_info_config, cwd=folder)
     for endp in endpoint_context.endpoint.values():
         p = urlparse(endp.endpoint_path)

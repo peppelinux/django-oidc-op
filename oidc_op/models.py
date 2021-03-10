@@ -45,6 +45,16 @@ def is_code(value):
     return len(value) > 256
 
 
+def get_client_by_id(client_id):
+    client = OidcRelyingParty.objects.filter(
+                            client_id = client_id,
+                            is_active = True
+                            
+    )
+    if client: 
+        return client.last()
+
+
 class TimeStampedModel(models.Model):
     """
     An abstract base class model that provides self-updating
@@ -414,22 +424,49 @@ class OidcSession(TimeStampedModel):
     """
     Store the session information in this model
     """
+    user_uid = models.CharField(max_length=120,
+                           blank=False, null=False)
     state = models.CharField(max_length=255,
-                             blank=False, null=False)
+                             blank=True, null=True)
+    client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE,
+                               blank=True, null=True)
+    session_info = models.TextField(blank=True, null=True)
+    
+    grant = models.TextField(blank=True, null=True)
+    grant_id = models.CharField(max_length=255,
+                                blank=True, null=True)
+    
+    issued_at = models.DateTimeField(blank=True, null=True)
+    valid_until = models.DateTimeField(blank=True, null=True)
+
     sso = models.ForeignKey(OidcSessionSso, on_delete=models.CASCADE,
                             blank=True, null=True)
     code = models.CharField(max_length=1024,
                             blank=True, null=True)
     sid = models.CharField(max_length=255,
                            blank=True, null=True)
-    client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE,
-                               blank=True, null=True)
-    session_info = models.TextField(blank=True, null=True)
-    valid_until = models.DateTimeField(blank=True, null=True)
+    sub = models.CharField(max_length=255,
+                           blank=True, null=True)
 
     class Meta:
         verbose_name = ('SSO Session')
         verbose_name_plural = ('SSO Sessions')
+    
+
+    @classmethod
+    def create_by(cls, **data):
+        
+        if data.get('client_id'):
+            client = get_client_by_id(data['client_id'])
+            data['client'] = client
+            data.pop('client_id')
+            
+        if data.get('session_info'):
+            data['session_info'] = json.dumps(data['session_info'].__dict__)
+        
+        res = cls.objects.create(**data)
+        return res
+    
 
     @classmethod
     def get_by_sid(cls, value):
@@ -438,18 +475,90 @@ class OidcSession(TimeStampedModel):
         if sids:
             return sids.last()
 
+
+    @classmethod
+    def get_session_by(cls, **data):
+        
+        if data.get('client_id'):
+            client = get_client_by_id(data['client_id'])
+            data.pop('client_id')
+            data['client'] = client
+        
+        
+        
+        data['valid_until__gt'] = timezone.localtime()
+        res = cls.objects.filter(**data)
+        if res:
+            return res.last()
+
+
+    @classmethod
+    def get_by_client_id(self, uid):
+        res = cls.objects.filter(uid=value,
+                                 valid_until__gt=timezone.localtime())
+        if res:
+            return self.session_info
+
+
+    def set_grant(self, grant):
+        """
+        {'issued_at': 1615403213, 'not_before': 0, 'expires_at': 0, 
+         'revoked': False, 'used': 0, 'usage_rules': {}, 'scope': [], 
+         'authorization_details': None, 
+         'authorization_request': <oidcmsg.oidc.AuthorizationRequest object at 0x7fa73521efa0>, 
+         'authentication_event': <oidcendpoint.authn_event.AuthnEvent object at 0x7fa735223070>, 
+         'claims': {}, 'resources': [], 'issued_token': [], 
+         'id': 'c695a5e881d311eb905343ee297b1c98', 
+         'sub': '204176ab8fe8917ee4788683bcee4ebc04bfe1ab659485ec61b2b2b4108c5272', 
+         'token_map': {
+            'authorization_code': <class 'oidcendpoint.session.token.AuthorizationCode'>, 
+            'access_token': <class 'oidcendpoint.session.token.AccessToken'>, 
+            'refresh_token': <class 'oidcendpoint.session.token.RefreshToken'>}
+        }
+        """
+        self.issued_at = timezone.make_aware(timezone.datetime.fromtimestamp(grant.issued_at))
+        self.sub = grant.sub
+        self.grant_id = grant.id
+        
+        grant.authorization_request = grant.authorization_request.to_json()
+        grant.authentication_event = grant.authentication_event.to_json()
+        # breakpoint()
+        # grant.token_map['authorization_code'] = grant.token_map['authorization_code'].to_json()
+        # grant.token_map['access_token'] = grant.token_map['access_token'].to_json()
+        # grant.token_map['refresh_token'] = grant.token_map['refresh_token'].to_json()
+        grant.token_map.pop('authorization_code')
+        grant.token_map.pop('access_token')
+        grant.token_map.pop('refresh_token')
+        
+        self.grant = grant.to_json()
+        self.save()
+        return grant
+    
+    @classmethod
+    def get_by_session_id(cls, user_uid, client_id, grant_id):
+        grant = cls.objects.filter(user_uid = user_uid,
+                                   client__client_id = client_id,
+                                   grant_id = grant_id)
+        if grant:
+            return grant.last()
+        
+        
+
     def copy(self):
         return dict(sid=self.sid or [],
                     state=self.state or '',
                     session_info=self.session_info)
 
+
     def append(self, value):
         """Not used, only back compatibility
         """
 
+
     def __iter__(self):
         for i in (self.sid,):
             yield i
+
 
     def __str__(self):
         return 'state: {}'.format(self.state or '')

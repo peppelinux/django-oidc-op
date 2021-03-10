@@ -6,6 +6,7 @@ import pytz
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from oidcendpoint.session.database import Database
+from oidcendpoint.session.info import UserSessionInfo
 from . models import (OidcRelyingParty,
                       OidcRPResponseType,
                       OidcRPGrantType,
@@ -134,6 +135,9 @@ class OidcSessionDb(Database):
         for value in (self.elems):
             yield value
 
+    def __getitem__(self, *args, **kwargs):
+        return self.get(*args, **kwargs)
+
     def get(self, key, excp=None):
         if is_sid(key):
             elem = self.db.get_by_sid(key)
@@ -141,16 +145,20 @@ class OidcSessionDb(Database):
             elem = self.get_valid_sessions().filter(code=key).last()
         else:
             # state is unpredictable, it's client side.
-            elem = self.get_valid_sessions().filter(state=key).last()
-
+            # elem = self.get_valid_sessions().filter(state=key).last()
+            elem = self.get_valid_sessions().filter(uid=key).last()
+            
         if not elem:
             return
         elif elem.sid and elem.sid == key:
             return json.loads(elem.session_info)
-        elif elem.state == key:
+        # elif elem.state == key:
+        elif elem.uid == key:
             return elem.sso.sid
 
     def set_session_info(self, info_dict):
+        # info_dict = {'user_id': 'wert', 'subordinate': [], 'revoked': False, 'type': 'UserSessionInfo'}
+        
         session = self.get_valid_sessions().get(
             state=info_dict['authn_req']['state'])
         session.session_info = json.dumps(info_dict)
@@ -173,6 +181,9 @@ class OidcSessionDb(Database):
         logger.debug('Session DB - set - {}'.format(session.copy()))
 
     def __setitem__(self, sid, instance):
+        
+        breakpoint()
+        
         if is_sid(sid):
             try:
                 instance.to_json()
@@ -183,6 +194,11 @@ class OidcSessionDb(Database):
                 pass
 
             self.set_session_info(instance)
+        
+        elif isinstance(instance, UserSessionInfo):
+            # {'_dict': {'user_id': 'wert', 'subordinate': [], 'revoked': False, 'type': 'UserSessionInfo'}, 'lax': False, 'jwt': None, 'jws_header': None, 'jwe_header': None, 'verify_ssl': True}
+            self.set_session_info(instance.__dict__['_dict'])
+        
         else:
             logger.error('{} tries __setitem__ {} in {}'.format(sid,
                                                                 instance,
@@ -231,8 +247,10 @@ class OidcSsoDb(object):
             # value = <OidcSessionSso: user: wert - sub: None>
             pass
 
+
     def set(self, k, v):
         logging.info('{}:{} - already there'.format(k, v))
+
 
     def get(self, k, default):
         session = self.session_handler.get_by_state(k)

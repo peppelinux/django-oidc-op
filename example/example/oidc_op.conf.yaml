@@ -27,6 +27,7 @@ op:
     issuer: *base_url
     httpc_params:
       verify: False
+    seed: asdasdasdasd-random
     session_key:
       filename: data/oidc_op/private/session_jwks.json
       type: OCT
