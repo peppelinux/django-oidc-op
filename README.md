@@ -1,6 +1,6 @@
 # django-oidc-op
 A Django implementation of an **OIDC Provider** on top of [jwtconnect.io](https://jwtconnect.io/).
-To configure a standard OIDC Provider you have to edit the oidcendpoint configuration file.
+To configure a standard OIDC Provider you have to edit the oidcop configuration file.
 See `example/example/oidc_op.conf.yaml` to get in.
 
 This project is based on [Roland Hedberg's oidc-op](https://github.com/rohe/oidc-op).

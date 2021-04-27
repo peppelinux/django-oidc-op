@@ -137,7 +137,7 @@ clients:
 
     # if you create a client through ADMIN UI ...
     client_id: demo_rp
-    client_secret: topsecret2020___
+    client_secret: topsecret2020_______
     # this redirect_uri must be statically configured in op's rp cdb!
     redirect_uris:
       - https://127.0.0.1:8099/authz_cb/shib_oidc_op

@@ -31,7 +31,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'unical_accounts',
+    'accounts',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -40,9 +40,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'oidc_op',
+    'oidc_provider',
 
 ]
+
+if 'oidc_provider' in INSTALLED_APPS:
+    from . oidc_provider_settings import OIDCOP_CONF
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -85,7 +90,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = "unical_accounts.User"
+AUTH_USER_MODEL = "accounts.User"
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
 
@@ -120,8 +125,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'data/static')
-
-OIDCENDPOINT_CONFIG = 'example/oidc_op.conf.yaml'
 
 # LOGGING
 LOGGING = {
@@ -173,27 +176,27 @@ LOGGING = {
             # 'level': 'INFO',
             # 'propagate': False,
         # },
-        'oidc_op': {
+        'oidc_provider': {
             'handlers': ['console', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': True,
         },
-        'oidcendpoint': {
+        'oidc_op': {
             'handlers': ['console', 'mail_admins'],
             'level': 'DEBUG',
             'propagate': False,
         },
-        # 'oidcendpoint.endpoint_context': {
+        # 'oidcop.endpoint_context': {
             # 'handlers': ['console', 'mail_admins'],
             # 'level': 'DEBUG',
             # 'propagate': False,
         # },
-        # 'oidcendpoint.sso_db': {
+        # 'oidcop.sso_db': {
             # 'handlers': ['console', 'mail_admins'],
             # 'level': 'DEBUG',
             # 'propagate': False,
         # },
-        # 'oidcendpoint.session': {
+        # 'oidcop.session': {
             # 'handlers': ['console', 'mail_admins'],
             # 'level': 'DEBUG',
             # 'propagate': False,
