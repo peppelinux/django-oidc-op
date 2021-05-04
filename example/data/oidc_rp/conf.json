@@ -173,7 +173,7 @@
         }
       }
     },
-    "local": {
+    "flask_provider": {
       "client_preferences": {
         "application_name": "rphandler",
         "application_type": "web",
@@ -242,7 +242,7 @@
         }
       }
     },
-    "django": {
+    "django_provider": {
       "client_preferences": {
         "application_name": "rphandler",
         "application_type": "web",
@@ -262,18 +262,18 @@
         "token_endpoint_auth_method": [
           "client_secret_basic",
           "client_secret_post"
-        ]
+        ],
       },
       "issuer": "https://127.0.0.1:8000/",
       "redirect_uris": [
-        "https://{domain}:{port}/authz_cb/local"
+        "https://{domain}:{port}/authz_cb/django"
       ],
       "post_logout_redirect_uris": [
-        "https://{domain}:{port}/session_logout/local"
+        "https://{domain}:{port}/session_logout/django"
       ],
-      "frontchannel_logout_uri": "https://{domain}:{port}/fc_logout/local",
+      "frontchannel_logout_uri": "https://{domain}:{port}/fc_logout/django",
       "frontchannel_logout_session_required": true,
-      "backchannel_logout_uri": "https://{domain}:{port}/bc_logout/local",
+      "backchannel_logout_uri": "https://{domain}:{port}/bc_logout/django",
       "backchannel_logout_session_required": true,
       "services": {
         "discovery": {
