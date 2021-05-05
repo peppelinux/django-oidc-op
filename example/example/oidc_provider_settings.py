@@ -59,7 +59,11 @@ OIDC_OP_ENDPOINTS = {
       "class": "oidcop.oidc.registration.Registration",
       "kwargs": {
         "client_authn_method": None,
-        "client_secret_expiration_time": 432000
+        "client_secret_expiration_time": 432000,
+        "client_id_generator": {
+           "class": 'oidcop.oidc.registration.random_client_id',
+           "kwargs": {}
+       }
       }
     },
     "registration_api": {
@@ -181,10 +185,10 @@ OIDC_OP_TOKEN_HANDLER = {
       "kwargs": {
         "lifetime": 3600,
         # this will add email in access_token
-        "base_claims": {
-            "email": None,
-            "email_verified": None,
-        },
+        # "base_claims": {
+            # "email": None,
+            # "email_verified": None,
+        # },
         # "enable_claims_per_client": True,
         # "aud": [
           # "https://example.org/appl"
