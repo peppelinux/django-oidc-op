@@ -16,6 +16,13 @@ OIDC_KEY_DEFS = [
       "use": [
         "sig"
       ]
+    },
+    {
+      "type": "RSA",
+      "kid": "session_id",
+      "use": [
+        "enc"
+      ]
     }
 ]
 
@@ -214,7 +221,7 @@ OIDC_OP_IDTOKEN = {
 }
 
 
-OIDCOP_CONF = {
+OIDCOP_CONFIG = {
   "port": PORT,
   "domain": DOMAIN,
   "server_name": SERVER_NAME,

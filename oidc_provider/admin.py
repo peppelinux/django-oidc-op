@@ -150,7 +150,6 @@ class OidcSessionAdmin(admin.ModelAdmin):
         (None, {
             'fields': (
                 ('client', ),
-                ('sso', ),
                 ('state',),
                 ('sid',),
                 ('valid_until',),
@@ -203,12 +202,3 @@ class OidcSessionAdmin(admin.ModelAdmin):
     class Media:
         js = ('js/textarea_autosize.js',)
         # css = {'default': ('css/textarea_large.css',)}
-
-
-@admin.register(OidcSessionSso)
-class OidcSessionSsoAdmin(admin.ModelAdmin):
-    list_filter = ('created', 'modified')
-    list_display = ('user',
-                    'sub', 'created')
-    search_fields = ('user',)
-    readonly_fields = ('sub', 'user')

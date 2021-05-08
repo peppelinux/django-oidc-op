@@ -266,6 +266,7 @@ def verify_user(request):
     if isinstance(args, ResponseMessage) and 'error' in args:
         return HttpResponse(args.to_json(), status=400)
 
+
     response = do_response(endpoint, request, **args)
     return response
 
