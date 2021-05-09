@@ -11,7 +11,7 @@ from django.http import (HttpResponse,
                          JsonResponse)
 from django.http.request import QueryDict
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from oidcop.authn_event import create_authn_event
 from oidcop.exception import UnAuthorizedClient
 from oidcop.exception import UnAuthorizedClientScope  # experimental
@@ -27,6 +27,8 @@ from urllib.parse import urlparse
 
 
 from . application import oidcop_application
+from . models import OidcRelyingParty
+
 oidcop_app = oidcop_application()
 
 logger = logging.getLogger(__name__)
@@ -195,7 +197,10 @@ def well_known(request, service):
 def registration(request):
     logger.info('registration request')
     _endpoint = oidcop_app.endpoint_context.endpoint['registration']
-    return service_endpoint(request, _endpoint)
+    response = service_endpoint(request, _endpoint)
+    # update db
+    OidcRelyingParty.import_from_cdb(oidcop_app.endpoint_context.endpoint_context.cdb)
+    return response
 
 
 @csrf_exempt
@@ -208,6 +213,14 @@ def registration_api():
 
 
 def authorization(request):
+    client_id = request.GET['client_id']
+    client = get_object_or_404(OidcRelyingParty,
+                               client_id = client_id,
+                               # TODO active/expired filters
+    )
+    oidcop_app.endpoint_context.endpoint_context.cdb = {
+        client_id: client.serialize()
+    }
     _endpoint = oidcop_app.endpoint_context.endpoint['authorization']
     return service_endpoint(request, _endpoint)
 

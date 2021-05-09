@@ -65,6 +65,8 @@ class OidcRelyingParty(TimeStampedModel):
         'grant_types': ['authorization_code'],
         'redirect_uris': [('https://127.0.0.1:8090/authz_cb/local', {})]
     }
+
+
     """
     _TOKEN_AUTH_CHOICES = ((i, i) for i in OIDC_TOKEN_AUTHN_METHODS)
 
@@ -218,12 +220,24 @@ class OidcRelyingParty(TimeStampedModel):
         verbose_name = ('Relying Party')
         verbose_name_plural = ('Relying Parties')
 
-    def copy(self):
+    @classmethod
+    def import_from_cdb(cls, cdb):
+        for client_id in cdb:
+            if cls.objects.filter(client_id = client_id):
+                continue
+            client = cls.objects.create(client_id = client_id)
+            for k,v in cdb[client_id].items():
+                if k in ('client_secret_expires_at', 'client_id_issued_at'):
+                    v = datetime.datetime.fromtimestamp(v)
+                setattr(client, k, v)
+            client.save()
+
+    def serialize(self):
         """
             Compability with rohe approach based on dictionaries
         """
         d = {k: v for k, v in self.__dict__.items() if k[0] != '_'}
-        disabled = ('created', 'modified', 'is_active', 'last_seen')
+        disabled = ('created', 'modified', 'is_active', 'last_seen', 'id')
         for dis in disabled:
             d.pop(dis)
         for key in TIMESTAMP_FIELDS:
@@ -322,6 +336,199 @@ class OidcRPScope(TimeStampedModel):
         return '{}, [{}]'.format(self.client, self.scope)
 
 
+class OidcSession(TimeStampedModel):
+    """
+    Store UserSessionInfo, ClientSessionInfo abd Grand
+
+    {
+      "db": {
+        "diana": [
+          "oidcop.session.info.UserSessionInfo",
+          {
+            "subordinate": [
+              "86M1io6O2Vdy"
+            ],
+            "revoked": false,
+            "type": "UserSessionInfo",
+            "extra_args": {},
+            "user_id": "diana"
+          }
+        ],
+        "diana;;86M1io6O2Vdy": [
+          "oidcop.session.info.ClientSessionInfo",
+          {
+            "subordinate": [
+              "fcc1c962a60911eb9d4d57d896f78a5d"
+            ],
+            "revoked": false,
+            "type": "ClientSessionInfo",
+            "extra_args": {},
+            "client_id": "86M1io6O2Vdy"
+          }
+        ],
+        "diana;;86M1io6O2Vdy;;fcc1c962a60911eb9d4d57d896f78a5d": [
+          "oidcop.session.grant.Grant",
+          {
+            "expires_at": 1619427939,
+            "issued_at": 1619384739,
+            "not_before": 0,
+            "revoked": false,
+            "usage_rules": {
+              "authorization_code": {
+                "supports_minting": [
+                  "access_token",
+                  "refresh_token",
+                  "id_token"
+                ],
+                "max_usage": 1
+              },
+              "access_token": {},
+              "refresh_token": {
+                "supports_minting": [
+                  "access_token",
+                  "refresh_token"
+                ]
+              }
+            },
+            "used": 2,
+            "authentication_event": {
+              "oidcop.authn_event.AuthnEvent": {
+                "uid": "diana",
+                "authn_info": "oidcop.user_authn.authn_context.INTERNETPROTOCOLPASSWORD",
+                "authn_time": 1619384739,
+                "valid_until": 1619388339
+              }
+            },
+            "authorization_request": {
+              "oidcmsg.oidc.AuthorizationRequest": {
+                "redirect_uri": "https://127.0.0.1:8090/authz_cb/local",
+                "scope": "openid profile email address phone",
+                "response_type": "code",
+                "nonce": "TXwiaGM9I8kEB4BbC4nqHNWc",
+                "state": "uKZM2ciKxWbg4x4xtsltzoy4PvjoQf4T",
+                "code_challenge": "WYVBXCNsPiDTe0lClNPG69qRB_yl6mJ2Lwop9XWjhYA",
+                "code_challenge_method": "S256",
+                "client_id": "86M1io6O2Vdy"
+              }
+            },
+            "claims": {
+              "userinfo": {
+                "sub": null,
+                "name": null,
+                "given_name": null,
+                "family_name": null,
+                "middle_name": null,
+                "nickname": null,
+                "profile": null,
+                "picture": null,
+                "website": null,
+                "gender": null,
+                "birthdate": null,
+                "zoneinfo": null,
+                "locale": null,
+                "updated_at": null,
+                "preferred_username": null,
+                "email": null,
+                "email_verified": null,
+                "address": null,
+                "phone_number": null,
+                "phone_number_verified": null
+              },
+              "introspection": {},
+              "id_token": {},
+              "access_token": {}
+            },
+            "issued_token": [
+              {
+                "expires_at": 0,
+                "issued_at": 1619384739,
+                "not_before": 0,
+                "revoked": false,
+                "usage_rules": {
+                  "supports_minting": [
+                    "access_token",
+                    "refresh_token",
+                    "id_token"
+                  ],
+                  "max_usage": 1
+                },
+                "used": 1,
+                "claims": {},
+                "id": "fcc1c963a60911eb9d4d57d896f78a5d",
+                "name": "AuthorizationCode",
+                "resources": [],
+                "scope": [],
+                "type": "authorization_code",
+                "value": "Z0FBQUFBQmdoZG1qdTlNZ0hzNGZzcVhZNnRJTXE2bkZZNGlVeXZTaDYwWlV4Vm1yMnFQWUZSSVFmb25HQjluQy1ZVWNXTWJlZ082OE03dVB1NmdBVG8xbkwxV1BWRTBZVkIzYXctY0xhTDB6c2hXUzhmeTRBNE9Ua3RxVVlmU0dDSElPeUJRb1VHQndtT21PR25nRWx3QXdoSG1DdklFM0REdjhWa2I2bWNtQzhFazdrRzBybWd4VV9oX19hcEt4MDZ3Uk5lNGpvbXllMVVmNkt4VXNRaW1FVHRTdS13ajVxczVibmtaXzRhXzhMcW9DOEFXVGtZND0="
+              },
+              {
+                "expires_at": 0,
+                "issued_at": 1619384739,
+                "not_before": 0,
+                "revoked": false,
+                "usage_rules": {},
+                "used": 0,
+                "based_on": "Z0FBQUFBQmdoZG1qdTlNZ0hzNGZzcVhZNnRJTXE2bkZZNGlVeXZTaDYwWlV4Vm1yMnFQWUZSSVFmb25HQjluQy1ZVWNXTWJlZ082OE03dVB1NmdBVG8xbkwxV1BWRTBZVkIzYXctY0xhTDB6c2hXUzhmeTRBNE9Ua3RxVVlmU0dDSElPeUJRb1VHQndtT21PR25nRWx3QXdoSG1DdklFM0REdjhWa2I2bWNtQzhFazdrRzBybWd4VV9oX19hcEt4MDZ3Uk5lNGpvbXllMVVmNkt4VXNRaW1FVHRTdS13ajVxczVibmtaXzRhXzhMcW9DOEFXVGtZND0=",
+                "claims": {},
+                "id": "fcc4fc72a60911eb9d4d57d896f78a5d",
+                "name": "AccessToken",
+                "resources": [],
+                "scope": [],
+                "type": "access_token",
+                "value": "eyJhbGciOiJFUzI1NiIsImtpZCI6IlNWUXpPV1ZVUm1oNWIxcHVVVmx1UlY4dGVVUlpVVlZTZFhkcFdVUTJTbTVMY1U0M01EWm1WV2REVlEifQ.eyJzY29wZSI6IFsib3BlbmlkIiwgInByb2ZpbGUiLCAiZW1haWwiLCAiYWRkcmVzcyIsICJwaG9uZSJdLCAiYXVkIjogWyI4Nk0xaW82TzJWZHkiXSwgInNpZCI6ICJkaWFuYTs7ODZNMWlvNk8yVmR5OztmY2MxYzk2MmE2MDkxMWViOWQ0ZDU3ZDg5NmY3OGE1ZCIsICJ0dHlwZSI6ICJUIiwgImlzcyI6ICJodHRwczovLzEyNy4wLjAuMTo1MDAwIiwgImlhdCI6IDE2MTkzODQ3MzksICJleHAiOiAxNjE5Mzg4MzM5fQ.Brva_I8bBM5z_1ZxFBWSRFN3U95y_YQxnLG5-51NrUmu862M-KSj4kd5v5vFGHiHF0iFvBuDLD6pSZL1RHXHCg"
+              }
+            ],
+            "resources": [
+              "86M1io6O2Vdy"
+            ],
+            "scope": [
+              "openid",
+              "profile",
+              "email",
+              "address",
+              "phone"
+            ],
+            "sub": "93be77e1b212f1643e0ee9dd5e477e2a2a231dc6ca22dd3273345e63eb156a23"
+          }
+        ],
+        "8ea62b28f57646fe8db31b4bdea0e262": [
+          "oidcop.session.info.SessionInfo",
+          {
+            "subordinate": [],
+            "revoked": false,
+            "type": "",
+            "extra_args": {}
+          }
+        ]
+      },
+      "salt": "1Kih63fBe5ympYSWi5z2aVXXCVKxqMvN"
+    }
+    """
+
+    user_uid = models.CharField(max_length=120, blank=False, null=False)
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE,
+                             blank=True, null=True)
+    client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE,
+                               blank=True, null=True)
+
+    user_session_info = models.TextField()
+    client_session_info = models.TextField()
+
+    grant = models.TextField()
+    grant_uid = models.CharField(max_length=254)
+    sub = models.CharField(max_length=255)
+
+    session_info = models.TextField()
+    sid = models.CharField(max_length=255)
+
+    class Meta:
+        verbose_name = ('SSO Session')
+        verbose_name_plural = ('SSO Sessions')
+
+    def __str__(self):
+        return f'{self.user};;{self.client.client_id};;{self.grant_uid}'
+
+
 class OidcIssuedToken(TimeStampedModel):
     """
         {
@@ -351,7 +558,7 @@ class OidcIssuedToken(TimeStampedModel):
         ('id_token', 'id_token'),
     )
 
-    id = models.CharField(max_length=128, blank=True, null=True)
+    uid = models.CharField(max_length=128, blank=True, null=True)
     type = models.CharField(choices = TT_CHOICES,
                             max_length=32,
                             blank=False, null=False)
@@ -367,158 +574,25 @@ class OidcIssuedToken(TimeStampedModel):
     used = models.IntegerField(default=0)
     based_on = models.TextField(blank=True, null=True)
 
+    session = models.ForeignKey(OidcSession, on_delete=models.CASCADE)
+
     class Meta:
         verbose_name = ('OIDC Issued Token')
         verbose_name_plural = ('OIDC Issued Tokens')
 
+    def serialized(self):
+        return {
+            "type": self.type,
+            "issued_at": self.issued_at,
+            "not_before": self.not_before,
+            "expires_at": self.expires_at,
+            "revoked": self.revoked,
+            "value": self.value,
+            "usage_rules": self.usage_rules,
+            "used": self.used,
+            "based_on": self.based_on,
+            "id": self.id
+       }
+
     def __str__(self):
         return f'{self.id} [{self.type}]'
-
-
-class OidcGrants(TimeStampedModel):
-    """
-    Store the session information in this model
-    """
-
-    user_uid = models.CharField(max_length=120,
-                           blank=False, null=False)
-
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE,
-                             blank=True, null=True)
-    sub = models.CharField(max_length=255,
-                           blank=True, null=True)
-
-    state = models.CharField(max_length=255,
-                             blank=True, null=True)
-    client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE,
-                               blank=True, null=True)
-    session_info = models.TextField(blank=True, null=True)
-
-    grant = models.TextField(blank=True, null=True)
-    grant_id = models.CharField(max_length=255,
-                                blank=True, null=True)
-
-    issued_at = models.DateTimeField(blank=True, null=True)
-    valid_until = models.DateTimeField(blank=True, null=True)
-
-    code = models.CharField(max_length=1024,
-                            blank=True, null=True)
-    sid = models.CharField(max_length=255,
-                           blank=True, null=True)
-    sub = models.CharField(max_length=255,
-                           blank=True, null=True)
-
-    class Meta:
-        verbose_name = ('SSO Session')
-        verbose_name_plural = ('SSO Sessions')
-
-
-    @classmethod
-    def create_by(cls, **data):
-
-        if data.get('client_id'):
-            client = get_client_by_id(data['client_id'])
-            data['client'] = client
-            data.pop('client_id')
-
-        if data.get('session_info'):
-            data['session_info'] = json.dumps(data['session_info'].__dict__)
-
-        res = cls.objects.create(**data)
-        return res
-
-
-    @classmethod
-    def get_by_sid(cls, value):
-        sids = cls.objects.filter(sid=value,
-                                  valid_until__gt=timezone.localtime())
-        if sids:
-            return sids.last()
-
-
-    @classmethod
-    def get_session_by(cls, **data):
-
-        if data.get('client_id'):
-            client = get_client_by_id(data['client_id'])
-            data.pop('client_id')
-            data['client'] = client
-
-
-
-        data['valid_until__gt'] = timezone.localtime()
-        res = cls.objects.filter(**data)
-        if res:
-            return res.last()
-
-
-    @classmethod
-    def get_by_client_id(self, uid):
-        res = cls.objects.filter(uid=value,
-                                 valid_until__gt=timezone.localtime())
-        if res:
-            return self.session_info
-
-
-    def set_grant(self, grant):
-        """
-        {'issued_at': 1615403213, 'not_before': 0, 'expires_at': 0,
-         'revoked': False, 'used': 0, 'usage_rules': {}, 'scope': [],
-         'authorization_details': None,
-         'authorization_request': <oidcmsg.oidc.AuthorizationRequest object at 0x7fa73521efa0>,
-         'authentication_event': <oidcop.authn_event.AuthnEvent object at 0x7fa735223070>,
-         'claims': {}, 'resources': [], 'issued_token': [],
-         'id': 'c695a5e881d311eb905343ee297b1c98',
-         'sub': '204176ab8fe8917ee4788683bcee4ebc04bfe1ab659485ec61b2b2b4108c5272',
-         'token_map': {
-            'authorization_code': <class 'oidcop.session.token.AuthorizationCode'>,
-            'access_token': <class 'oidcop.session.token.AccessToken'>,
-            'refresh_token': <class 'oidcop.session.token.RefreshToken'>}
-        }
-        """
-        self.issued_at = timezone.make_aware(timezone.datetime.fromtimestamp(grant.issued_at))
-        self.sub = grant.sub
-        self.grant_id = grant.id
-
-        grant.authorization_request = grant.authorization_request.to_json()
-        grant.authentication_event = grant.authentication_event.to_json()
-        # breakpoint()
-        # grant.token_map['authorization_code'] = grant.token_map['authorization_code'].to_json()
-        # grant.token_map['access_token'] = grant.token_map['access_token'].to_json()
-        # grant.token_map['refresh_token'] = grant.token_map['refresh_token'].to_json()
-        grant.token_map.pop('authorization_code')
-        grant.token_map.pop('access_token')
-        grant.token_map.pop('refresh_token')
-
-        self.grant = grant.to_json()
-        self.save()
-        return grant
-
-    @classmethod
-    def get_by_session_id(cls, user_uid, client_id, grant_id):
-        grant = cls.objects.filter(user_uid = user_uid,
-                                   client__client_id = client_id,
-                                   grant_id = grant_id)
-        if grant:
-            return grant.last()
-
-
-
-    def copy(self):
-        return dict(sid=self.sid or [],
-                    state=self.state or '',
-                    session_info=self.session_info)
-
-
-    def append(self, value):
-        """Not used, only back compatibility
-        """
-
-
-    def __iter__(self):
-        for i in (self.sid,):
-            yield i
-
-
-    def __str__(self):
-        return 'state: {}'.format(self.state or '')

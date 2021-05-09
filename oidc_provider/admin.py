@@ -138,67 +138,66 @@ class SessionAdmin(admin.ModelAdmin):
     list_display = ['session_key', '_session_data', 'expire_date']
 
 
-@admin.register(OidcSession)
-class OidcSessionAdmin(admin.ModelAdmin):
-    list_filter = ('created', 'modified', 'valid_until')
-    list_display = ('client', 'state', 'sso', 'created')
-    search_fields = ('state', 'sso__user__username')
-    readonly_fields = ('sid', 'client', 'sso', 'state', 'valid_until', 'info_session_preview',
-                       'access_token_preview', 'id_token_preview')
+# @admin.register(OidcSession)
+# class OidcSessionAdmin(admin.ModelAdmin):
+    # list_filter = ('created', 'modified', 'valid_until')
+    # list_display = ('client', 'state', 'sso', 'created')
+    # search_fields = ('state', 'sso__user__username')
+    # readonly_fields = ('sid', 'client', 'sso', 'state', 'valid_until', 'info_session_preview',
+                       # 'access_token_preview', 'id_token_preview')
 
-    fieldsets = (
-        (None, {
-            'fields': (
-                ('client', ),
-                ('state',),
-                ('sid',),
-                ('valid_until',),
-            )
-        },
-        ),
-        ('Session info',
-         {
-             'classes': ('collapse',),
-             'fields': ('info_session_preview',),
-         }
-         ),
+    # fieldsets = (
+        # (None, {
+            # 'fields': (
+                # ('client', ),
+                # ('state',),
+                # ('sid',),
+                # ('valid_until',),
+            # )
+        # },
+        # ),
+        # ('Session info',
+         # {
+             # 'classes': ('collapse',),
+             # 'fields': ('info_session_preview',),
+         # }
+         # ),
 
-        ('Token previews',
-         {
-             'classes': ('collapse',),
-             'fields': (
-                 ('access_token_preview'),
-                 ('id_token_preview'),
-             )
+        # ('Token previews',
+         # {
+             # 'classes': ('collapse',),
+             # 'fields': (
+                 # ('access_token_preview'),
+                 # ('id_token_preview'),
+             # )
 
-         },
-         ),
-    )
+         # },
+         # ),
+    # )
 
-    def info_session_preview(self, obj):
-        msg = json.loads(obj.session_info or '{}')
-        dumps = json.dumps(msg, indent=2)
-        return mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
-    info_session_preview.short_description = 'Info Session preview'
+    # def info_session_preview(self, obj):
+        # msg = json.loads(obj.session_info or '{}')
+        # dumps = json.dumps(msg, indent=2)
+        # return mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+    # info_session_preview.short_description = 'Info Session preview'
 
-    def access_token_preview(self, obj):
-        try:
-            msg = decode_token(obj.session_info or {}, 'access_token')
-            dumps = json.dumps(msg.to_dict(), indent=2)
-            return mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
-        except Exception as e:
-            logger.tracelog(e)
-    access_token_preview.short_description = 'Access Token preview'
+    # def access_token_preview(self, obj):
+        # try:
+            # msg = decode_token(obj.session_info or {}, 'access_token')
+            # dumps = json.dumps(msg.to_dict(), indent=2)
+            # return mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+        # except Exception as e:
+            # logger.tracelog(e)
+    # access_token_preview.short_description = 'Access Token preview'
 
-    def id_token_preview(self, obj):
-        try:
-            msg = decode_token(obj.session_info or {}, 'id_token')
-            dumps = json.dumps(msg.to_dict(), indent=2)
-            return mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
-        except Exception as e:
-            logger.tracelog(e)
-    id_token_preview.short_description = 'ID Token preview'
+    # def id_token_preview(self, obj):
+        # try:
+            # msg = decode_token(obj.session_info or {}, 'id_token')
+            # dumps = json.dumps(msg.to_dict(), indent=2)
+            # return mark_safe(dumps.replace('\n', '<br>').replace('\s', '&nbsp'))
+        # except Exception as e:
+            # logger.tracelog(e)
+    # id_token_preview.short_description = 'ID Token preview'
 
-    class Media:
-        js = ('js/textarea_autosize.js',)
-        # css = {'default': ('css/textarea_large.css',)}
+    # class Media:
+        # js = ('js/textarea_autosize.js',)
