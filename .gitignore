@@ -9,3 +9,4 @@ example/data/oidc_op/private/*
 snippets/private
 snippets/static
 static/*
+example/private/*

@@ -27,7 +27,7 @@ from urllib.parse import urlparse
 
 
 from . application import oidcop_application
-from . models import OidcRelyingParty
+from . models import OidcRelyingParty, OidcSession
 
 oidcop_app = oidcop_application()
 
@@ -92,6 +92,15 @@ def do_response(endpoint, req_args, error='', **args):
     if 'cookie' in info:
         add_cookie(resp, info['cookie'])
 
+    ec = oidcop_app.endpoint_context
+    ses_man_dump = ec.endpoint_context.session_manager.dump()
+    # ec.endpoint_context.session_manager.flush()
+    if endpoint.__class__.__name__ == 'Authorization':
+        session = OidcSession.load(ses_man_dump)
+        ec.endpoint_context.session_manager.flush()
+    elif endpoint.__class__.__name__ == 'Token':
+        pass
+        # ec.endpoint_context.session_manager.flush()
     return resp
 
 
@@ -196,10 +205,13 @@ def well_known(request, service):
 @csrf_exempt
 def registration(request):
     logger.info('registration request')
-    _endpoint = oidcop_app.endpoint_context.endpoint['registration']
+    ec = oidcop_app.endpoint_context
+    _endpoint = ec.endpoint['registration']
     response = service_endpoint(request, _endpoint)
     # update db
-    OidcRelyingParty.import_from_cdb(oidcop_app.endpoint_context.endpoint_context.cdb)
+    OidcRelyingParty.import_from_cdb(
+        oidcop_app.endpoint_context.endpoint_context.cdb
+    )
     return response
 
 
@@ -211,16 +223,23 @@ def registration_api():
         oidcop_app.endpoint_context.endpoint['registration_api']
     )
 
+def _fill_cdb(request)->None:
+    client_id = request.GET.get('client_id') or request.POST.get('client_id')
+    if client_id:
+        client = get_object_or_404(OidcRelyingParty,
+                                   client_id = client_id,
+                                   # TODO active/expired filters
+        )
+        ec = oidcop_app.endpoint_context
+        ec.endpoint_context.cdb = {
+            client_id: client.serialize()
+        }
+    else:
+        logger.warning(f'Client {client_id} not found!')
+
 
 def authorization(request):
-    client_id = request.GET['client_id']
-    client = get_object_or_404(OidcRelyingParty,
-                               client_id = client_id,
-                               # TODO active/expired filters
-    )
-    oidcop_app.endpoint_context.endpoint_context.cdb = {
-        client_id: client.serialize()
-    }
+    _fill_cdb(request)
     _endpoint = oidcop_app.endpoint_context.endpoint['authorization']
     return service_endpoint(request, _endpoint)
 
@@ -232,6 +251,7 @@ def verify_user(request):
     token = request.POST.get('token')
     if not token:
         return HttpResponse('Access forbidden: invalid token.', status=403)
+
     authn_method = oidcop_app.endpoint_context.endpoint_context.authn_broker.get_method_by_id('user')
 
     kwargs = dict([(k, v) for k, v in request.POST.items()])
@@ -252,8 +272,6 @@ def verify_user(request):
     )
 
     endpoint = oidcop_app.endpoint_context.endpoint['authorization']
-    # cinfo = endpoint.endpoint_context.cdb[authz_request["client_id"]]
-
     # {'session_id': 'diana;;client_3;;38044288819611eb905343ee297b1c98', 'identity': {'uid': 'diana'}, 'user': 'diana'}
     client_id = authz_request["client_id"]
     _token_usage_rules = endpoint.server_get("endpoint_context").authn_broker.get_method_by_id('user')
@@ -287,8 +305,19 @@ def verify_user(request):
 @csrf_exempt
 def token(request):
     logger.info('token request')
-    _endpoint = oidcop_app.endpoint_context.endpoint['token']
-    return service_endpoint(request, _endpoint)
+    ec = oidcop_app.endpoint_context
+    _endpoint = ec.endpoint['token']
+
+    _fill_cdb(request)
+    breakpoint()
+    # ec.endpoint_context.session_manager.load()
+
+    # update db
+    # OidcSession.load(
+        # ec.endpoint_context.session_manager.dump()
+    # )
+    response = service_endpoint(request, _endpoint)
+    return response
 
 
 @csrf_exempt

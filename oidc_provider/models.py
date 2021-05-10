@@ -1,5 +1,6 @@
 import datetime
 import json
+import pytz
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -120,10 +121,12 @@ class OidcRelyingParty(TimeStampedModel):
         if scopes:
             return [i.scope for i in scopes]
         else:
-            return ['openid']
+            return ['openid', 'profile']
 
     @allowed_scopes.setter
     def allowed_scopes(self, values):
+        if not values:
+            values = ['openid', 'profile']
         for i in values:
             scope = self.oidcrpscope_set.create(client=self, scope=i)
 
@@ -336,9 +339,14 @@ class OidcRPScope(TimeStampedModel):
         return '{}, [{}]'.format(self.client, self.scope)
 
 
+def _aware_dt_from_timestamp(timestamp):
+    dt = datetime.datetime.fromtimestamp(timestamp)
+    return pytz.timezone("UTC").localize(dt, is_dst=None)
+
+
 class OidcSession(TimeStampedModel):
     """
-    Store UserSessionInfo, ClientSessionInfo abd Grand
+    Store UserSessionInfo, ClientSessionInfo and Grant
 
     {
       "db": {
@@ -505,28 +513,104 @@ class OidcSession(TimeStampedModel):
     }
     """
 
-    user_uid = models.CharField(max_length=120, blank=False, null=False)
+    user_uid = models.CharField(max_length=120, blank=True, null=True)
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE,
                              blank=True, null=True)
     client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE,
                                blank=True, null=True)
 
-    user_session_info = models.TextField()
-    client_session_info = models.TextField()
+    user_sessioninfo = models.TextField(default='{}')
+    client_sessioninfo = models.TextField(default='{}')
 
-    grant = models.TextField()
-    grant_uid = models.CharField(max_length=254)
-    sub = models.CharField(max_length=255)
+    grant_sessioninfo = models.TextField()
+    grant_uid = models.CharField(max_length=254, blank=True, null=True)
+    expires_at = models.DateTimeField(blank=True, null=True)
+    revoked = models.BooleanField(default=False)
 
-    session_info = models.TextField()
-    sid = models.CharField(max_length=255)
+    session_info = models.TextField(default='{}', blank=True, null=True)
+    sub = models.CharField(max_length=255, blank=True, null=True)
+    sid = models.CharField(max_length=255, blank=True, null=True)
+
+    salt = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         verbose_name = ('SSO Session')
         verbose_name_plural = ('SSO Sessions')
 
+    @property
+    def user_session_info(self):
+        return json.loads(self.user_sessioninfo)
+
+    @property
+    def client_session_info(self):
+        return json.loads(self.client_sessioninfo)
+
+    @property
+    def grant(self):
+        return json.loads(self.grant_sessioninfo)
+
+    @classmethod
+    def load(cls, ses_man_dump:dict)->None:
+        if 'db' not in ses_man_dump:
+            return
+
+        attr_map = {
+            'oidcop.session.info.UserSessionInfo': 'user_sessioninfo',
+            'oidcop.session.info.ClientSessionInfo': 'client_sessioninfo',
+            'oidcop.session.grant.Grant': 'grant_sessioninfo'
+        }
+        data = dict(
+            user_uid = None,
+            user = None,
+            client = None,
+            user_sessioninfo = None,
+            client_sessioninfo = None,
+            grant_sessioninfo = None,
+            grant_uid = None,
+            expires_at = None,
+            session_info = None,
+            sub = None,
+            sid = None
+        )
+        for k,v in ses_man_dump['db'].items():
+            classname = v[0]
+            attr = getattr(cls, attr_map[classname])
+            field_name = attr.field.name
+            data[field_name] = json.dumps(v[1])
+            if field_name == 'user_sessioninfo':
+                user_id = v[1]['user_id']
+                client_id = v[1]['subordinate'][0]
+                data['user_uid'] = user_id
+                data['user'] = get_user_model().objects.get(username=user_id)
+                data['client'] = OidcRelyingParty.objects.get(client_id=client_id)
+            elif field_name == 'client_sessioninfo':
+                data['grant_uid'] = v[1]['subordinate'][0]
+            elif field_name == 'grant_sessioninfo':
+                data['expires_at'] = _aware_dt_from_timestamp(v[1]['expires_at'])
+                data['revoked'] = v[1]['revoked']
+                data['sub'] = v[1]['sub']
+
+        data['salt'] = ses_man_dump['salt']
+        session = cls.objects.create(**data)
+        OidcIssuedToken.load(session)
+        return session
+
+    def serialize(self):
+        user_label = self.user_uid
+        ses_label = f"{user_label};;{self.client.client_id}"
+        grant_label = f"{ses_label};;{grant_uid}"
+
+        return dict(
+            db = {
+                user_label : self.user_session_info,
+                ses_label: self.client_session_info,
+                grant_label: self.grant
+            },
+            salt = self.salt
+        )
+
     def __str__(self):
-        return f'{self.user};;{self.client.client_id};;{self.grant_uid}'
+        return f'{self.user.username};;{self.client.client_id};;{self.grant_uid}'
 
 
 class OidcIssuedToken(TimeStampedModel):
@@ -565,7 +649,7 @@ class OidcIssuedToken(TimeStampedModel):
 
     issued_at = models.DateTimeField()
     expires_at = models.DateTimeField()
-    not_before = models.DateTimeField(blank=True, null=True)
+    not_before = models.DateTimeField(null=True, blank=True)
 
     revoked = models.BooleanField(default=False)
     value = models.TextField()
@@ -577,22 +661,48 @@ class OidcIssuedToken(TimeStampedModel):
     session = models.ForeignKey(OidcSession, on_delete=models.CASCADE)
 
     class Meta:
-        verbose_name = ('OIDC Issued Token')
-        verbose_name_plural = ('OIDC Issued Tokens')
+        verbose_name = ('Issued Token')
+        verbose_name_plural = ('Issued Tokens')
+        indexes = [
+           models.Index(fields=['value',]),
+        ]
 
-    def serialized(self):
+    def serialize(self):
         return {
             "type": self.type,
-            "issued_at": self.issued_at,
-            "not_before": self.not_before,
-            "expires_at": self.expires_at,
+            "issued_at": self.issued_at.timestamp(),
+            "expires_at": self.expires_at.timestamp(),
+            "not_before": self.not_before.timestamp() if self.not_before else 0,
             "revoked": self.revoked,
             "value": self.value,
             "usage_rules": self.usage_rules,
             "used": self.used,
             "based_on": self.based_on,
-            "id": self.id
+            "id": self.uid
        }
 
+    @classmethod
+    def load(cls, session:OidcSession)->None:
+        for token in session.grant['issued_token']:
+            if token.get('not_before'):
+                nbt = datetime.datetime.fromtimestamp(token['not_before'])
+            else:
+                nbt = None
+
+            data = dict(
+                session = session,
+                type = token['type'],
+                issued_at = _aware_dt_from_timestamp(token['issued_at']),
+                expires_at = _aware_dt_from_timestamp(token['expires_at']),
+                not_before = nbt,
+                revoked = token['revoked'],
+                value = token['value'],
+                usage_rules = json.dumps(token['usage_rules'],),
+                used = token['used'],
+                based_on = token.get('based_on'),
+                uid = token['id'],
+            )
+            obj = cls.objects.create(**data)
+
     def __str__(self):
-        return f'{self.id} [{self.type}]'
+        return f'{self.type} {self.session}'
