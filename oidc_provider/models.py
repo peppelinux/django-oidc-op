@@ -550,9 +550,9 @@ class OidcSession(TimeStampedModel):
         return json.loads(self.grant_sessioninfo)
 
     @classmethod
-    def load(cls, ses_man_dump:dict)->None:
+    def load(cls, ses_man_dump:dict)->dict:
         if 'db' not in ses_man_dump:
-            return
+            ses_man_dump
 
         attr_map = {
             'oidcop.session.info.UserSessionInfo': 'user_sessioninfo',
@@ -589,6 +589,7 @@ class OidcSession(TimeStampedModel):
                 data['expires_at'] = _aware_dt_from_timestamp(v[1]['expires_at'])
                 data['revoked'] = v[1]['revoked']
                 data['sub'] = v[1]['sub']
+                data['sid'] = f"{user_id};;{client_id};;{data['grant_uid']}"
 
         data['salt'] = ses_man_dump['salt']
         session = cls.objects.create(**data)
@@ -598,13 +599,13 @@ class OidcSession(TimeStampedModel):
     def serialize(self):
         user_label = self.user_uid
         ses_label = f"{user_label};;{self.client.client_id}"
-        grant_label = f"{ses_label};;{grant_uid}"
+        grant_label = f"{ses_label};;{self.grant_uid}"
 
         return dict(
             db = {
-                user_label : self.user_session_info,
-                ses_label: self.client_session_info,
-                grant_label: self.grant
+                user_label : ['oidcop.session.info.UserSessionInfo', self.user_session_info],
+                ses_label: ['oidcop.session.info.ClientSessionInfo', self.client_session_info],
+                grant_label: ['oidcop.session.grant.Grant', self.grant]
             },
             salt = self.salt
         )

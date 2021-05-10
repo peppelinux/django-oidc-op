@@ -27,7 +27,7 @@ from urllib.parse import urlparse
 
 
 from . application import oidcop_application
-from . models import OidcRelyingParty, OidcSession
+from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
 
 oidcop_app = oidcop_application()
 
@@ -94,13 +94,15 @@ def do_response(endpoint, req_args, error='', **args):
 
     ec = oidcop_app.endpoint_context
     ses_man_dump = ec.endpoint_context.session_manager.dump()
-    # ec.endpoint_context.session_manager.flush()
+
+    # session db mngmtn
     if endpoint.__class__.__name__ == 'Authorization':
         session = OidcSession.load(ses_man_dump)
         ec.endpoint_context.session_manager.flush()
     elif endpoint.__class__.__name__ == 'Token':
-        pass
-        # ec.endpoint_context.session_manager.flush()
+        session = OidcSession.load(ses_man_dump)
+        ec.endpoint_context.session_manager.flush()
+
     return resp
 
 
@@ -302,6 +304,17 @@ def verify_user(request):
     return response
 
 
+def _get_session_by_token(request):
+    token = OidcIssuedToken.objects.filter(
+        type = request.POST.get('grant_type'),
+        value = request.POST.get('code')
+    ).first()
+    if token:
+        return token.session.serialize()
+    else:
+        return {}
+
+
 @csrf_exempt
 def token(request):
     logger.info('token request')
@@ -309,13 +322,15 @@ def token(request):
     _endpoint = ec.endpoint['token']
 
     _fill_cdb(request)
-    breakpoint()
-    # ec.endpoint_context.session_manager.load()
-
-    # update db
-    # OidcSession.load(
-        # ec.endpoint_context.session_manager.dump()
-    # )
+    session = _get_session_by_token(request)
+    if session:
+        ec.endpoint_context.session_manager.load(
+            session,
+            init_args={
+                'server_get': ec.server_get,
+                'handler': ec.endpoint_context.session_manager.token_handler
+            }
+        )
     response = service_endpoint(request, _endpoint)
     return response
 
