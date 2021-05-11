@@ -592,7 +592,13 @@ class OidcSession(TimeStampedModel):
 
         data['key'] = ses_man_dump['key']
         data['salt'] = ses_man_dump['salt']
-        session = cls.objects.create(**data)
+
+        session = cls.objects.filter(sid=data['sid'])
+        if not session:
+            session = cls.objects.create(**data)
+        else:
+            cls.objects.update(**data)
+            session = session.first()
         OidcIssuedToken.load(session)
 
         if session.serialize() != ses_man_dump:
@@ -711,7 +717,13 @@ class OidcIssuedToken(TimeStampedModel):
                 based_on = token.get('based_on'),
                 uid = token['id'],
             )
-            obj = cls.objects.create(**data)
+
+            obj = cls.objects.filter(value=token['value'])
+            if not obj:
+                obj = cls.objects.create(**data)
+            else:
+                cls.objects.update(**data)
+                # obj = obj.first()
 
     def __str__(self):
         return f'{self.type} {self.session}'
