@@ -27,6 +27,7 @@ from urllib.parse import urlparse
 
 
 from . application import oidcop_application
+from . exceptions import InconsinstentSessionDump
 from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
 
 oidcop_app = oidcop_application()
@@ -98,11 +99,18 @@ def do_response(endpoint, req_args, error='', **args):
     # session db mngmtn
     if endpoint.__class__.__name__ == 'Authorization':
         session = OidcSession.load(ses_man_dump)
-        ec.endpoint_context.session_manager.flush()
+        if ses_man_dump != session.serialize():
+            raise InconsinstentSessionDump('Authorization')
+        # breakpoint()
+        # ec.endpoint_context.session_manager.flush()
     elif endpoint.__class__.__name__ == 'Token':
         session = OidcSession.load(ses_man_dump)
-        ec.endpoint_context.session_manager.flush()
+        # breakpoint()
+        # ec.endpoint_context.session_manager.flush()
+        if ses_man_dump != session.serialize():
+            raise InconsinstentSessionDump('Token')
 
+    #ec.endpoint_context.session_manager.flush()
     return resp
 
 
@@ -154,6 +162,8 @@ def service_endpoint(request, endpoint):
     else:
         data = {k: v for k, v in request.POST.items()}
 
+    if isinstance(endpoint, Token):
+        breakpoint()
     req_args = endpoint.parse_request(data, http_info=http_info)
 
     try:
@@ -299,7 +309,6 @@ def verify_user(request):
     if isinstance(args, ResponseMessage) and 'error' in args:
         return HttpResponse(args.to_json(), status=400)
 
-
     response = do_response(endpoint, request, **args)
     return response
 
@@ -331,6 +340,9 @@ def token(request):
                 'handler': ec.endpoint_context.session_manager.token_handler
             }
         )
+    if ec.endpoint_context.session_manager.dump() != session:
+        raise InconsinstentSessionDump()
+
     response = service_endpoint(request, _endpoint)
     return response
 

@@ -9,6 +9,9 @@ from django.utils import timezone
 from oidcop.utils import load_yaml_config
 
 
+from . exceptions import InconsinstentSessionDump
+
+
 OIDC_RESPONSE_TYPES = settings.OIDCOP_CONFIG['op']['server_info'][
     'endpoint']['authorization']['kwargs']['response_types_supported']
 
@@ -528,10 +531,12 @@ class OidcSession(TimeStampedModel):
     revoked = models.BooleanField(default=False)
 
     session_info = models.TextField(default='{}', blank=True, null=True)
-    sub = models.CharField(max_length=255, blank=True, null=True)
-    sid = models.CharField(max_length=255, blank=True, null=True)
+    sub = models.CharField(max_length=254, blank=True, null=True)
+    sid = models.CharField(max_length=254, blank=True, null=True)
+    sid_encrypted = models.CharField(max_length=254, blank=True, null=True)
 
-    salt = models.CharField(max_length=255, blank=True, null=True)
+    key = models.CharField(max_length=254, blank=True, null=True)
+    salt = models.CharField(max_length=254, blank=True, null=True)
 
     class Meta:
         verbose_name = ('SSO Session')
@@ -559,20 +564,14 @@ class OidcSession(TimeStampedModel):
             'oidcop.session.info.ClientSessionInfo': 'client_sessioninfo',
             'oidcop.session.grant.Grant': 'grant_sessioninfo'
         }
-        data = dict(
-            user_uid = None,
-            user = None,
-            client = None,
-            user_sessioninfo = None,
-            client_sessioninfo = None,
-            grant_sessioninfo = None,
-            grant_uid = None,
-            expires_at = None,
-            session_info = None,
-            sub = None,
-            sid = None
-        )
+        data = dict()
         for k,v in ses_man_dump['db'].items():
+
+            # TODO: ask roland to have something more precise
+            if len(k) > 128:
+                data['sid_encrypted'] = k
+                continue
+
             classname = v[0]
             attr = getattr(cls, attr_map[classname])
             field_name = attr.field.name
@@ -591,9 +590,16 @@ class OidcSession(TimeStampedModel):
                 data['sub'] = v[1]['sub']
                 data['sid'] = f"{user_id};;{client_id};;{data['grant_uid']}"
 
+        data['key'] = ses_man_dump['key']
         data['salt'] = ses_man_dump['salt']
         session = cls.objects.create(**data)
         OidcIssuedToken.load(session)
+
+        if session.serialize() != ses_man_dump:
+            raise InconsinstentSessionDump(
+                'Serialized session differs from the dumped one'
+            )
+
         return session
 
     def serialize(self):
@@ -605,9 +611,11 @@ class OidcSession(TimeStampedModel):
             db = {
                 user_label : ['oidcop.session.info.UserSessionInfo', self.user_session_info],
                 ses_label: ['oidcop.session.info.ClientSessionInfo', self.client_session_info],
-                grant_label: ['oidcop.session.grant.Grant', self.grant]
+                grant_label: ['oidcop.session.grant.Grant', self.grant],
+                self.sid_encrypted : ['oidcop.session.grant.Grant', self.grant]
             },
-            salt = self.salt
+            salt = self.salt,
+            key = self.key
         )
 
     def __str__(self):
