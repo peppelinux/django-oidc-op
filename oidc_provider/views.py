@@ -253,7 +253,9 @@ def _fill_cdb_by_client(client):
 
 def authorization(request):
     _fill_cdb(request)
-    _endpoint = oidcop_app.endpoint_context.endpoint['authorization']
+    ec = oidcop_app.endpoint_context
+    _endpoint = ec.endpoint['authorization']
+    session_manager = ec.endpoint_context.session_manager
     return service_endpoint(request, _endpoint)
 
 
@@ -291,6 +293,13 @@ def verify_user(request):
     _token_usage_rules = endpoint.server_get("endpoint_context").authn_broker.get_method_by_id('user')
 
     session_manager = ec.endpoint_context.session_manager
+
+    # TODO - remove it when rohe fixes this bug
+    # dump = session_manager.dump()
+    # if not dump.get('db'):
+        # dump['db'] = {}
+        # session_manager.load(dump)
+
     _session_id = session_manager.create_session(
                                 authn_event=authn_event,
                                 auth_req=authz_request,
