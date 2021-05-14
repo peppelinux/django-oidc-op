@@ -124,19 +124,23 @@ class OidcRelyingParty(TimeStampedModel):
         if scopes:
             return [i.scope for i in scopes]
         else:
-            return ['openid', 'profile']
+            return None
 
     @allowed_scopes.setter
     def allowed_scopes(self, values):
         if not values:
-            values = ['openid', 'profile']
+            values = None
         for i in values:
-            scope = self.oidcrpscope_set.create(client=self, scope=i)
+            data = dict(client=self, scope=i)
+            if not self.oidcrpscope_set.filter(**data):
+                scope = self.oidcrpscope_set.create(**data)
 
     @property
     def contacts(self):
-        return [elem.contact
-                for elem in self.oidcrpcontact_set.filter(client=self)]
+        return [
+            elem.contact
+            for elem in self.oidcrpcontact_set.filter(client=self)
+        ]
 
     @contacts.setter
     def contacts(self, values):
@@ -145,8 +149,9 @@ class OidcRelyingParty(TimeStampedModel):
         if isinstance(values, str):
             value = [values]
         for value in values:
-            self.oidcrpcontact_set.create(client=self,
-                                          contact=value)
+            data = dict(client=self, contact=value)
+            if not self.oidcrpcontact_set.filter(**data):
+                self.oidcrpcontact_set.create(**data)
 
     @property
     def grant_types(self):
@@ -161,8 +166,9 @@ class OidcRelyingParty(TimeStampedModel):
         if isinstance(values, str):
             value = [values]
         for value in values:
-            self.oidcrpgranttype_set.create(client=self,
-                                            grant_type=value)
+            data = dict(client=self, grant_type=value)
+            if not self.oidcrpgranttype_set.filter(**data):
+                self.oidcrpgranttype_set.create(**data)
 
     @property
     def response_types(self):
@@ -179,9 +185,9 @@ class OidcRelyingParty(TimeStampedModel):
         if isinstance(values, str):
             value = [values]
         for value in values:
-            self.oidcrpresponsetype_set.create(
-                client=self, response_type=value
-            )
+            data = dict(client=self, response_type=value)
+            if not self.oidcrpresponsetype_set.filter(**data):
+                self.oidcrpresponsetype_set.create(**data)
 
     @property
     def post_logout_redirect_uris(self):
@@ -197,12 +203,14 @@ class OidcRelyingParty(TimeStampedModel):
         old.delete()
         for value in values:
             args = json.dumps(value[1] if value[1] else [])
-            self.oidcrpredirecturi_set.create(
+            data = dict(
                 client=self,
                 uri=value[0],
                 values=args,
                 type='post_logout_redirect_uris'
             )
+            for i in self.oidcrpredirecturi_set.filter(**data):
+                self.oidcrpredirecturi_set.create(**data)
 
     @property
     def redirect_uris(self):
@@ -217,10 +225,12 @@ class OidcRelyingParty(TimeStampedModel):
         old = self.oidcrpredirecturi_set.filter(client=self)
         old.delete()
         for value in values:
-            self.oidcrpredirecturi_set.create(client=self,
-                                              uri=value[0],
-                                              values=json.dumps(value[1]),
-                                              type='redirect_uris')
+            data = dict(client=self,
+                        uri=value[0],
+                        values=json.dumps(value[1]),
+                        type='redirect_uris')
+            if not self.oidcrpredirecturi_set.filter(**data):
+                self.oidcrpredirecturi_set.create(**data)
 
     class Meta:
         verbose_name = ('Relying Party')
@@ -242,21 +252,25 @@ class OidcRelyingParty(TimeStampedModel):
         """
             Compability with rohe approach based on dictionaries
         """
-        d = {k: v for k, v in self.__dict__.items() if k[0] != '_'}
+        data = {k: v for k, v in self.__dict__.items() if k[0] != '_'}
         disabled = ('created', 'modified', 'is_active', 'last_seen', 'id')
         for dis in disabled:
-            d.pop(dis)
+            data.pop(dis)
         for key in TIMESTAMP_FIELDS:
-            if d.get(key):
-                d[key] = int(datetime.datetime.timestamp(d[key]))
+            if data.get(key):
+                data[key] = int(datetime.datetime.timestamp(data[key]))
 
-        d['contacts'] = self.contacts
-        d['grant_types'] = self.grant_types
-        d['response_types'] = self.response_types
-        d['post_logout_redirect_uris'] = self.post_logout_redirect_uris
-        d['redirect_uris'] = self.redirect_uris
-        d['allowed_scopes'] = self.allowed_scopes
-        return d
+        data['contacts'] = self.contacts
+        data['grant_types'] = self.grant_types
+        data['response_types'] = self.response_types
+        data['post_logout_redirect_uris'] = self.post_logout_redirect_uris
+        data['redirect_uris'] = self.redirect_uris
+        if self.allowed_scopes:
+            # without allowed scopes set it will return all availables
+            # configure allowed_scopes to filter only which one MUST allowed
+            data['allowed_scopes'] = self.allowed_scopes
+
+        return data
 
     def __str__(self):
         return '{}'.format(self.client_id)
@@ -568,7 +582,7 @@ class OidcSession(TimeStampedModel):
         for k,v in ses_man_dump['db'].items():
 
             # TODO: ask roland to have something more precise
-            if len(k) > 128:
+            if len(k) > 128 and k not in attr_map.values():
                 data['sid_encrypted'] = k
                 continue
 
@@ -699,6 +713,9 @@ class OidcIssuedToken(TimeStampedModel):
     @classmethod
     def load(cls, session:OidcSession)->None:
         for token in session.grant['issued_token']:
+            # {'oidcop.session.token.AuthorizationCode': {'expires_at': 0, 'issued_at': 16209 ...
+            token = token[list(token.keys())[0]]
+
             if token.get('not_before'):
                 nbt = datetime.datetime.fromtimestamp(token['not_before'])
             else:

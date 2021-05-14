@@ -265,7 +265,8 @@ def verify_user(request):
     if not token:
         return HttpResponse('Access forbidden: invalid token.', status=403)
 
-    authn_method = oidcop_app.endpoint_context.endpoint_context.authn_broker.get_method_by_id('user')
+    ec = oidcop_app.endpoint_context
+    authn_method = ec.endpoint_context.authn_broker.get_method_by_id('user')
 
     kwargs = dict([(k, v) for k, v in request.POST.items()])
     user = authn_method.verify(**kwargs)
@@ -289,7 +290,7 @@ def verify_user(request):
     client_id = authz_request["client_id"]
     _token_usage_rules = endpoint.server_get("endpoint_context").authn_broker.get_method_by_id('user')
 
-    session_manager = oidcop_app.endpoint_context.endpoint_context.session_manager
+    session_manager = ec.endpoint_context.session_manager
     _session_id = session_manager.create_session(
                                 authn_event=authn_event,
                                 auth_req=authz_request,
