@@ -2,6 +2,25 @@ DOMAIN = "127.0.0.1"
 PORT = 8000
 SERVER_NAME = f"{DOMAIN}:{PORT}"
 
+OIDC_SIGN_ALGS = [
+    "RS256",
+    "RS512",
+    "ES256",
+    "ES512",
+    "PS256",
+    "PS512",
+]
+
+OIDC_ENC_ALGS =[
+    "RSA-OAEP",
+    "RSA-OAEP-256",
+    "A192KW",
+    "A256KW",
+    "ECDH-ES",
+    "ECDH-ES+A128KW",
+    "ECDH-ES+A192KW",
+    "ECDH-ES+A256KW"
+]
 
 OIDC_KEY_DEFS = [
     {
@@ -287,10 +306,18 @@ OIDCOP_CONFIG = {
         ],
         "grant_types_supported": [
           "authorization_code",
-          "implicit",
+          # "implicit",
           "urn:ietf:params:oauth:grant-type:jwt-bearer",
           "refresh_token"
         ],
+
+        # algs
+        "request_object_signing_alg_values_supported": OIDC_SIGN_ALGS,
+        "request_object_encryption_alg_values_supported": OIDC_ENC_ALGS,
+        "token_endpoint_auth_signing_alg_values_supported": OIDC_SIGN_ALGS,
+        "id_token_signing_alg_values_supported": OIDC_SIGN_ALGS,
+        "id_token_encryption_alg_values_supported": OIDC_ENC_ALGS,
+
         # indicates that unknow/unavailable scopes requested by a RP
         # would get a 403 error message instead of be declined implicitly.
         # If False the op will only release the available scopes and ignoring the missings.

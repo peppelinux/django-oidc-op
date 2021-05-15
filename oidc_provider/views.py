@@ -295,10 +295,10 @@ def verify_user(request):
     session_manager = ec.endpoint_context.session_manager
 
     # TODO - remove it when rohe fixes this bug
-    # dump = session_manager.dump()
-    # if not dump.get('db'):
-        # dump['db'] = {}
-        # session_manager.load(dump)
+    dump = session_manager.dump()
+    if not dump.get('db'):
+        dump['db'] = {}
+        session_manager.load(dump)
 
     _session_id = session_manager.create_session(
                                 authn_event=authn_event,
