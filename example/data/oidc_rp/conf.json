@@ -265,6 +265,10 @@
         ],
       },
       "issuer": "https://127.0.0.1:8000/",
+
+      "client_id": "82BnhKa6TQqzCmJpRCLnBw",
+      "client_secret": "528819cda18a3832ffee7fa4c0326c4f7046a7d5e12747a5abb3e032",
+
       "redirect_uris": [
         "https://{domain}:{port}/authz_cb/django"
       ],

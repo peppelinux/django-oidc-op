@@ -19,7 +19,16 @@ OIDC_ENC_ALGS =[
     "ECDH-ES",
     "ECDH-ES+A128KW",
     "ECDH-ES+A192KW",
-    "ECDH-ES+A256KW"
+    "ECDH-ES+A256KW",
+]
+
+OIDC_ENCS = [
+    'A128CBC-HS256',
+    'A192CBC-HS384',
+    'A256CBC-HS512',
+    'A128GCM',
+    'A192GCM',
+    'A256GCM'
 ]
 
 OIDC_KEY_DEFS = [
@@ -121,6 +130,9 @@ OIDC_OP_ENDPOINTS = {
         "claims_parameter_supported": True,
         "request_parameter_supported": True,
         "request_uri_parameter_supported": True,
+
+        "request_object_encryption_alg_values_supported": OIDC_ENC_ALGS,
+
         "response_types_supported": [
           "code",
           # "token",
@@ -147,7 +159,7 @@ OIDC_OP_ENDPOINTS = {
           "client_secret_basic",
           "client_secret_jwt",
           "private_key_jwt"
-        ]
+        ],
       }
     },
     "userinfo": {
@@ -158,7 +170,9 @@ OIDC_OP_ENDPOINTS = {
           "normal",
           "aggregated",
           "distributed"
-        ]
+        ],
+        "userinfo_signing_alg_values_supported": OIDC_SIGN_ALGS,
+        "userinfo_encryption_alg_values_supported": OIDC_ENC_ALGS,
       }
     },
     "end_session": {
@@ -225,6 +239,14 @@ OIDC_OP_TOKEN_HANDLER = {
       "kwargs": {
         "lifetime": 86400
       }
+    },
+    "id_token": {
+        "class": "oidcop.token.id_token.IDToken",
+        "kwargs": {
+            "id_token_signing_alg_values_supported": OIDC_SIGN_ALGS,
+            "id_token_encryption_alg_values_supported": OIDC_ENC_ALGS,
+            "id_token_encryption_enc_values_supported": OIDC_ENCS,
+        }
     }
 }
 
@@ -312,11 +334,13 @@ OIDCOP_CONFIG = {
         ],
 
         # algs
-        "request_object_signing_alg_values_supported": OIDC_SIGN_ALGS,
-        "request_object_encryption_alg_values_supported": OIDC_ENC_ALGS,
-        "token_endpoint_auth_signing_alg_values_supported": OIDC_SIGN_ALGS,
-        "id_token_signing_alg_values_supported": OIDC_SIGN_ALGS,
-        "id_token_encryption_alg_values_supported": OIDC_ENC_ALGS,
+        # "signing_alg_values_supported": OIDC_SIGN_ALGS,
+        # "encryption_alg_values_supported": OIDC_ENC_ALGS,
+        # "encryption_enc_values_supported": OIDC_ENC_ALGS,
+
+        # "request_object_signing_alg_values_supported": OIDC_SIGN_ALGS,
+        # "request_object_encryption_alg_values_supported": OIDC_ENC_ALGS,
+        # "token_endpoint_auth_signing_alg_values_supported": OIDC_SIGN_ALGS,
 
         # indicates that unknow/unavailable scopes requested by a RP
         # would get a 403 error message instead of be declined implicitly.
