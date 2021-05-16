@@ -102,7 +102,17 @@ def do_response(endpoint, req_args, error='', **args):
             'Token',
             'UserInfo'
         ):
-        session = OidcSession.load(ses_man_dump)
+        try:
+            session = OidcSession.load(ses_man_dump)
+        except InconsinstentSessionDump as e:
+            logger.critical(e)
+            ec.endpoint_context.session_manager.flush()
+            return JsonResponse(json.dumps({
+                'error': 'invalid_request',
+                'error_description': str(e),
+                'method': request.method
+            }), safe=False, status=500)
+
         ec.endpoint_context.session_manager.flush()
         if ses_man_dump != session.serialize():
             logger.critical(ses_man_dump, session)
@@ -232,17 +242,22 @@ def registration_api():
 
 def _fill_cdb(request)->None:
     client_id = request.GET.get('client_id') or request.POST.get('client_id')
+    _msg = f'Client {client_id} not found!'
     if client_id:
-        client = get_object_or_404(OidcRelyingParty,
-                                   client_id = client_id,
-                                   # TODO active/expired filters
+        client = OidcRelyingParty.objects.filter(
+                client_id = client_id,
+                # TODO active/expired filters
         )
-        ec = oidcop_app.endpoint_context
-        ec.endpoint_context.cdb = {
-            client_id: client.serialize()
-        }
-    else:
-        logger.warning(f'Client {client_id} not found!')
+        if client:
+            client = client.first()
+            ec = oidcop_app.endpoint_context
+            ec.endpoint_context.cdb = {
+                client_id: client.serialize()
+            }
+            return
+
+    logger.warning(_msg)
+    raise InvalidClient(_msg)
 
 
 def _fill_cdb_by_client(client):
@@ -253,7 +268,14 @@ def _fill_cdb_by_client(client):
 
 
 def authorization(request):
-    _fill_cdb(request)
+    try:
+        _fill_cdb(request)
+    except InvalidClient as e:
+        return JsonResponse(json.dumps({
+            'error': 'invalid_request',
+            'error_description': str(e),
+            'method': request.method
+        }), safe=False, status=403)
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['authorization']
     session_manager = ec.endpoint_context.session_manager

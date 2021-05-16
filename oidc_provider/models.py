@@ -1,8 +1,8 @@
 import datetime
 import json
+import logging
 import pytz
 
-from cryptojwt.jws.jws import factory as jwt_factory
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -11,6 +11,9 @@ from oidcop.utils import load_yaml_config
 
 
 from . exceptions import InconsinstentSessionDump
+
+
+logger = logging.getLogger(__name__)
 
 
 OIDC_RESPONSE_TYPES = settings.OIDCOP_CONFIG['op']['server_info'][
@@ -548,7 +551,7 @@ class OidcSession(TimeStampedModel):
 
     session_info = models.TextField(default='{}', blank=True, null=True)
     sub = models.CharField(max_length=254, blank=True, null=True)
-    sid = models.CharField(max_length=254, blank=True, null=True)
+    sid = models.CharField(max_length=254, unique=True, blank=True, null=True)
     sid_encrypted = models.CharField(max_length=254, blank=True, null=True)
 
     key = models.CharField(max_length=254, blank=True, null=True)
@@ -613,7 +616,7 @@ class OidcSession(TimeStampedModel):
         if not session:
             session = cls.objects.create(**data)
         else:
-            cls.objects.update(**data)
+            session.update(**data)
             session = session.first()
         OidcIssuedToken.load(session)
 
@@ -631,10 +634,20 @@ class OidcSession(TimeStampedModel):
 
         return dict(
             db = {
-                user_label : ['oidcop.session.info.UserSessionInfo', self.user_session_info],
-                ses_label: ['oidcop.session.info.ClientSessionInfo', self.client_session_info],
-                grant_label: ['oidcop.session.grant.Grant', self.grant],
-                self.sid_encrypted : ['oidcop.session.grant.Grant', self.grant]
+                user_label : [
+                    'oidcop.session.info.UserSessionInfo',
+                    self.user_session_info
+                ],
+                ses_label: [
+                    'oidcop.session.info.ClientSessionInfo',
+                    self.client_session_info
+                ],
+                grant_label: [
+                    'oidcop.session.grant.Grant',
+                    self.grant
+                ],
+                self.sid_encrypted : [
+                    'oidcop.session.grant.Grant', self.grant]
             },
             salt = self.salt,
             key = self.key
@@ -697,42 +710,29 @@ class OidcIssuedToken(TimeStampedModel):
     def load(cls, session:OidcSession)->None:
         for token in session.grant['issued_token']:
             token = token[list(token.keys())[0]]
-            if token.get("type") in ('access_token', 'authorization_code'):
-                # {'oidcop.session.token.AuthorizationCode': {'expires_at': 0, 'issued_at': 16209 ...
+            # {'oidcop.session.token.AuthorizationCode': {'expires_at': 0, 'issued_at': 16209 ...
 
-                if token.get('not_before'):
-                    nbt = datetime.datetime.fromtimestamp(token['not_before'])
-                else:
-                    nbt = None
-                data = dict(
-                    session = session,
-                    type = token['type'],
-                    issued_at = _aware_dt_from_timestamp(token['issued_at']),
-                    expires_at = _aware_dt_from_timestamp(token['expires_at']),
-                    not_before = nbt,
-                    revoked = token['revoked'],
-                    value = token['value'],
-                    usage_rules = json.dumps(token['usage_rules'],),
-                    used = token['used'],
-                    based_on = token.get('based_on'),
-                    uid = token['id'],
-                )
+            if token.get('not_before'):
+                nbt = datetime.datetime.fromtimestamp(token['not_before'])
             else:
-                _jwt = jwt_factory(token['value'])
-                _payload = _jwt.jwt.payload()
-                data = {
-                    "type": 'id_token',
-                    "value": token['value'],
-                    "issued_at": _aware_dt_from_timestamp(_payload['iat']),
-                    "expires_at": _aware_dt_from_timestamp(_payload['exp']),
-                    "revoked": 0,
-                    "usage_rules": "",
-                    "used": 0,
-                    "uid": _payload['nonce'],
-                    "session": session,
-                }
+                nbt = None
+            data = dict(
+                session = session,
+                type = token['type'],
+                issued_at = _aware_dt_from_timestamp(token['issued_at']),
+                expires_at = _aware_dt_from_timestamp(token['expires_at']),
+                not_before = nbt,
+                revoked = token['revoked'],
+                value = token['value'],
+                usage_rules = json.dumps(token['usage_rules'],),
+                used = token['used'],
+                based_on = token.get('based_on'),
+                uid = token['id'],
+            )
 
-            obj = cls.objects.filter(value=data['value'])
+            obj = cls.objects.filter(
+                session=session, value=data['value']
+            )
             if not obj:
                 obj = cls.objects.create(**data)
             else:
