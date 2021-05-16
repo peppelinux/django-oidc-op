@@ -618,10 +618,10 @@ class OidcSession(TimeStampedModel):
         OidcIssuedToken.load(session)
 
         if session.serialize() != ses_man_dump:
+            logger.critical(ses_man_dump, session)
             raise InconsinstentSessionDump(
                 'Serialized session differs from the dumped one'
             )
-
         return session
 
     def serialize(self):

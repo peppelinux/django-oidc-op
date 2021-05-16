@@ -73,7 +73,7 @@ def do_response(endpoint, req_args, error='', **args):
 
     if error:
         if _response_placement == 'body':
-            logger.debug('Error Response [Body]: {}'.format(info_response))
+            logger.error('Error Response [Body]: {}'.format(info_response))
             resp = HttpResponse(info_response, status=400)
         else:  # _response_placement == 'url':
             logger.debug('Redirect to: {}'.format(info_response))
@@ -105,6 +105,7 @@ def do_response(endpoint, req_args, error='', **args):
         session = OidcSession.load(ses_man_dump)
         ec.endpoint_context.session_manager.flush()
         if ses_man_dump != session.serialize():
+            logger.critical(ses_man_dump, session)
             raise InconsinstentSessionDump(endpoint.__class__.__name__)
 
     return resp
@@ -359,6 +360,11 @@ def token(request):
             }
         )
     if ec.endpoint_context.session_manager.dump() != session:
+        logger.critical(
+            ec.endpoint_context.session_manager.dump(),
+            session
+        )
+        ec.endpoint_context.session_manager.flush()
         raise InconsinstentSessionDump()
 
     response = service_endpoint(request, _endpoint)
@@ -388,6 +394,7 @@ def userinfo(request):
             ec.endpoint_context.session_manager.dump(),
             session
         )
+        ec.endpoint_context.session_manager.flush()
         raise InconsinstentSessionDump('userinfo endpoint')
 
     return service_endpoint(request, _endpoint)

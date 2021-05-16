@@ -160,7 +160,7 @@ class OidcIssuedTokenAdmin(admin.ModelAdmin):
 class OidcSessionAdmin(admin.ModelAdmin):
     list_filter = ('created', 'modified', 'expires_at')
     list_display = ('user', 'client', 'created', 'expires_at')
-    search_fields = ('user__username', )
+    search_fields = ('user__username', 'client__client_id')
     readonly_fields = ('user_uid', 'user', 'client',
                        'sub',
                        'created', 'expires_at',
