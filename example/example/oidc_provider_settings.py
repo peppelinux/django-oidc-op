@@ -251,15 +251,15 @@ OIDC_OP_TOKEN_HANDLER = {
 }
 
 
-OIDC_OP_IDTOKEN = {
-    "class": "oidcop.id_token.IDToken",
-    "kwargs": {
-        "base_claims": {
-            "email": None,
-            "email_verified": None,
-        },
-    },
-}
+# OIDC_OP_IDTOKEN = {
+    # "class": "oidcop.session.token.IDToken",
+    # "kwargs": {
+        # "base_claims": {
+            # "email": None,
+            # "email_verified": None,
+        # },
+    # },
+# }
 
 
 OIDCOP_CONFIG = {
@@ -370,7 +370,6 @@ OIDCOP_CONFIG = {
         "verify": False
       },
       "endpoint": OIDC_OP_ENDPOINTS,
-      "id_token": OIDC_OP_IDTOKEN,
       "issuer": f"https://{SERVER_NAME}",
       "keys": {
         "private_path": "data/oidc_op/private/jwks.json",

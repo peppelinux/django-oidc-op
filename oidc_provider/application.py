@@ -52,4 +52,3 @@ def oidcop_application(conf = settings.OIDCOP_CONFIG):
     app = oidc_provider_init_app(config)
     os.environ['OIDCOP_CONFIG'] = json.dumps(conf)
     return app
-
