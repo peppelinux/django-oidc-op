@@ -165,7 +165,7 @@ LOGGING = {
         },
         'django': {
             'handlers': ['console', 'mail_admins'],
-            'level': 'ERROR',
+            'level': 'INFO',
             'propagate': True,
         },
         'django.request': {
@@ -183,20 +183,20 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'oidcop': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'oidcmsg': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'cryptojwt': {
-            'handlers': ['console'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
+        # 'oidcop': {
+            # 'handlers': ['console'],
+            # 'level': 'DEBUG',
+            # 'propagate': False,
+        # },
+        # 'oidcmsg': {
+            # 'handlers': ['console'],
+            # 'level': 'DEBUG',
+            # 'propagate': False,
+        # },
+        # 'cryptojwt': {
+            # 'handlers': ['console'],
+            # 'level': 'DEBUG',
+            # 'propagate': False,
+        # },
     }
 }

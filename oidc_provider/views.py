@@ -31,7 +31,6 @@ from . exceptions import InconsinstentSessionDump
 from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
 
 
-
 logger = logging.getLogger(__name__)
 oidcop_app = oidcop_application(conf = settings.OIDCOP_CONFIG)
 IGNORED_HEADERS = ["cookie", "user-agent"]
@@ -122,33 +121,11 @@ def do_response(endpoint, req_args, error='', **args):
     return resp
 
 
-def fancy_debug(request):
-    """
-    fancy logging of JWT things
-    """
-    _headers = json.dumps(dict(request.headers), indent=2)
-    logger.debug('Request Headers: {}\n\n'.format(_headers))
-
-    _get = json.dumps(dict(request.GET), indent=2)
-    if request.GET:
-        logger.debug('Request arguments GET: {}\n'.format(_get))
-    if request.POST or request.body:
-        _post = request.POST or request.body
-        if isinstance(_post, bytes):
-            _post = json.dumps(json.loads(_post.decode()), indent=2)
-        elif isinstance(_post, QueryDict):
-            _post = json.dumps({k: v for k, v in _post.items()},
-                               indent=2)
-        logger.debug('Request arguments POST: {}\n'.format(_post))
-
-
 def service_endpoint(request, endpoint):
     """
     TODO: documentation here
     """
-    logger.info('\n\nRequest at the "{}" endpoint'.format(endpoint.name))
-    # if logger.level == 0:
-        # fancy_debug(request)
+    logger.info('Request at the "{}" endpoint'.format(endpoint.name))
 
     http_info = {
         "headers": {
@@ -210,10 +187,17 @@ def service_endpoint(request, endpoint):
     return do_response(endpoint, req_args, **args)
 
 
+def _debug_request(endpoint_name, request):
+    logger.debug(
+        f'{endpoint_name} request GET: {request.GET} - POST:{request.POST}'
+    )
+
+
 def well_known(request, service):
     """
     /.well-known/<service>
     """
+    _debug_request('well_known', request)
     if service == 'openid-configuration':
         _endpoint = oidcop_app.endpoint_context.endpoint['provider_config']
     # TODO fedservice integration here
@@ -229,7 +213,7 @@ def well_known(request, service):
 
 @csrf_exempt
 def registration(request):
-    logger.info('registration request')
+    _debug_request('registration', request)
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['registration']
     response = service_endpoint(request, _endpoint)
@@ -242,7 +226,7 @@ def registration(request):
 
 @csrf_exempt
 def registration_api():
-    logger.info('registration API')
+    _debug_request('registration api', request)
     return service_endpoint(
         request,
         oidcop_app.endpoint_context.endpoint['registration_api']
@@ -277,6 +261,7 @@ def _fill_cdb_by_client(client):
 
 
 def authorization(request):
+    _debug_request('authorization', request)
     try:
         _fill_cdb(request)
     except InvalidClient as e:
@@ -295,6 +280,7 @@ def authorization(request):
 def verify_user(request):
     """csrf is not needed because it uses oidc token in the post
     """
+    _debug_request('verify_user', request)
     token = request.POST.get('token')
     if not token:
         return HttpResponse('Access forbidden: invalid token.', status=403)
@@ -376,7 +362,7 @@ def _get_session_by_token(request):
 
 @csrf_exempt
 def token(request):
-    logger.info('token request')
+    _debug_request('token request', request)
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['token']
 
@@ -404,7 +390,7 @@ def token(request):
 
 @csrf_exempt
 def userinfo(request):
-    logger.info('userinfo request')
+    _debug_request('userinfo request', request)
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['userinfo']
 
@@ -464,6 +450,7 @@ def check_session_iframe(request):
 
 @csrf_exempt
 def rp_logout(request):
+    _debug_request('rp_logout', request)
     _endp = oidcop_app.endpoint_context.endpoint['session']
     _info = _endp.unpack_signed_jwt(request.POST['sjwt'])
     alla = None  # request.POST.get('logout')
@@ -487,6 +474,7 @@ def rp_logout(request):
 
 
 def verify_logout(request):
+    _debug_request('verify_logout', request)
     part = urlparse(oidcop_app.endpoint_context.conf['issuer'])
     d = dict(op=part.hostname,
              do_logout='rp_logout',
@@ -495,4 +483,5 @@ def verify_logout(request):
 
 
 def post_logout(request):
+    _debug_request('post_logout', request)
     return render(request, 'post_logout.html')

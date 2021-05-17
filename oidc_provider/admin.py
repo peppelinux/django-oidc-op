@@ -163,12 +163,12 @@ class OidcSessionAdmin(admin.ModelAdmin):
                     'grant_uid', 'created', 'expires_at')
     search_fields = ('user__username', 'client__client_id')
     readonly_fields = ('user_uid', 'user', 'client',
-                       'sub',
+                       'sub', 'sid', 'sid_encrypted', 'key', 'salt',
                        'created', 'expires_at',
                        'user_session_info_preview',
                        'client_session_info_preview',
                        'grant_preview',
-                       'session_info_preview'
+                       'session_info_preview',
     )
 
     fieldsets = (
@@ -177,6 +177,10 @@ class OidcSessionAdmin(admin.ModelAdmin):
                 ('client', ),
                 ('user_uid',),
                 ('sub', ),
+                ('sid',),
+                ('sid_encrypted',),
+                ('key',),
+                ('salt',),
                 ('created',),
                 ('expires_at',),
             )

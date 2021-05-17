@@ -338,6 +338,20 @@ OIDCOP_CONFIG = {
         "type": "OCT",
         "use": "sig"
       },
+      "sub_func": {
+        "public": {
+          "class": "oidcop.session.manager.PublicID",
+          "kwargs": {
+            "salt": "sdfsdfdsf"
+          }
+        },
+        "pairwise": {
+          "class": "oidcop.session.manager.PairWiseID",
+          "kwargs": {
+            "salt": "sdfsdfsdf"
+          }
+        }
+     },
       "template_dir": "templates",
       "token_handler_args": OIDC_OP_TOKEN_HANDLER,
       "userinfo": {
