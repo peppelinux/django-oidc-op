@@ -2,6 +2,7 @@ import base64
 import logging
 import json
 import os
+import sys
 import urllib
 
 from django.conf import settings
@@ -197,7 +198,9 @@ def well_known(request, service):
     """
     /.well-known/<service>
     """
-    _debug_request('well_known', request)
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
     if service == 'openid-configuration':
         _endpoint = oidcop_app.endpoint_context.endpoint['provider_config']
     # TODO fedservice integration here
@@ -213,7 +216,9 @@ def well_known(request, service):
 
 @csrf_exempt
 def registration(request):
-    _debug_request('registration', request)
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['registration']
     response = service_endpoint(request, _endpoint)
@@ -226,7 +231,9 @@ def registration(request):
 
 @csrf_exempt
 def registration_api():
-    _debug_request('registration api', request)
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
     return service_endpoint(
         request,
         oidcop_app.endpoint_context.endpoint['registration_api']
@@ -261,7 +268,9 @@ def _fill_cdb_by_client(client):
 
 
 def authorization(request):
-    _debug_request('authorization', request)
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
     try:
         _fill_cdb(request)
     except InvalidClient as e:
@@ -272,7 +281,6 @@ def authorization(request):
         }), safe=False, status=403)
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['authorization']
-    session_manager = ec.endpoint_context.session_manager
     return service_endpoint(request, _endpoint)
 
 
@@ -280,7 +288,9 @@ def authorization(request):
 def verify_user(request):
     """csrf is not needed because it uses oidc token in the post
     """
-    _debug_request('verify_user', request)
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
     token = request.POST.get('token')
     if not token:
         return HttpResponse('Access forbidden: invalid token.', status=403)
@@ -311,7 +321,6 @@ def verify_user(request):
     _token_usage_rules = endpoint.server_get("endpoint_context").authn_broker.get_method_by_id('user')
 
     session_manager = ec.endpoint_context.session_manager
-
     # TODO - remove it when rohe fixes this bug
     dump = session_manager.dump()
     if not dump.get('db'):
@@ -360,29 +369,30 @@ def _get_session_by_token(request):
         return {}
 
 
-@csrf_exempt
-def token(request):
-    _debug_request('token request', request)
-    ec = oidcop_app.endpoint_context
-    _endpoint = ec.endpoint['token']
-
-    _fill_cdb(request)
-    session = _get_session_by_token(request).serialize()
-    if session:
-        ec.endpoint_context.session_manager.load(
-            session,
-            init_args={
-                'server_get': ec.server_get,
-                'handler': ec.endpoint_context.session_manager.token_handler
-            }
-        )
+def _check_session_dump_consistency(endpoint_name, ec, session):
     if ec.endpoint_context.session_manager.dump() != session:
         logger.critical(
             ec.endpoint_context.session_manager.dump(),
             session
         )
         ec.endpoint_context.session_manager.flush()
-        raise InconsinstentSessionDump()
+        raise InconsinstentSessionDump('userinfo endpoint')
+
+
+@csrf_exempt
+def token(request):
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
+    ec = oidcop_app.endpoint_context
+    _endpoint = ec.endpoint['token']
+
+    _fill_cdb(request)
+    session = _get_session_by_token(request).serialize()
+    if session:
+        ec.endpoint_context.session_manager.load(session)
+
+    _check_session_dump_consistency(_name, ec, session)
 
     response = service_endpoint(request, _endpoint)
     return response
@@ -390,7 +400,9 @@ def token(request):
 
 @csrf_exempt
 def userinfo(request):
-    _debug_request('userinfo request', request)
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['userinfo']
 
@@ -399,20 +411,9 @@ def userinfo(request):
     session = session.serialize()
 
     if session:
-        ec.endpoint_context.session_manager.load(
-            session,
-            # init_args={
-                # 'server_get': ec.server_get,
-                # 'handler': ec.endpoint_context.session_manager.token_handler
-            # }
-        )
-    if ec.endpoint_context.session_manager.dump() != session:
-        logger.critical(
-            ec.endpoint_context.session_manager.dump(),
-            session
-        )
-        ec.endpoint_context.session_manager.flush()
-        raise InconsinstentSessionDump('userinfo endpoint')
+        ec.endpoint_context.session_manager.load(session)
+
+    _check_session_dump_consistency(_name, ec, session)
 
     return service_endpoint(request, _endpoint)
 
@@ -450,7 +451,9 @@ def check_session_iframe(request):
 
 @csrf_exempt
 def rp_logout(request):
-    _debug_request('rp_logout', request)
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
     _endp = oidcop_app.endpoint_context.endpoint['session']
     _info = _endp.unpack_signed_jwt(request.POST['sjwt'])
     alla = None  # request.POST.get('logout')
@@ -474,7 +477,9 @@ def rp_logout(request):
 
 
 def verify_logout(request):
-    _debug_request('verify_logout', request)
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
     part = urlparse(oidcop_app.endpoint_context.conf['issuer'])
     d = dict(op=part.hostname,
              do_logout='rp_logout',
@@ -483,5 +488,7 @@ def verify_logout(request):
 
 
 def post_logout(request):
-    _debug_request('post_logout', request)
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
     return render(request, 'post_logout.html')
