@@ -66,6 +66,9 @@ OIDC_OP_AUTHZ = {
     }
 }
 
+OIDC_JWKS_PRIVATE_PATH = 'data/oidc_op/private/'
+OIDC_JWKS_PUBLIC_PATH = 'data/static/'
+
 
 OIDC_OP_ENDPOINTS = {
     "webfinger": {
@@ -186,28 +189,7 @@ OIDC_OP_ENDPOINTS = {
 
 
 OIDC_OP_TOKEN_HANDLER = {
-    "jwks_def": {
-      "private_path": "data/oidc_op/private/token_jwks.json",
-      "read_only": False,
-      "key_defs": [
-        {
-          "type": "oct",
-          "bytes": 24,
-          "use": [
-            "enc"
-          ],
-          "kid": "code"
-        },
-        {
-          "type": "oct",
-          "bytes": 24,
-          "use": [
-            "enc"
-          ],
-          "kid": "refresh"
-        }
-      ]
-    },
+    # "jwks_file": f"{OIDC_JWKS_PRIVATE_PATH}/token_jwks.json",
     "code": {
       "kwargs": {
         "lifetime": 600
@@ -243,31 +225,11 @@ OIDC_OP_TOKEN_HANDLER = {
     }
 }
 
-
-# OIDC_OP_IDTOKEN = {
-    # "class": "oidcop.session.token.IDToken",
-    # "kwargs": {
-        # "base_claims": {
-            # "email": None,
-            # "email_verified": None,
-        # },
-    # },
-# }
-
-
 OIDCOP_CONFIG = {
   "port": PORT,
   "domain": DOMAIN,
   "server_name": SERVER_NAME,
   "base_url": f"https://{SERVER_NAME}",
-  "key_def": OIDC_KEY_DEFS,
-  "OIDC_KEYS": {
-    "private_path": "data/oidc_op/private/jwks.json",
-    "key_defs": OIDC_KEY_DEFS,
-    "public_path": "data/static/jwks.json",
-    "read_only": False,
-    "uri_path": "static/jwks.json"
-  },
   "op": {
     # "seed": "CHANGE-THIS-RANDOMNESS!!!",
     "server_info": {
@@ -335,7 +297,7 @@ OIDCOP_CONFIG = {
         "class": "oidcop.cookie_handler.CookieHandler",
         "kwargs": {
           "keys": {
-            "private_path": "data/oidc_op/private/cookie_jwks.json",
+            "private_path": f"{OIDC_JWKS_PRIVATE_PATH}/cookie_jwks.json",
             "key_defs": [
               {"type": "OCT", "use": ["enc"], "kid": "enc"},
               {"type": "OCT", "use": ["sig"], "kid": "sig"}
@@ -355,9 +317,9 @@ OIDCOP_CONFIG = {
       "endpoint": OIDC_OP_ENDPOINTS,
       "issuer": f"https://{SERVER_NAME}",
       "keys": {
-        "private_path": "data/oidc_op/private/jwks.json",
+        "private_path": f"{OIDC_JWKS_PRIVATE_PATH}/jwks.json",
         "key_defs": OIDC_KEY_DEFS,
-        "public_path": "data/static/jwks.json",
+        "public_path": f"{OIDC_JWKS_PUBLIC_PATH}/jwks.json",
         "read_only": False,
         "uri_path": "static/jwks.json"
       },
@@ -372,7 +334,7 @@ OIDCOP_CONFIG = {
         }
       },
       "session_key": {
-        "filename": "data/oidc_op/private/session_jwk.json",
+        "filename": f"{OIDC_JWKS_PRIVATE_PATH}/session_jwk.json",
         "type": "OCT",
         "use": "sig"
       },
