@@ -21,7 +21,6 @@ def init_oidc_op_endpoints(app):
         # iss = iss.format(domain=app.srv_config.domain,
                          # port=app.srv_config.port)
         # op_config['issuer'] = iss
-
     server = Server(op_config, cwd=folder)
 
     for endp in server.endpoint.values():
@@ -43,7 +42,8 @@ def oidc_provider_init_app(config, name='oidc_op', **kwargs):
     return app
 
 
-def oidcop_application(conf = settings.OIDCOP_CONFIG):
+def oidcop_application(conf = None):
+    conf = conf or settings.OIDCOP_CONFIG
     domain = getattr(settings, 'DOMAIN', None)
     port = getattr(settings, 'PORT', None)
     config = OPConfiguration(conf = conf['op']['server_info'],

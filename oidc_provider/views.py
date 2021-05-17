@@ -12,6 +12,7 @@ from django.http import (HttpResponse,
 from django.http.request import QueryDict
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, get_object_or_404
+from django.utils import timezone
 from oidcop.authn_event import create_authn_event
 from oidcop.exception import UnAuthorizedClient
 from oidcop.exception import UnAuthorizedClientScope  # experimental
@@ -25,15 +26,15 @@ from oidcmsg.oidc import AuthorizationRequest
 from urllib import parse as urlib_parse
 from urllib.parse import urlparse
 
-
 from . application import oidcop_application
 from . exceptions import InconsinstentSessionDump
 from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
 
-oidcop_app = oidcop_application()
+
 
 logger = logging.getLogger(__name__)
-IGNORE = ["cookie", "user-agent"]
+oidcop_app = oidcop_application(conf = settings.OIDCOP_CONFIG)
+IGNORED_HEADERS = ["cookie", "user-agent"]
 
 
 def _add_cookie(resp, cookie_spec):
@@ -150,11 +151,17 @@ def service_endpoint(request, endpoint):
         # fancy_debug(request)
 
     http_info = {
-        "headers": {k.lower(): v for k, v in request.headers.items() if k not in IGNORE},
+        "headers": {
+            k.lower(): v
+            for k, v in request.headers.items()
+            if k not in IGNORED_HEADERS
+        },
         "method": request.method,
         "url": request.get_raw_uri(),
         # name is not unique
-        "cookie": [{"name": k, "value": v} for k, v in request.COOKIES.items()]
+        "cookie": [
+            {"name": k, "value": v} for k, v in request.COOKIES.items()
+        ]
     }
 
     if request.method == 'GET':
@@ -216,6 +223,7 @@ def well_known(request, service):
         _endpoint = oidcop_app.endpoint_context.endpoint['webfinger']
     else:
         return HttpResponseBadRequest('Not supported', status=400)
+
     return service_endpoint(request, _endpoint)
 
 
@@ -246,7 +254,8 @@ def _fill_cdb(request)->None:
     if client_id:
         client = OidcRelyingParty.objects.filter(
                 client_id = client_id,
-                # TODO active/expired filters
+                is_active = True,
+                client_secret_expires_at__gte=timezone.localtime()
         )
         if client:
             client = client.first()

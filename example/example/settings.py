@@ -50,6 +50,7 @@ if 'oidc_provider' in INSTALLED_APPS:
 
 
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -178,34 +179,24 @@ LOGGING = {
             # 'propagate': False,
         # },
         'oidc_provider': {
-            'handlers': ['console', 'mail_admins'],
+            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,
         },
-        'oidc_op': {
-            'handlers': ['console', 'mail_admins'],
+        'oidcop': {
+            'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
-        # 'oidcop.endpoint_context': {
-            # 'handlers': ['console', 'mail_admins'],
-            # 'level': 'DEBUG',
-            # 'propagate': False,
-        # },
-        # 'oidcop.sso_db': {
-            # 'handlers': ['console', 'mail_admins'],
-            # 'level': 'DEBUG',
-            # 'propagate': False,
-        # },
-        # 'oidcop.session': {
-            # 'handlers': ['console', 'mail_admins'],
-            # 'level': 'DEBUG',
-            # 'propagate': False,
-        # },
-        # 'oidcmsg': {
-            # 'handlers': ['console', 'mail_admins'],
-            # 'level': 'INFO',
-            # 'propagate': False,
-        # },
+        'oidcmsg': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'cryptojwt': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     }
 }

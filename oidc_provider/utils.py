@@ -2,6 +2,7 @@ import datetime
 import json
 import pytz
 
+from django.conf import settings
 from oidcmsg.message import Message
 from cryptojwt.key_jar import KeyJar
 

@@ -34,7 +34,7 @@
   },
   "port": 8090,
   "domain": "127.0.0.1",
-  "base_url": "https://{domain}:{port}",
+  "base_url": "https://example.org",
   "httpc_params": {
     "verify": false
   },
@@ -55,7 +55,7 @@
     }
   ],
   "rp_keys": {
-    "private_path": "private/jwks.json",
+    "private_path": "snippets/private/jwks.json",
     "key_defs": [
       {
         "type": "RSA",
@@ -265,6 +265,10 @@
         ],
       },
       "issuer": "https://127.0.0.1:8000/",
+
+      "client_id": "wprOL67QF0hWUPduTIH2RQ",
+      "client_secret": "a1aaa6cd40a4e3922b79308ac5a42a8661863badd65c37c1680ba874",
+
       "redirect_uris": [
         "https://example.org/authz_cb/django"
       ],

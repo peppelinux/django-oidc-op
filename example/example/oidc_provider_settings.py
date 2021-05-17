@@ -66,8 +66,8 @@ OIDC_OP_AUTHZ = {
     }
 }
 
-OIDC_JWKS_PRIVATE_PATH = 'data/oidc_op/private/'
-OIDC_JWKS_PUBLIC_PATH = 'data/static/'
+OIDC_JWKS_PRIVATE_PATH = 'data/oidc_op/private'
+OIDC_JWKS_PUBLIC_PATH = 'data/static'
 
 
 OIDC_OP_ENDPOINTS = {
@@ -189,7 +189,7 @@ OIDC_OP_ENDPOINTS = {
 
 
 OIDC_OP_TOKEN_HANDLER = {
-    # "jwks_file": f"{OIDC_JWKS_PRIVATE_PATH}/token_jwks.json",
+    "jwks_file": f"{OIDC_JWKS_PRIVATE_PATH}/token_jwks.json",
     "code": {
       "kwargs": {
         "lifetime": 600
