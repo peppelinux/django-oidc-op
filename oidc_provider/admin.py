@@ -110,26 +110,6 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
          ),
     )
 
-    # def save_model(self, request, obj, form, change):
-    # res = False
-    # msg = ''
-    # try:
-    # json.dumps(obj.as_pysaml2_mdstore_row())
-    # res = obj.validate()
-    # super(MetadataStoreAdmin, self).save_model(request, obj, form, change)
-    # except Exception as excp:
-    # obj.is_valid = False
-    # obj.save()
-    # msg = str(excp)
-
-    # if not res:
-    # messages.set_level(request, messages.ERROR)
-    # _msg = _("Storage {} is not valid, if 'mdq' at least a "
-    # "valid url must be inserted. "
-    # "If local: at least a file or a valid path").format(obj.name)
-    # if msg: _msg = _msg + '. ' + msg
-    # messages.add_message(request, messages.ERROR, _msg)
-
 
 @admin.register(Session)
 class SessionAdmin(admin.ModelAdmin):
@@ -140,6 +120,7 @@ class SessionAdmin(admin.ModelAdmin):
 
 @admin.register(OidcIssuedToken)
 class OidcIssuedTokenAdmin(admin.ModelAdmin):
+    search_fields = ('value',)
     list_display = ['session', 'type', 'created']
     readonly_fields = (
         "type",

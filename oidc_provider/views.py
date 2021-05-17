@@ -8,6 +8,7 @@ import urllib
 from django.conf import settings
 from django.http import (HttpResponse,
                          HttpResponseBadRequest,
+                         HttpResponseForbidden,
                          HttpResponseRedirect,
                          JsonResponse)
 from django.http.request import QueryDict
@@ -54,7 +55,7 @@ def add_cookie(resp, cookie_spec):
         _add_cookie(resp, cookie_spec)
 
 
-def do_response(endpoint, req_args, error='', **args):
+def do_response(request, endpoint, req_args, error='', **args):
     info = endpoint.do_response(request=req_args, error=error, **args)
     _response_placement = info.get('response_placement')
     if not _response_placement:
@@ -185,7 +186,7 @@ def service_endpoint(request, endpoint):
     if 'http_response' in args:
         return HttpResponse(args['http_response'], status=200)
 
-    return do_response(endpoint, req_args, **args)
+    return do_response(request, endpoint, req_args, **args)
 
 
 def _debug_request(endpoint_name, request):
@@ -318,7 +319,8 @@ def verify_user(request):
     endpoint = oidcop_app.endpoint_context.endpoint['authorization']
     # {'session_id': 'diana;;client_3;;38044288819611eb905343ee297b1c98', 'identity': {'uid': 'diana'}, 'user': 'diana'}
     client_id = authz_request["client_id"]
-    _token_usage_rules = endpoint.server_get("endpoint_context").authn_broker.get_method_by_id('user')
+    _token_usage_rules = endpoint.server_get(
+        "endpoint_context").authn_broker.get_method_by_id('user')
 
     session_manager = ec.endpoint_context.session_manager
     # TODO - remove it when rohe fixes this bug
@@ -347,7 +349,7 @@ def verify_user(request):
     if isinstance(args, ResponseMessage) and 'error' in args:
         return HttpResponse(args.to_json(), status=400)
 
-    response = do_response(endpoint, request, **args)
+    response = do_response(request, endpoint, request, **args)
     return response
 
 
@@ -357,17 +359,20 @@ def _get_session_by_token(request):
         token = OidcIssuedToken.objects.filter(
             value = bearer.split(' ')[1]
         ).first()
-    else:
+    elif request.POST.get('grant_type'):
         token = OidcIssuedToken.objects.filter(
-            type = request.POST.get('grant_type'),
+            type = request.POST['grant_type'],
             value = request.POST.get('code')
         ).first()
-
-    if token:
-        return token.session
+    elif request.GET.get('id_token_hint'):
+        token = OidcIssuedToken.objects.filter(
+            type = 'id_token',
+            value = request.GET['id_token_hint']
+        ).first()
     else:
-        return {}
+        raise HttpResponseForbidden()
 
+    return token.session
 
 def _check_session_dump_consistency(endpoint_name, ec, session):
     if ec.endpoint_context.session_manager.dump() != session:
@@ -391,7 +396,6 @@ def token(request):
     session = _get_session_by_token(request).serialize()
     if session:
         ec.endpoint_context.session_manager.load(session)
-
     _check_session_dump_consistency(_name, ec, session)
 
     response = service_endpoint(request, _endpoint)
@@ -412,7 +416,6 @@ def userinfo(request):
 
     if session:
         ec.endpoint_context.session_manager.load(session)
-
     _check_session_dump_consistency(_name, ec, session)
 
     return service_endpoint(request, _endpoint)
@@ -422,11 +425,22 @@ def userinfo(request):
 # LOGOUT
 ########
 def session_endpoint(request):
-    return service_endpoint(
-        request,
-        oidcop_app.endpoint_context.endpoint['session']
-    )
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
 
+    ec = oidcop_app.endpoint_context
+    _endpoint = ec.endpoint['userinfo']
+    session = _get_session_by_token(request)
+    _fill_cdb_by_client(session.client)
+    session = session.serialize()
+    if session:
+        ec.endpoint_context.session_manager.load(session)
+    _check_session_dump_consistency(_name, ec, session)
+    try:
+        res = service_endpoint(request, _endpoint)
+    except:
+        ec.endpoint_context.session_manager.flush()
+        return HttpResponseForbidden()
 
 def check_session_iframe(request):
     if request.method == 'GET':
