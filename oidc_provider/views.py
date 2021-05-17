@@ -155,6 +155,9 @@ def service_endpoint(request, endpoint):
     else:
         data = {k: v for k, v in request.POST.items()}
 
+    # if endpoint.name == 'session':
+        # breakpoint()
+
     req_args = endpoint.parse_request(data, http_info=http_info)
 
     try:
@@ -297,6 +300,8 @@ def verify_user(request):
         return HttpResponse('Access forbidden: invalid token.', status=403)
 
     ec = oidcop_app.endpoint_context
+    ec.endpoint_context.session_manager.flush()
+
     authn_method = ec.endpoint_context.authn_broker.get_method_by_id('user')
 
     kwargs = dict([(k, v) for k, v in request.POST.items()])
@@ -390,6 +395,8 @@ def token(request):
     _debug_request(f'{_name}', request)
 
     ec = oidcop_app.endpoint_context
+    ec.endpoint_context.session_manager.flush()
+
     _endpoint = ec.endpoint['token']
 
     _fill_cdb(request)
@@ -408,6 +415,7 @@ def userinfo(request):
     _debug_request(f'{_name}', request)
 
     ec = oidcop_app.endpoint_context
+    ec.endpoint_context.session_manager.flush()
     _endpoint = ec.endpoint['userinfo']
 
     session = _get_session_by_token(request)
@@ -429,7 +437,9 @@ def session_endpoint(request):
     _debug_request(f'{_name}', request)
 
     ec = oidcop_app.endpoint_context
-    _endpoint = ec.endpoint['userinfo']
+    ec.endpoint_context.session_manager.flush()
+
+    _endpoint = ec.endpoint['session']
     session = _get_session_by_token(request)
     _fill_cdb_by_client(session.client)
     session = session.serialize()
@@ -438,9 +448,13 @@ def session_endpoint(request):
     _check_session_dump_consistency(_name, ec, session)
     try:
         res = service_endpoint(request, _endpoint)
+        return res
     except:
         ec.endpoint_context.session_manager.flush()
         return HttpResponseForbidden()
+
+
+## TODO - not supported yet with session manager storage
 
 def check_session_iframe(request):
     if request.method == 'GET':

@@ -114,12 +114,6 @@ class OidcRelyingParty(TimeStampedModel):
         default="client_secret_basic"
     )
     jwks_uri = models.URLField(max_length=255, blank=True, null=True)
-    post_logout_redirect_uris = models.CharField(
-        max_length=254, blank=True, null=True
-    )
-    redirect_uris = models.CharField(
-        max_length=254, blank=True, null=True
-    )
     is_active = models.BooleanField(('active'), default=True)
     last_seen = models.DateTimeField(blank=True, null=True)
 
@@ -194,17 +188,17 @@ class OidcRelyingParty(TimeStampedModel):
             if not self.oidcrpresponsetype_set.filter(**data):
                 self.oidcrpresponsetype_set.create(**data)
 
-    @property
-    def post_logout_redirect_uris(self):
+    def get_redirect_uri(self, uri_type:str):
         l = []
         for elem in self.oidcrpredirecturi_set.\
-                filter(client=self, type='post_logout_redirect_uris'):
+                filter(client=self, type=uri_type):
             l.append((elem.uri, json.loads(elem.values)))
         return l
 
-    @post_logout_redirect_uris.setter
-    def post_logout_redirect_uris(self, values):
-        old = self.oidcrpredirecturi_set.filter(client=self)
+    def set_redirect_uri(self, uri_type:str, values):
+        old = self.oidcrpredirecturi_set.filter(
+            client=self, type=uri_type
+        )
         old.delete()
         for value in values:
             args = json.dumps(value[1] if value[1] else [])
@@ -212,30 +206,25 @@ class OidcRelyingParty(TimeStampedModel):
                 client=self,
                 uri=value[0],
                 values=args,
-                type='post_logout_redirect_uris'
+                type=uri_type
             )
-            for i in self.oidcrpredirecturi_set.filter(**data):
-                self.oidcrpredirecturi_set.create(**data)
+            self.oidcrpredirecturi_set.create(**data)
+
+    @property
+    def post_logout_redirect_uris(self):
+        return self.get_redirect_uri('post_logout_redirect_uris')
+
+    @post_logout_redirect_uris.setter
+    def post_logout_redirect_uris(self, values):
+        self.set_redirect_uri('post_logout_redirect_uris', values)
 
     @property
     def redirect_uris(self):
-        l = []
-        for elem in self.oidcrpredirecturi_set.filter(
-                client=self, type='redirect_uris'):
-            l.append((elem.uri, json.loads(elem.values)))
-        return l
+        return self.get_redirect_uri('redirect_uris')
 
     @redirect_uris.setter
     def redirect_uris(self, values):
-        old = self.oidcrpredirecturi_set.filter(client=self)
-        old.delete()
-        for value in values:
-            data = dict(client=self,
-                        uri=value[0],
-                        values=json.dumps(value[1]),
-                        type='redirect_uris')
-            if not self.oidcrpredirecturi_set.filter(**data):
-                self.oidcrpredirecturi_set.create(**data)
+        self.set_redirect_uri('redirect_uris', values)
 
     class Meta:
         verbose_name = ('Relying Party')
@@ -265,11 +254,10 @@ class OidcRelyingParty(TimeStampedModel):
             if data.get(key):
                 data[key] = int(datetime.datetime.timestamp(data[key]))
 
-        data['contacts'] = self.contacts
-        data['grant_types'] = self.grant_types
-        data['response_types'] = self.response_types
-        data['post_logout_redirect_uris'] = self.post_logout_redirect_uris
-        data['redirect_uris'] = self.redirect_uris
+        for i in ('contacts', 'grant_types', 'response_types',
+                  'post_logout_redirect_uris', 'redirect_uris'):
+            data[i] = getattr(self, i)
+
         if self.allowed_scopes:
             # without allowed scopes set it will return all availables
             # configure allowed_scopes to filter only which one MUST allowed
@@ -327,15 +315,20 @@ class OidcRPContact(TimeStampedModel):
 
 
 class OidcRPRedirectUri(TimeStampedModel):
+    URIS = (
+            ('redirect_uris', 'redirect_uris'),
+            ('post_logout_redirect_uris', 'post_logout_redirect_uris'),
+            ('frontchannel_logout_uri', 'frontchannel_logout_uri'),
+            ('backchannel_logout_uri', 'backchannel_logout_uri'),
+    )
+
     client = models.ForeignKey(OidcRelyingParty,
                                on_delete=models.CASCADE)
     uri = models.CharField(max_length=254,
                            blank=True, null=True)
     values = models.CharField(max_length=254,
                               blank=True, null=True)
-    type = models.CharField(choices=(('redirect_uris', 'redirect_uris'),
-                                     ('post_logout_redirect_uris',
-                                      'post_logout_redirect_uris')),
+    type = models.CharField(choices=URIS,
                             max_length=33)
 
     class Meta:
@@ -344,6 +337,7 @@ class OidcRPRedirectUri(TimeStampedModel):
 
     def __str__(self):
         return '{} [{}] {}'.format(self.client, self.uri, self.type)
+
 
 
 class OidcRPScope(TimeStampedModel):
@@ -369,170 +363,6 @@ def _aware_dt_from_timestamp(timestamp):
 class OidcSession(TimeStampedModel):
     """
     Store UserSessionInfo, ClientSessionInfo and Grant
-
-    {
-      "db": {
-        "diana": [
-          "oidcop.session.info.UserSessionInfo",
-          {
-            "subordinate": [
-              "86M1io6O2Vdy"
-            ],
-            "revoked": false,
-            "type": "UserSessionInfo",
-            "extra_args": {},
-            "user_id": "diana"
-          }
-        ],
-        "diana;;86M1io6O2Vdy": [
-          "oidcop.session.info.ClientSessionInfo",
-          {
-            "subordinate": [
-              "fcc1c962a60911eb9d4d57d896f78a5d"
-            ],
-            "revoked": false,
-            "type": "ClientSessionInfo",
-            "extra_args": {},
-            "client_id": "86M1io6O2Vdy"
-          }
-        ],
-        "diana;;86M1io6O2Vdy;;fcc1c962a60911eb9d4d57d896f78a5d": [
-          "oidcop.session.grant.Grant",
-          {
-            "expires_at": 1619427939,
-            "issued_at": 1619384739,
-            "not_before": 0,
-            "revoked": false,
-            "usage_rules": {
-              "authorization_code": {
-                "supports_minting": [
-                  "access_token",
-                  "refresh_token",
-                  "id_token"
-                ],
-                "max_usage": 1
-              },
-              "access_token": {},
-              "refresh_token": {
-                "supports_minting": [
-                  "access_token",
-                  "refresh_token"
-                ]
-              }
-            },
-            "used": 2,
-            "authentication_event": {
-              "oidcop.authn_event.AuthnEvent": {
-                "uid": "diana",
-                "authn_info": "oidcop.user_authn.authn_context.INTERNETPROTOCOLPASSWORD",
-                "authn_time": 1619384739,
-                "valid_until": 1619388339
-              }
-            },
-            "authorization_request": {
-              "oidcmsg.oidc.AuthorizationRequest": {
-                "redirect_uri": "https://127.0.0.1:8090/authz_cb/local",
-                "scope": "openid profile email address phone",
-                "response_type": "code",
-                "nonce": "TXwiaGM9I8kEB4BbC4nqHNWc",
-                "state": "uKZM2ciKxWbg4x4xtsltzoy4PvjoQf4T",
-                "code_challenge": "WYVBXCNsPiDTe0lClNPG69qRB_yl6mJ2Lwop9XWjhYA",
-                "code_challenge_method": "S256",
-                "client_id": "86M1io6O2Vdy"
-              }
-            },
-            "claims": {
-              "userinfo": {
-                "sub": null,
-                "name": null,
-                "given_name": null,
-                "family_name": null,
-                "middle_name": null,
-                "nickname": null,
-                "profile": null,
-                "picture": null,
-                "website": null,
-                "gender": null,
-                "birthdate": null,
-                "zoneinfo": null,
-                "locale": null,
-                "updated_at": null,
-                "preferred_username": null,
-                "email": null,
-                "email_verified": null,
-                "address": null,
-                "phone_number": null,
-                "phone_number_verified": null
-              },
-              "introspection": {},
-              "id_token": {},
-              "access_token": {}
-            },
-            "issued_token": [
-              {
-                "expires_at": 0,
-                "issued_at": 1619384739,
-                "not_before": 0,
-                "revoked": false,
-                "usage_rules": {
-                  "supports_minting": [
-                    "access_token",
-                    "refresh_token",
-                    "id_token"
-                  ],
-                  "max_usage": 1
-                },
-                "used": 1,
-                "claims": {},
-                "id": "fcc1c963a60911eb9d4d57d896f78a5d",
-                "name": "AuthorizationCode",
-                "resources": [],
-                "scope": [],
-                "type": "authorization_code",
-                "value": "Z0FBQUFBQmdoZG1qdTlNZ0hzNGZzcVhZNnRJTXE2bkZZNGlVeXZTaDYwWlV4Vm1yMnFQWUZSSVFmb25HQjluQy1ZVWNXTWJlZ082OE03dVB1NmdBVG8xbkwxV1BWRTBZVkIzYXctY0xhTDB6c2hXUzhmeTRBNE9Ua3RxVVlmU0dDSElPeUJRb1VHQndtT21PR25nRWx3QXdoSG1DdklFM0REdjhWa2I2bWNtQzhFazdrRzBybWd4VV9oX19hcEt4MDZ3Uk5lNGpvbXllMVVmNkt4VXNRaW1FVHRTdS13ajVxczVibmtaXzRhXzhMcW9DOEFXVGtZND0="
-              },
-              {
-                "expires_at": 0,
-                "issued_at": 1619384739,
-                "not_before": 0,
-                "revoked": false,
-                "usage_rules": {},
-                "used": 0,
-                "based_on": "Z0FBQUFBQmdoZG1qdTlNZ0hzNGZzcVhZNnRJTXE2bkZZNGlVeXZTaDYwWlV4Vm1yMnFQWUZSSVFmb25HQjluQy1ZVWNXTWJlZ082OE03dVB1NmdBVG8xbkwxV1BWRTBZVkIzYXctY0xhTDB6c2hXUzhmeTRBNE9Ua3RxVVlmU0dDSElPeUJRb1VHQndtT21PR25nRWx3QXdoSG1DdklFM0REdjhWa2I2bWNtQzhFazdrRzBybWd4VV9oX19hcEt4MDZ3Uk5lNGpvbXllMVVmNkt4VXNRaW1FVHRTdS13ajVxczVibmtaXzRhXzhMcW9DOEFXVGtZND0=",
-                "claims": {},
-                "id": "fcc4fc72a60911eb9d4d57d896f78a5d",
-                "name": "AccessToken",
-                "resources": [],
-                "scope": [],
-                "type": "access_token",
-                "value": "eyJhbGciOiJFUzI1NiIsImtpZCI6IlNWUXpPV1ZVUm1oNWIxcHVVVmx1UlY4dGVVUlpVVlZTZFhkcFdVUTJTbTVMY1U0M01EWm1WV2REVlEifQ.eyJzY29wZSI6IFsib3BlbmlkIiwgInByb2ZpbGUiLCAiZW1haWwiLCAiYWRkcmVzcyIsICJwaG9uZSJdLCAiYXVkIjogWyI4Nk0xaW82TzJWZHkiXSwgInNpZCI6ICJkaWFuYTs7ODZNMWlvNk8yVmR5OztmY2MxYzk2MmE2MDkxMWViOWQ0ZDU3ZDg5NmY3OGE1ZCIsICJ0dHlwZSI6ICJUIiwgImlzcyI6ICJodHRwczovLzEyNy4wLjAuMTo1MDAwIiwgImlhdCI6IDE2MTkzODQ3MzksICJleHAiOiAxNjE5Mzg4MzM5fQ.Brva_I8bBM5z_1ZxFBWSRFN3U95y_YQxnLG5-51NrUmu862M-KSj4kd5v5vFGHiHF0iFvBuDLD6pSZL1RHXHCg"
-              }
-            ],
-            "resources": [
-              "86M1io6O2Vdy"
-            ],
-            "scope": [
-              "openid",
-              "profile",
-              "email",
-              "address",
-              "phone"
-            ],
-            "sub": "93be77e1b212f1643e0ee9dd5e477e2a2a231dc6ca22dd3273345e63eb156a23"
-          }
-        ],
-        "8ea62b28f57646fe8db31b4bdea0e262": [
-          "oidcop.session.info.SessionInfo",
-          {
-            "subordinate": [],
-            "revoked": false,
-            "type": "",
-            "extra_args": {}
-          }
-        ]
-      },
-      "salt": "1Kih63fBe5ympYSWi5z2aVXXCVKxqMvN"
-    }
     """
 
     user_uid = models.CharField(max_length=120, blank=True, null=True)
