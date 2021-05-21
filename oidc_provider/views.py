@@ -6,6 +6,7 @@ import sys
 import urllib
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.http import (HttpResponse,
                          HttpResponseBadRequest,
                          HttpResponseForbidden,
@@ -115,6 +116,7 @@ def do_response(request, endpoint, req_args, error='', **args):
                 'method': request.method
             }), safe=False, status=500)
 
+        #  logger.warning(endpoint.__class__.__name__)
         ec.endpoint_context.session_manager.flush()
         if ses_man_dump != session.serialize():
             logger.critical(ses_man_dump, session)
@@ -300,8 +302,6 @@ def verify_user(request):
         return HttpResponse('Access forbidden: invalid token.', status=403)
 
     ec = oidcop_app.endpoint_context
-    ec.endpoint_context.session_manager.flush()
-
     authn_method = ec.endpoint_context.authn_broker.get_method_by_id('user')
 
     kwargs = dict([(k, v) for k, v in request.POST.items()])
@@ -328,12 +328,6 @@ def verify_user(request):
         "endpoint_context").authn_broker.get_method_by_id('user')
 
     session_manager = ec.endpoint_context.session_manager
-    # TODO - remove it when rohe fixes this bug
-    dump = session_manager.dump()
-    if not dump.get('db'):
-        dump['db'] = {}
-        session_manager.load(dump)
-
     _session_id = session_manager.create_session(
                                 authn_event=authn_event,
                                 auth_req=authz_request,
@@ -375,7 +369,7 @@ def _get_session_by_token(request):
             value = request.GET['id_token_hint']
         ).first()
     else:
-        raise HttpResponseForbidden()
+        raise PermissionDenied()
 
     return token.session
 

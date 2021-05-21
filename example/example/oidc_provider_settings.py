@@ -233,6 +233,8 @@ OIDCOP_CONFIG = {
   "op": {
     # "seed": "CHANGE-THIS-RANDOMNESS!!!",
     "server_info": {
+      #  "password": 'ciao',
+      #  "salt": "bye",
       "add_on": {
         "pkce": {
           "function": "oidcop.oidc.add_on.pkce.add_pkce_support",

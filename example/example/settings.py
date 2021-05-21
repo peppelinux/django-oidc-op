@@ -138,7 +138,7 @@ LOGGING = {
             'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
         },
         'detailed': {
-            'format': '[%(asctime)s] %(message)s [(%(levelname)s) %(name)s.%(funcName)s:%(lineno)s]'
+            'format': '[(%(levelname)s)] [%(asctime)s] %(message)s [%(name)s.%(funcName)s:%(lineno)s]'
         },
     },
     'filters': {

@@ -442,9 +442,14 @@ class OidcSession(TimeStampedModel):
         data['key'] = ses_man_dump['key']
         data['salt'] = ses_man_dump['salt']
 
-        if not ses_man_dump['key'] or not ses_man_dump['salt']:
+        if not ses_man_dump['key']:
             logger.critical(
-                f"Missing salt or key in session dump"
+                f"Missing key in session dump"
+            )
+
+        if not ses_man_dump['salt']:
+            logger.critical(
+                f"Missing salt in session dump"
             )
 
         session = cls.objects.filter(sid=data['sid'])
