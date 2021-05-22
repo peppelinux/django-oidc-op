@@ -167,12 +167,6 @@ class OidcSessionAdmin(admin.ModelAdmin):
             )
         },
         ),
-        ('Session info',
-         {
-             # 'classes': ('collapse',),
-             'fields': ('session_info_preview',),
-         }
-         ),
 
         ('User session info',
          {

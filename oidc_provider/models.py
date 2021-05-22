@@ -379,7 +379,6 @@ class OidcSession(TimeStampedModel):
     expires_at = models.DateTimeField(blank=True, null=True)
     revoked = models.BooleanField(default=False)
 
-    session_info = models.TextField(default='{}', blank=True, null=True)
     sub = models.CharField(max_length=254, blank=True, null=True)
     sid = models.CharField(max_length=254, unique=True, blank=True, null=True)
     sid_encrypted = models.CharField(max_length=254, blank=True, null=True)

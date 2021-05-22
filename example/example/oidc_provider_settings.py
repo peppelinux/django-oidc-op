@@ -11,7 +11,7 @@ OIDC_SIGN_ALGS = [
     "PS512",
 ]
 
-OIDC_ENC_ALGS =[
+OIDC_ENC_ALGS = [
     "RSA-OAEP",
     "RSA-OAEP-256",
     "A192KW",
@@ -231,10 +231,10 @@ OIDCOP_CONFIG = {
   "server_name": SERVER_NAME,
   "base_url": f"https://{SERVER_NAME}",
   "op": {
-    # "seed": "CHANGE-THIS-RANDOMNESS!!!",
     "server_info": {
-      #  "password": 'ciao',
-      #  "salt": "bye",
+      # "seed": "CHANGE-THIS-RANDOMNESS!!!",
+      "password": 'password_used_to_encrypt_access_token_sid_value',
+      "salt": "salt involved in session sub hash ",
       "add_on": {
         "pkce": {
           "function": "oidcop.oidc.add_on.pkce.add_pkce_support",
