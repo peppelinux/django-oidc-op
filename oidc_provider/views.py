@@ -363,6 +363,12 @@ def _get_session_by_token(request):
             type = request.POST['grant_type'],
             value = request.POST.get('code')
         ).first()
+    elif request.POST.get('token_type_hint'):
+        # token introspection
+        token = OidcIssuedToken.objects.filter(
+            type = request.POST['token_type_hint'],
+            value = request.POST['token']
+        ).first()
     elif request.GET.get('id_token_hint'):
         token = OidcIssuedToken.objects.filter(
             type = 'id_token',
@@ -414,6 +420,26 @@ def userinfo(request):
 
     session = _get_session_by_token(request)
     _fill_cdb_by_client(session.client)
+    session = session.serialize()
+
+    if session:
+        ec.endpoint_context.session_manager.load(session)
+    _check_session_dump_consistency(_name, ec, session)
+
+    return service_endpoint(request, _endpoint)
+
+@csrf_exempt
+def introspection(request):
+    _name = sys._getframe().f_code.co_name
+    _debug_request(f'{_name}', request)
+
+    ec = oidcop_app.endpoint_context
+    ec.endpoint_context.session_manager.flush()
+    _endpoint = ec.endpoint['introspection']
+
+    session = _get_session_by_token(request)
+    _fill_cdb_by_client(session.client)
+    ec.endpoint_context.cdb
     session = session.serialize()
 
     if session:

@@ -266,8 +266,8 @@
       },
       "issuer": "https://127.0.0.1:8000/",
 
-#      "client_id": "wprOL67QF0hWUPduTIH2RQ",
-#      "client_secret": "a1aaa6cd40a4e3922b79308ac5a42a8661863badd65c37c1680ba874",
+      "client_id": "oLyRj7sJJ3XvAYjeDCe8rQ",
+      "client_secret": "53fb49f2a6501ec775355c89750dc416744a3253138d5a04e409b313",
 
       "redirect_uris": [
         "https://example.org/authz_cb/django_provider"

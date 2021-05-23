@@ -20,7 +20,7 @@ urlpatterns = [
          name="oidc_op_verify_user"),
     path('token', views.token, name="oidc_op_token"),
     path('userinfo', views.userinfo, name="oidc_op_userinfo"),
-
+    path('introspection', views.introspection, name="oidc_op_userinfo"),
 
     path('check_session_iframe', views.check_session_iframe,
          name="oidc_op_check_session_iframe"),
