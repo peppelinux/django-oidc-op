@@ -236,8 +236,6 @@ OIDCOP_CONFIG = {
   "op": {
     "server_info": {
       # "seed": "CHANGE-THIS-RANDOMNESS!!!",
-      "password": 'password_used_to_encrypt_access_token_sid_value',
-      "salt": "salt involved in session sub hash ",
       "add_on": {
         "pkce": {
           "function": "oidcop.oidc.add_on.pkce.add_pkce_support",
@@ -268,7 +266,7 @@ OIDCOP_CONFIG = {
       "authz": OIDC_OP_AUTHZ,
       "authentication": {
         "user": {
-          "acr": "oidcop.user_authn.authn_context.INTERNETPROTOCOLPASSWORD",
+          "acr": "urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocolPassword",
           "class": "oidc_provider.users.UserPassDjango",
           "kwargs": {
             "verify_endpoint": "verify/oidc_user_login/",
@@ -333,30 +331,29 @@ OIDCOP_CONFIG = {
         "kwargs": {
           "scheme_map": {
             "email": [
-              "oidcop.user_authn.authn_context.INTERNETPROTOCOLPASSWORD"
+              "urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocolPassword"
             ]
           }
         }
       },
-      "session_key": {
-        "filename": f"{OIDC_JWKS_PRIVATE_PATH}/session_jwk.json",
-        "type": "OCT",
-        "use": "sig"
+      "session_params": {
+          "password": '__password_used_to_encrypt_access_token_sid_value',
+          "salt": "salt involved in session sub hash ",
+          "sub_func": {
+            "public": {
+              "class": "oidcop.session.manager.PublicID",
+              "kwargs": {
+                "salt": "sdfsdfdsf"
+              }
+            },
+            "pairwise": {
+              "class": "oidcop.session.manager.PairWiseID",
+              "kwargs": {
+                "salt": "sdfsdfsdf"
+              }
+            }
+         },
       },
-      "sub_func": {
-        "public": {
-          "class": "oidcop.session.manager.PublicID",
-          "kwargs": {
-            "salt": "sdfsdfdsf"
-          }
-        },
-        "pairwise": {
-          "class": "oidcop.session.manager.PairWiseID",
-          "kwargs": {
-            "salt": "sdfsdfsdf"
-          }
-        }
-     },
       "template_dir": "templates",
       "token_handler_args": OIDC_OP_TOKEN_HANDLER,
       "userinfo": {
