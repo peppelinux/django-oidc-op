@@ -533,7 +533,7 @@ class OidcIssuedToken(TimeStampedModel):
 
     def serialize(self):
         return {
-            "type": self.type,
+            "token_class": self.type,
             "issued_at": self.issued_at.timestamp(),
             "expires_at": self.expires_at.timestamp(),
             "not_before": self.not_before.timestamp() if self.not_before else 0,
@@ -557,7 +557,7 @@ class OidcIssuedToken(TimeStampedModel):
                 nbt = None
             data = dict(
                 session = session,
-                type = token['type'],
+                type = token['token_class'],
                 issued_at = _aware_dt_from_timestamp(token['issued_at']),
                 expires_at = _aware_dt_from_timestamp(token['expires_at']),
                 not_before = nbt,
