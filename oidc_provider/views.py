@@ -157,9 +157,6 @@ def service_endpoint(request, endpoint):
     else:
         data = {k: v for k, v in request.POST.items()}
 
-    # if endpoint.name == 'session':
-        # breakpoint()
-
     req_args = endpoint.parse_request(data, http_info=http_info)
 
     try:
