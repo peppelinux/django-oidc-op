@@ -31,18 +31,21 @@ You can also use a scripted RP handler on top of oidc-rp
 python3 snippets/rp_handler.py -c example/data/oidc_rp/conf.django.yaml -u myuser -p mypass -iss django_oidc_op
 ````
 
+## Configuration
 
-## Configure OIDC endpoint
-
-#### Django settings.py parameters
-
-`OIDCOP_CONFIG`: The path containing the oidc-op configuration file.
-
-
-## Django specific implementation
-
-This project rely interely on behaviour and features provided by oidcendpoint, to get an exaustive integration in Django it
+This project rely interely on behaviour and features provided by oidcop, to get an exaustive integration in Django it
 adopt the following customizations.
+
+#### Settings
+
+`OIDCOP_CONFIG` is a python dictionary that contains the oidcop configuration.
+
+#### URLs
+
+MUST be configured in `urls.py` and also in oidc_op `example/oidc_provider_settings.py`.
+
+- /oidc/endpoint/<provider_name>
+
 
 #### UserInfo endpoint
 
@@ -79,19 +82,17 @@ Configuration Example:
 ![Alt text](images/issued_token_list.png)
 ![Alt text](images/issued_token_detail.png)
 
-## OIDC endpoint url prefix
-MUST be configured in `urls.py` and also in oidc_op `example/oidc_provider_settings.py`.
 
-- /oidc/endpoint/<provider_name>
+## Developers'
 
-## Running tests
+#### Running tests
 
 running tests
 ````
 ./manage.py test oidc_provider
 ````
 
-## code coverage
+#### coverage
 ````
 coverage erase
 coverage run manage.py test
