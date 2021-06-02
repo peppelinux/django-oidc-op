@@ -17,20 +17,29 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcRelyingParty',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('client_id', models.CharField(max_length=255, unique=True)),
-                ('client_salt', models.CharField(blank=True, max_length=255, null=True)),
-                ('registration_access_token', models.CharField(blank=True, max_length=255, null=True)),
-                ('registration_client_uri', models.URLField(blank=True, max_length=255, null=True)),
+                ('client_salt', models.CharField(
+                    blank=True, max_length=255, null=True)),
+                ('registration_access_token', models.CharField(
+                    blank=True, max_length=255, null=True)),
+                ('registration_client_uri', models.URLField(
+                    blank=True, max_length=255, null=True)),
                 ('client_id_issued_at', models.DateTimeField(blank=True, null=True)),
-                ('client_secret', models.CharField(blank=True, help_text='It is not needed for Clients selecting a token_endpoint_auth_method of private_key_jwt', max_length=255, null=True)),
-                ('client_secret_expires_at', models.DateTimeField(blank=True, help_text='REQUIRED if client_secret is issued', null=True)),
-                ('application_type', models.CharField(blank=True, default='web', max_length=255, null=True)),
-                ('token_endpoint_auth_method', models.CharField(blank=True, choices=[('client_secret_post', 'client_secret_post'), ('client_secret_basic', 'client_secret_basic'), ('client_secret_jwt', 'client_secret_jwt'), ('private_key_jwt', 'private_key_jwt')], default='client_secret_basic', max_length=33, null=True)),
+                ('client_secret', models.CharField(
+                    blank=True, help_text='It is not needed for Clients selecting a token_endpoint_auth_method of private_key_jwt', max_length=255, null=True)),
+                ('client_secret_expires_at', models.DateTimeField(blank=True,
+                                                                  help_text='REQUIRED if client_secret is issued', null=True)),
+                ('application_type', models.CharField(
+                    blank=True, default='web', max_length=255, null=True)),
+                ('token_endpoint_auth_method', models.CharField(blank=True, choices=[('client_secret_post', 'client_secret_post'), ('client_secret_basic', 'client_secret_basic'), (
+                    'client_secret_jwt', 'client_secret_jwt'), ('private_key_jwt', 'private_key_jwt')], default='client_secret_basic', max_length=33, null=True)),
                 ('jwks_uri', models.URLField(blank=True, max_length=255, null=True)),
-                ('is_active', models.BooleanField(default=True, verbose_name='active')),
+                ('is_active', models.BooleanField(
+                    default=True, verbose_name='active')),
                 ('last_seen', models.DateTimeField(blank=True, null=True)),
             ],
             options={
@@ -41,21 +50,26 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcSession',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('user_uid', models.CharField(blank=True, max_length=120, null=True)),
                 ('user_sessioninfo', models.TextField(default='{}')),
                 ('client_sessioninfo', models.TextField(default='{}')),
                 ('grant_sessioninfo', models.TextField()),
-                ('grant_uid', models.CharField(blank=True, max_length=254, null=True)),
+                ('grant_uid', models.CharField(
+                    blank=True, max_length=254, null=True)),
                 ('sub', models.CharField(blank=True, max_length=255, null=True)),
                 ('expires_at', models.DateTimeField(blank=True, null=True)),
                 ('revoked', models.BooleanField(default=False)),
-                ('session_info', models.TextField(blank=True, default='{}', null=True)),
+                ('session_info', models.TextField(
+                    blank=True, default='{}', null=True)),
                 ('sid', models.CharField(blank=True, max_length=255, null=True)),
-                ('client', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ('client', models.ForeignKey(blank=True, null=True,
+                                             on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
+                ('user', models.ForeignKey(blank=True, null=True,
+                                           on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'verbose_name': 'SSO Session',
@@ -65,13 +79,16 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcRPRedirectUri',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('uri', models.CharField(blank=True, max_length=254, null=True)),
                 ('values', models.CharField(blank=True, max_length=254, null=True)),
-                ('type', models.CharField(choices=[('redirect_uris', 'redirect_uris'), ('post_logout_redirect_uris', 'post_logout_redirect_uris')], max_length=33)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
+                ('type', models.CharField(choices=[('redirect_uris', 'redirect_uris'), (
+                    'post_logout_redirect_uris', 'post_logout_redirect_uris')], max_length=33)),
+                ('client', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
             ],
             options={
                 'verbose_name': 'Relying Party URI',
@@ -81,11 +98,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcIssuedToken',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('uid', models.CharField(blank=True, max_length=128, null=True)),
-                ('type', models.CharField(choices=[('authorization_code', 'authorization_code'), ('access_token', 'access_token'), ('id_token', 'id_token')], max_length=32)),
+                ('type', models.CharField(choices=[('authorization_code', 'authorization_code'), (
+                    'access_token', 'access_token'), ('id_token', 'id_token')], max_length=32)),
                 ('issued_at', models.DateTimeField()),
                 ('expires_at', models.DateTimeField()),
                 ('not_before', models.DateTimeField(blank=True, null=True)),
@@ -94,7 +113,8 @@ class Migration(migrations.Migration):
                 ('usage_rules', models.TextField()),
                 ('used', models.IntegerField(default=0)),
                 ('based_on', models.TextField(blank=True, null=True)),
-                ('session', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcsession')),
+                ('session', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcsession')),
             ],
             options={
                 'verbose_name': 'OIDC Issued Token',
@@ -104,11 +124,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcRPScope',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('scope', models.CharField(blank=True, max_length=254, null=True)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
+                ('client', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
             ],
             options={
                 'verbose_name': 'Relying Party Scope',
@@ -119,11 +141,14 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcRPResponseType',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
-                ('response_type', models.CharField(choices=[('code', 'code')], max_length=60)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
+                ('response_type', models.CharField(
+                    choices=[('code', 'code')], max_length=60)),
+                ('client', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
             ],
             options={
                 'verbose_name': 'Relying Party Response Type',
@@ -134,11 +159,14 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcRPGrantType',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
-                ('grant_type', models.CharField(choices=[('authorization_code', 'authorization_code'), ('implicit', 'implicit'), ('urn:ietf:params:oauth:grant-type:jwt-bearer', 'urn:ietf:params:oauth:grant-type:jwt-bearer'), ('refresh_token', 'refresh_token')], max_length=60)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
+                ('grant_type', models.CharField(choices=[('authorization_code', 'authorization_code'), ('implicit', 'implicit'), (
+                    'urn:ietf:params:oauth:grant-type:jwt-bearer', 'urn:ietf:params:oauth:grant-type:jwt-bearer'), ('refresh_token', 'refresh_token')], max_length=60)),
+                ('client', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
             ],
             options={
                 'verbose_name': 'Relying Party GrantType',
@@ -149,11 +177,13 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OidcRPContact',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(auto_created=True,
+                                        primary_key=True, serialize=False, verbose_name='ID')),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('contact', models.CharField(blank=True, max_length=254, null=True)),
-                ('client', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
+                ('client', models.ForeignKey(
+                    on_delete=django.db.models.deletion.CASCADE, to='oidc_provider.oidcrelyingparty')),
             ],
             options={
                 'verbose_name': 'Relying Party Contact',
@@ -163,6 +193,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name='oidcissuedtoken',
-            index=models.Index(fields=['value'], name='oidc_provid_value_6594c4_idx'),
+            index=models.Index(
+                fields=['value'], name='oidc_provid_value_6594c4_idx'),
         ),
     ]

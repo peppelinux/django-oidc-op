@@ -1,3 +1,4 @@
+import json
 import logging
 
 from django import forms
@@ -5,9 +6,14 @@ from django.contrib import admin
 from django.contrib.sessions.models import Session
 from django.utils.safestring import mark_safe
 
-from . models import *
-from . utils import decode_token
-
+from . models import OidcIssuedToken
+from . models import OidcRPContact
+from . models import OidcRPRedirectUri
+from . models import OidcRPGrantType
+from . models import OidcRPResponseType
+from . models import OidcRPScope
+from . models import OidcRelyingParty
+from . models import OidcSession
 
 logger = logging.getLogger(__name__)
 
@@ -74,7 +80,8 @@ class OidcRPScopeInline(admin.TabularInline):
 
 @admin.register(OidcRelyingParty)
 class OidcRelyingPartyAdmin(admin.ModelAdmin):
-    list_filter = ('created', 'modified', 'is_active')
+    list_filter = ('created', 'modified', 'is_active',
+                   'client_id_issued_at', 'client_secret_expires_at')
     list_display = ('client_id', 'created',
                     'last_seen', 'is_active')
     search_fields = ('client_id',)
@@ -120,8 +127,9 @@ class SessionAdmin(admin.ModelAdmin):
 
 @admin.register(OidcIssuedToken)
 class OidcIssuedTokenAdmin(admin.ModelAdmin):
-    search_fields = ('value',)
+    search_fields = ('value', 'session__user__username')
     list_display = ['session', 'type', 'created']
+    list_filter = ('issued_at', 'expires_at', 'revoked', 'type')
     readonly_fields = (
         "type",
         "issued_at",
@@ -150,7 +158,7 @@ class OidcSessionAdmin(admin.ModelAdmin):
                        'client_session_info_preview',
                        'grant_preview',
                        'session_info_preview',
-    )
+                       )
 
     fieldsets = (
         (None, {

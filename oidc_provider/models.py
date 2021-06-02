@@ -7,7 +7,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
-from oidcop.utils import load_yaml_config
 
 
 from . exceptions import InconsinstentSessionDump
@@ -23,15 +22,15 @@ OIDC_TOKEN_AUTHN_METHODS = settings.OIDCOP_CONFIG['op']['server_info'][
     'endpoint']['token']['kwargs']['client_authn_method']
 
 OIDC_GRANT_TYPES = settings.OIDCOP_CONFIG[
-            'op']['server_info']['capabilities']['grant_types_supported']
+    'op']['server_info']['capabilities']['grant_types_supported']
 
 TIMESTAMP_FIELDS = ['client_id_issued_at', 'client_secret_expires_at']
 
 
 def get_client_by_id(client_id):
     client = OidcRelyingParty.objects.filter(
-                            client_id = client_id,
-                            is_active = True
+        client_id=client_id,
+        is_active=True
 
     )
     if client:
@@ -132,7 +131,7 @@ class OidcRelyingParty(TimeStampedModel):
         for i in values:
             data = dict(client=self, scope=i)
             if not self.oidcrpscope_set.filter(**data):
-                scope = self.oidcrpscope_set.create(**data)
+                self.oidcrpscope_set.create(**data)
 
     @property
     def contacts(self):
@@ -188,14 +187,14 @@ class OidcRelyingParty(TimeStampedModel):
             if not self.oidcrpresponsetype_set.filter(**data):
                 self.oidcrpresponsetype_set.create(**data)
 
-    def get_redirect_uri(self, uri_type:str):
-        l = []
+    def get_redirect_uri(self, uri_type: str):
+        res = []
         for elem in self.oidcrpredirecturi_set.\
                 filter(client=self, type=uri_type):
-            l.append((elem.uri, json.loads(elem.values)))
-        return l
+            res.append((elem.uri, json.loads(elem.values)))
+        return res
 
-    def set_redirect_uri(self, uri_type:str, values):
+    def set_redirect_uri(self, uri_type: str, values):
         old = self.oidcrpredirecturi_set.filter(
             client=self, type=uri_type
         )
@@ -209,6 +208,24 @@ class OidcRelyingParty(TimeStampedModel):
                 type=uri_type
             )
             self.oidcrpredirecturi_set.create(**data)
+
+    def save(self, *args, **kwargs):
+        for d in TIMESTAMP_FIELDS:
+            field = getattr(self, d)
+            if d == 'client_id_issued_at' and not field:
+                setattr(self, d, timezone.localtime())
+            elif d == 'client_secret_expires_at' and not field:
+                setattr(
+                    self, d,
+                    timezone.localtime() + timezone.timedelta(days=365)
+                )
+
+            field = getattr(self, d)
+            if field.tzinfo is None or field.tzinfo.utcoffset(d) is None:
+                timezone.activate(pytz.timezone("UTC"))
+                setattr(self, d, timezone.make_aware(field))
+
+        super().save(*args, **kwargs)
 
     @property
     def post_logout_redirect_uris(self):
@@ -233,10 +250,10 @@ class OidcRelyingParty(TimeStampedModel):
     @classmethod
     def import_from_cdb(cls, cdb):
         for client_id in cdb:
-            if cls.objects.filter(client_id = client_id):
+            if cls.objects.filter(client_id=client_id):
                 continue
-            client = cls.objects.create(client_id = client_id)
-            for k,v in cdb[client_id].items():
+            client = cls.objects.create(client_id=client_id)
+            for k, v in cdb[client_id].items():
                 if k in ('client_secret_expires_at', 'client_id_issued_at'):
                     v = datetime.datetime.fromtimestamp(v)
                 setattr(client, k, v)
@@ -271,8 +288,11 @@ class OidcRelyingParty(TimeStampedModel):
 
 class OidcRPResponseType(TimeStampedModel):
     client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE)
-    response_type = models.CharField(choices=[(i, i) for i in OIDC_RESPONSE_TYPES],
-                                     max_length=60)
+    response_type = models.CharField(choices=[
+                                        (i, i) for i in OIDC_RESPONSE_TYPES
+                                    ],
+                                     max_length=60
+    )
 
     class Meta:
         verbose_name = ('Relying Party Response Type')
@@ -316,10 +336,10 @@ class OidcRPContact(TimeStampedModel):
 
 class OidcRPRedirectUri(TimeStampedModel):
     URIS = (
-            ('redirect_uris', 'redirect_uris'),
-            ('post_logout_redirect_uris', 'post_logout_redirect_uris'),
-            ('frontchannel_logout_uri', 'frontchannel_logout_uri'),
-            ('backchannel_logout_uri', 'backchannel_logout_uri'),
+        ('redirect_uris', 'redirect_uris'),
+        ('post_logout_redirect_uris', 'post_logout_redirect_uris'),
+        ('frontchannel_logout_uri', 'frontchannel_logout_uri'),
+        ('backchannel_logout_uri', 'backchannel_logout_uri'),
     )
 
     client = models.ForeignKey(OidcRelyingParty,
@@ -337,7 +357,6 @@ class OidcRPRedirectUri(TimeStampedModel):
 
     def __str__(self):
         return '{} [{}] {}'.format(self.client, self.uri, self.type)
-
 
 
 class OidcRPScope(TimeStampedModel):
@@ -403,7 +422,7 @@ class OidcSession(TimeStampedModel):
         return json.loads(self.grant_sessioninfo)
 
     @classmethod
-    def load(cls, ses_man_dump:dict)->dict:
+    def load(cls, ses_man_dump: dict) -> dict:
         if 'db' not in ses_man_dump:
             ses_man_dump
 
@@ -413,7 +432,7 @@ class OidcSession(TimeStampedModel):
             'oidcop.session.grant.Grant': 'grant_sessioninfo'
         }
         data = dict()
-        for k,v in ses_man_dump['db'].items():
+        for k, v in ses_man_dump['db'].items():
 
             # TODO: ask roland to have something more precise
             if len(k) > 128 and k not in attr_map.values():
@@ -429,11 +448,13 @@ class OidcSession(TimeStampedModel):
                 client_id = v[1]['subordinate'][0]
                 data['user_uid'] = user_id
                 data['user'] = get_user_model().objects.get(username=user_id)
-                data['client'] = OidcRelyingParty.objects.get(client_id=client_id)
+                data['client'] = OidcRelyingParty.objects.get(
+                    client_id=client_id)
             elif field_name == 'client_sessioninfo':
                 data['grant_uid'] = v[1]['subordinate'][0]
             elif field_name == 'grant_sessioninfo':
-                data['expires_at'] = _aware_dt_from_timestamp(v[1]['expires_at'])
+                data['expires_at'] = _aware_dt_from_timestamp(
+                    v[1]['expires_at'])
                 data['revoked'] = v[1]['revoked']
                 data['sub'] = v[1]['sub']
                 data['sid'] = f"{user_id};;{client_id};;{data['grant_uid']}"
@@ -443,12 +464,12 @@ class OidcSession(TimeStampedModel):
 
         if not ses_man_dump['key']:
             logger.critical(
-                f"Missing key in session dump"
+                "Missing key in session dump"
             )
 
         if not ses_man_dump['salt']:
             logger.critical(
-                f"Missing salt in session dump"
+                "Missing salt in session dump"
             )
 
         session = cls.objects.filter(sid=data['sid'])
@@ -472,8 +493,8 @@ class OidcSession(TimeStampedModel):
         grant_label = f"{ses_label};;{self.grant_uid}"
 
         return dict(
-            db = {
-                user_label : [
+            db={
+                user_label: [
                     'oidcop.session.info.UserSessionInfo',
                     self.user_session_info
                 ],
@@ -485,11 +506,11 @@ class OidcSession(TimeStampedModel):
                     'oidcop.session.grant.Grant',
                     self.grant
                 ],
-                self.sid_encrypted : [
+                self.sid_encrypted: [
                     'oidcop.session.grant.Grant', self.grant]
             },
-            salt = self.salt,
-            key = self.key
+            salt=self.salt,
+            key=self.key
         )
 
     def __str__(self):
@@ -502,12 +523,12 @@ class OidcIssuedToken(TimeStampedModel):
     """
     TT_CHOICES = (
         ('authorization_code', 'authorization_code'),
-        ('access_token','access_token'),
+        ('access_token', 'access_token'),
         ('id_token', 'id_token'),
     )
 
     uid = models.CharField(max_length=128, blank=True, null=True)
-    type = models.CharField(choices = TT_CHOICES,
+    type = models.CharField(choices=TT_CHOICES,
                             max_length=32,
                             blank=False, null=False)
 
@@ -528,7 +549,7 @@ class OidcIssuedToken(TimeStampedModel):
         verbose_name = ('Issued Token')
         verbose_name_plural = ('Issued Tokens')
         indexes = [
-           models.Index(fields=['value',]),
+            models.Index(fields=['value', ]),
         ]
 
     def serialize(self):
@@ -543,30 +564,30 @@ class OidcIssuedToken(TimeStampedModel):
             "used": self.used,
             "based_on": self.based_on,
             "id": self.uid
-       }
+        }
 
     @classmethod
-    def load(cls, session:OidcSession)->None:
+    def load(cls, session: OidcSession) -> None:
         for token in session.grant['issued_token']:
             token = token[list(token.keys())[0]]
-            # {'oidcop.session.token.AuthorizationCode': {'expires_at': 0, 'issued_at': 16209 ...
 
             if token.get('not_before'):
                 nbt = datetime.datetime.fromtimestamp(token['not_before'])
             else:
                 nbt = None
+
             data = dict(
-                session = session,
-                type = token['token_class'],
-                issued_at = _aware_dt_from_timestamp(token['issued_at']),
-                expires_at = _aware_dt_from_timestamp(token['expires_at']),
-                not_before = nbt,
-                revoked = token['revoked'],
-                value = token['value'],
-                usage_rules = json.dumps(token['usage_rules'],),
-                used = token['used'],
-                based_on = token.get('based_on'),
-                uid = token['id'],
+                session=session,
+                type=token['token_class'],
+                issued_at=_aware_dt_from_timestamp(token['issued_at']),
+                expires_at=_aware_dt_from_timestamp(token['expires_at']),
+                not_before=nbt,
+                revoked=token['revoked'],
+                value=token['value'],
+                usage_rules=json.dumps(token['usage_rules'],),
+                used=token['used'],
+                based_on=token.get('based_on'),
+                uid=token['id'],
             )
 
             obj = cls.objects.filter(

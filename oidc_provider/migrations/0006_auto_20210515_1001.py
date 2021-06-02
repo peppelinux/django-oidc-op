@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='oidcrpgranttype',
             name='grant_type',
-            field=models.CharField(choices=[('authorization_code', 'authorization_code'), ('urn:ietf:params:oauth:grant-type:jwt-bearer', 'urn:ietf:params:oauth:grant-type:jwt-bearer'), ('refresh_token', 'refresh_token')], max_length=60),
+            field=models.CharField(choices=[('authorization_code', 'authorization_code'), ('urn:ietf:params:oauth:grant-type:jwt-bearer',
+                                                                                           'urn:ietf:params:oauth:grant-type:jwt-bearer'), ('refresh_token', 'refresh_token')], max_length=60),
         ),
     ]

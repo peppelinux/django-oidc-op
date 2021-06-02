@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='oidcrpredirecturi',
             name='type',
-            field=models.CharField(choices=[('redirect_uris', 'redirect_uris'), ('post_logout_redirect_uris', 'post_logout_redirect_uris'), ('frontchannel_logout_uri', 'frontchannel_logout_uri'), ('backchannel_logout_uri', 'backchannel_logout_uri')], max_length=33),
+            field=models.CharField(choices=[('redirect_uris', 'redirect_uris'), ('post_logout_redirect_uris', 'post_logout_redirect_uris'), (
+                'frontchannel_logout_uri', 'frontchannel_logout_uri'), ('backchannel_logout_uri', 'backchannel_logout_uri')], max_length=33),
         ),
     ]

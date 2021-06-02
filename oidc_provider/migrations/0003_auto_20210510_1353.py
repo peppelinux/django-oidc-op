@@ -12,6 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='oidcissuedtoken',
-            options={'verbose_name': 'Issued Token', 'verbose_name_plural': 'Issued Tokens'},
+            options={'verbose_name': 'Issued Token',
+                     'verbose_name_plural': 'Issued Tokens'},
         ),
     ]

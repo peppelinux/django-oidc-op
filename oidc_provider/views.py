@@ -12,16 +12,13 @@ from django.http import (HttpResponse,
                          HttpResponseForbidden,
                          HttpResponseRedirect,
                          JsonResponse)
-from django.http.request import QueryDict
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.utils import timezone
 from oidcop.authn_event import create_authn_event
 from oidcop.exception import UnAuthorizedClient
-from oidcop.exception import UnAuthorizedClientScope  # experimental
 from oidcop.exception import InvalidClient
 from oidcop.exception import UnknownClient
-from oidcop.session.token import AccessToken
 from oidcop.oidc.token import Token
 from oidcmsg.oauth2 import ResponseMessage
 from oidcmsg.oidc import AccessTokenRequest
@@ -35,7 +32,7 @@ from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
 
 
 logger = logging.getLogger(__name__)
-oidcop_app = oidcop_application(conf = settings.OIDCOP_CONFIG)
+oidcop_app = oidcop_application(conf=settings.OIDCOP_CONFIG)
 IGNORED_HEADERS = ["cookie", "user-agent"]
 
 
@@ -63,16 +60,18 @@ def do_response(request, endpoint, req_args, error='', **args):
         _response_placement = endpoint.response_placement
 
     info_response = info['response']
-    # Debugging things
-    try:
-        response_params = json.dumps(json.loads(info_response), indent=2)
-        logger.debug('Response params: {}\n'.format(response_params))
-    except:
-        url, args = urllib.parse.splitquery(info_response)
-        response_params = urllib.parse.parse_qs(args)
-        resp = json.dumps(response_params, indent=2)
-        logger.debug('Response params: {}\n{}\n\n'.format(url, resp))
-    # end debugging
+
+    if settings.DEBUG:
+        # Debugging things
+        try:
+            response_params = json.dumps(json.loads(info_response), indent=2)
+            logger.debug('Response params: {}\n'.format(response_params))
+        except Exception:
+            url, args = urllib.parse.splitquery(info_response)
+            response_params = urllib.parse.parse_qs(args)
+            resp = json.dumps(response_params, indent=2)
+            logger.debug('Response params: {}\n{}\n\n'.format(url, resp))
+        # end debugging
 
     if error:
         if _response_placement == 'body':
@@ -83,10 +82,10 @@ def do_response(request, endpoint, req_args, error='', **args):
             resp = HttpResponseRedirect(info_response)
     else:
         if _response_placement == 'body':
-            #logger.debug('Response [Body]: {}'.format(info_response))
+            # logger.debug('Response [Body]: {}'.format(info_response))
             resp = HttpResponse(info_response, status=200)
         else:  # _response_placement == 'url':
-            #logger.debug('Redirect to: {}'.format(info_response))
+            # logger.debug('Redirect to: {}'.format(info_response))
             resp = HttpResponseRedirect(info_response)
 
     for key, value in info['http_headers']:
@@ -101,10 +100,10 @@ def do_response(request, endpoint, req_args, error='', **args):
 
     # session db mngmtn
     if endpoint.__class__.__name__ in (
-            'Authorization',
-            'Token',
-            'UserInfo'
-        ):
+        'Authorization',
+        'Token',
+        'UserInfo'
+    ):
         try:
             session = OidcSession.load(ses_man_dump)
         except InconsinstentSessionDump as e:
@@ -233,7 +232,7 @@ def registration(request):
 
 
 @csrf_exempt
-def registration_api():
+def registration_api(request):
     _name = sys._getframe().f_code.co_name
     _debug_request(f'{_name}', request)
 
@@ -242,14 +241,15 @@ def registration_api():
         oidcop_app.endpoint_context.endpoint['registration_api']
     )
 
-def _fill_cdb(request)->None:
+
+def _fill_cdb(request) -> None:
     client_id = request.GET.get('client_id') or request.POST.get('client_id')
     _msg = f'Client {client_id} not found!'
     if client_id:
         client = OidcRelyingParty.objects.filter(
-                client_id = client_id,
-                is_active = True,
-                client_secret_expires_at__gte=timezone.localtime()
+            client_id=client_id,
+            is_active=True,
+            client_secret_expires_at__gte=timezone.localtime()
         )
         if client:
             client = client.first()
@@ -319,23 +319,22 @@ def verify_user(request):
     )
 
     endpoint = oidcop_app.endpoint_context.endpoint['authorization']
-    # {'session_id': 'diana;;client_3;;38044288819611eb905343ee297b1c98', 'identity': {'uid': 'diana'}, 'user': 'diana'}
     client_id = authz_request["client_id"]
     _token_usage_rules = endpoint.server_get(
         "endpoint_context").authn_broker.get_method_by_id('user')
 
     session_manager = ec.endpoint_context.session_manager
     _session_id = session_manager.create_session(
-                                authn_event=authn_event,
-                                auth_req=authz_request,
-                                user_id=user.username,
-                                client_id=client_id,
-                                token_usage_rules=_token_usage_rules
+        authn_event=authn_event,
+        auth_req=authz_request,
+        user_id=user.username,
+        client_id=client_id,
+        token_usage_rules=_token_usage_rules
     )
 
     try:
         args = endpoint.authz_part2(user=user.username,
-                                    session_id = _session_id,
+                                    session_id=_session_id,
                                     request=authz_request,
                                     authn_event=authn_event)
     except ValueError as excp:
@@ -353,28 +352,29 @@ def _get_session_by_token(request):
     bearer = request.META.get('HTTP_AUTHORIZATION')
     if bearer and not request.POST:
         token = OidcIssuedToken.objects.filter(
-            value = bearer.split(' ')[1]
+            value=bearer.split(' ')[1]
         ).first()
     elif request.POST.get('grant_type'):
         token = OidcIssuedToken.objects.filter(
-            type = request.POST['grant_type'],
-            value = request.POST.get('code')
+            type=request.POST['grant_type'],
+            value=request.POST.get('code')
         ).first()
     elif request.POST.get('token_type_hint'):
         # token introspection
         token = OidcIssuedToken.objects.filter(
-            type = request.POST['token_type_hint'],
-            value = request.POST['token']
+            type=request.POST['token_type_hint'],
+            value=request.POST['token']
         ).first()
     elif request.GET.get('id_token_hint'):
         token = OidcIssuedToken.objects.filter(
-            type = 'id_token',
-            value = request.GET['id_token_hint']
+            type='id_token',
+            value=request.GET['id_token_hint']
         ).first()
     else:
         raise PermissionDenied()
 
     return token.session
+
 
 def _check_session_dump_consistency(endpoint_name, ec, session):
     if ec.endpoint_context.session_manager.dump() != session:
@@ -425,6 +425,7 @@ def userinfo(request):
 
     return service_endpoint(request, _endpoint)
 
+
 @csrf_exempt
 def introspection(request):
     _name = sys._getframe().f_code.co_name
@@ -466,12 +467,12 @@ def session_endpoint(request):
     try:
         res = service_endpoint(request, _endpoint)
         return res
-    except:
+    except Exception:
         ec.endpoint_context.session_manager.flush()
         return HttpResponseForbidden()
 
 
-## TODO - not supported yet with session manager storage
+# TODO - not supported yet with session manager storage
 
 def check_session_iframe(request):
     if request.method == 'GET':
@@ -485,7 +486,7 @@ def check_session_iframe(request):
         # will contain client_id and origin
         if req_args['origin'] != oidcop_app.endpoint_context.conf['issuer']:
             return 'error'
-        if req_args['client_id'] != current_app.endpoint_context.cdb:
+        if req_args['client_id'] != oidcop_app.endpoint_context.cdb:
             return 'error'
         return 'OK'
 
@@ -517,7 +518,7 @@ def rp_logout(request):
             _endp.kill_cookies()
         except AttributeError:
             logger.debug('Cookie not implemented or not working.')
-        #_add_cookie(res, _kakor)
+        # _add_cookie(res, _kakor)
     return res
 
 

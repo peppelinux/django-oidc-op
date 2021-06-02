@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='oidcsession',
             name='sid',
-            field=models.CharField(blank=True, max_length=254, null=True, unique=True),
+            field=models.CharField(
+                blank=True, max_length=254, null=True, unique=True),
         ),
     ]

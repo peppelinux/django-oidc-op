@@ -1,11 +1,13 @@
 import copy
 
-from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
 
 from oidcop.user_authn.user import (create_signed_jwt, LABELS)
 from oidcop.user_authn.user import UserAuthnMethod
+
+from . exceptions import FailedAuthentication
 
 
 class UserPassDjango(UserAuthnMethod):
@@ -89,7 +91,7 @@ class UserInfo(object):
         It's a best effort task; if essential claims are not present
         no error is flagged.
 
-        :param userinfo: A dictionary containing the available info for one user
+        :param userinfo: A dictionary containing available infos for one user
         :param user_info_claims: A dictionary specifying the asked for claims
         :return: A dictionary of filtered claims.
         """
@@ -130,10 +132,3 @@ class UserInfo(object):
             return {}
 
         return self.filter(user, user_info_claims)
-
-    def search(self, **kwargs):
-        for uid, args in self.db.items():
-            if dict_subset(kwargs, args):
-                return uid
-
-        raise KeyError('No matching user')
