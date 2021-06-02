@@ -1,7 +1,7 @@
 # django-oidc-op
 A Django implementation of an **OIDC Provider** on top of [jwtconnect.io](https://jwtconnect.io/).
 To configure a standard OIDC Provider you have to edit the oidcop configuration file.
-See `example/example/oidc_op.conf.yaml` to get in.
+See `example/example/settings.py` and `example/example/oidc_provider_settings.py` to get in.
 
 This project is based on [IdentityPython oidc-op](https://github.com/IdentityPython/oidc-op).
 Please consult official [oidc-op documentation](https://oidcop.readthedocs.io/en/latest/) for any further information about it's features and capabilities.
@@ -14,10 +14,10 @@ cd django-oidc-op
 
 pip install -r requirements.txt
 cd example
-bash run.sh
 
-## debug server
-gunicorn example.wsgi -b0.0.0.0:8000 --keyfile=./data/oidc_op/certs/key.pem --certfile=./data/oidc_op/certs/cert.pem --reload --timeout 3600 --capture-output --enable-stdio-inheritance
+./manage.py createsuperuser
+
+bash run.sh
 ````
 
 You can use [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP) as follow:
@@ -36,7 +36,7 @@ python3 snippets/rp_handler.py -c example/data/oidc_rp/conf.django.yaml -u myuse
 
 #### Django settings.py parameters
 
-`OIDCENDPOINT_CONFIG`: The path containing the oidc-op configuration file.
+`OIDCOP_CONFIG`: The path containing the oidc-op configuration file.
 
 
 ## Django specific implementation
@@ -46,8 +46,8 @@ adopt the following customizations.
 
 #### UserInfo endpoint
 
-Claims to be released are configured in `op.server_info.user_info` (in `conf.yaml`).
-The attributes release and user authentication mechanism rely on classes implemented in `oidc_op.users.py`.
+Claims to be released are configured in `op.server_info.user_info` (in `oidc_provider_settings.py`).
+The attributes release and user authentication mechanism rely on classes implemented in `oidc_op/users.py`.
 
 Configuration Example:
 
