@@ -98,3 +98,7 @@ coverage erase
 coverage run manage.py test
 coverage report
 ````
+
+## Author
+
+- Giuseppe De Marco
