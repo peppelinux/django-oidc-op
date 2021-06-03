@@ -5,7 +5,7 @@ from . application import oidcop_app
 logger = logging.getLogger(__name__)
 
 
-def _debug_request(endpoint_name, request):
+def debug_request(endpoint_name, request):
     logger.debug(
         f'{endpoint_name} request GET: {request.GET} - POST:{request.POST}'
     )
@@ -17,7 +17,7 @@ def prepare_oidc_endpoint(func_to_decorate):
     def new_func(*original_args, **original_kwargs):
         request = original_args[0]
         _name = func_to_decorate.__name__
-        _debug_request(f'{_name}', request)
+        debug_request(f'{_name}', request)
 
         ec = oidcop_app.endpoint_context
         # yes, in flush we believe ...

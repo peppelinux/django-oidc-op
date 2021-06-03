@@ -27,7 +27,7 @@ from urllib import parse as urlib_parse
 from urllib.parse import urlparse
 
 from . application import oidcop_app
-from . decorators import prepare_oidc_endpoint
+from . decorators import prepare_oidc_endpoint, debug_request
 from . exceptions import InconsinstentSessionDump
 from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
 
@@ -197,18 +197,12 @@ def service_endpoint(request, endpoint):
     return do_response(request, endpoint, req_args, **args)
 
 
-def _debug_request(endpoint_name, request):
-    logger.debug(
-        f'{endpoint_name} request GET: {request.GET} - POST:{request.POST}'
-    )
-
-
 def well_known(request, service):
     """
     /.well-known/<service>
     """
     _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
+    debug_request(f'{_name}', request)
 
     if service == 'openid-configuration':
         _endpoint = oidcop_app.endpoint_context.endpoint['provider_config']
@@ -224,10 +218,8 @@ def well_known(request, service):
 
 
 @csrf_exempt
+@prepare_oidc_endpoint
 def registration(request):
-    _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
-
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['registration']
     response = service_endpoint(request, _endpoint)
@@ -239,10 +231,8 @@ def registration(request):
 
 
 @csrf_exempt
+@prepare_oidc_endpoint
 def registration_api(request):
-    _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
-
     return service_endpoint(
         request,
         oidcop_app.endpoint_context.endpoint['registration_api']
@@ -296,7 +286,7 @@ def verify_user(request):
     """csrf is not needed because it uses oidc token in the post
     """
     _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
+    debug_request(f'{_name}', request)
 
     token = request.POST.get('token')
     if not token:
@@ -478,7 +468,7 @@ def check_session_iframe(request):
 @csrf_exempt
 def rp_logout(request):
     _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
+    debug_request(f'{_name}', request)
 
     _endp = oidcop_app.endpoint_context.endpoint['session']
     _info = _endp.unpack_signed_jwt(request.POST['sjwt'])
@@ -503,7 +493,7 @@ def rp_logout(request):
 
 def verify_logout(request):
     _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
+    debug_request(f'{_name}', request)
 
     part = urlparse(oidcop_app.endpoint_context.conf['issuer'])
     d = dict(op=part.hostname,
@@ -514,6 +504,5 @@ def verify_logout(request):
 
 def post_logout(request):
     _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
-
+    debug_request(f'{_name}', request)
     return render(request, 'post_logout.html')
