@@ -96,7 +96,7 @@ def run_rp_session(rph, issuer_id, username, password):
                  'password': password,
                  'token': auth_code}
 
-    auth_url = '/'.join((issuer_fqdn, auth_url))
+    auth_url = ''.join((issuer_fqdn, auth_url))
     print('Credential form submit ...')
     req = requests.post(auth_url,
                         data=auth_dict, verify=rph.verify_ssl,

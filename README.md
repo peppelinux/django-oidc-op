@@ -1,11 +1,10 @@
 # django-oidc-op
-A Django implementation of an **OIDC Provider** on top of [jwtconnect.io](https://jwtconnect.io/).
-To configure a standard OIDC Provider you have to edit the oidcop configuration file.
-See `example/example/settings.py` and `example/example/oidc_provider_settings.py` to get in.
-
+A Django implementation of an **OIDC Provider** and an **OAuth2 AS** on top of [jwtconnect.io](https://jwtconnect.io/).
 This project is based on [IdentityPython oidc-op](https://github.com/IdentityPython/oidc-op).
 Please consult the official [oidc-op documentation](https://oidcop.readthedocs.io/en/latest/) for any further information about its features and capabilities.
 
+To configure a standard OIDC Provider you have to edit the oidcop configuration file.
+See `example/example/settings.py` and `example/example/oidc_provider_settings.py` to get in.
 
 ## Run the example demo
 ````

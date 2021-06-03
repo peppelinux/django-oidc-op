@@ -53,6 +53,16 @@ def add_cookie(resp, cookie_spec):
         _add_cookie(resp, cookie_spec)
 
 
+def _check_session_dump_consistency(endpoint_name, ec, session):
+    if ec.endpoint_context.session_manager.dump() != session:
+        logger.critical(
+            ec.endpoint_context.session_manager.dump(),
+            session
+        )
+        ec.endpoint_context.session_manager.flush()
+        raise InconsinstentSessionDump(endpoint_name)
+
+
 def do_response(request, endpoint, req_args, error='', **args):
     info = endpoint.do_response(request=req_args, error=error, **args)
     _response_placement = info.get('response_placement')
@@ -99,11 +109,9 @@ def do_response(request, endpoint, req_args, error='', **args):
     ses_man_dump = ec.endpoint_context.session_manager.dump()
 
     # session db mngmtn
-    if endpoint.__class__.__name__ in (
-        'Authorization',
-        'Token',
-        'UserInfo'
-    ):
+    if endpoint.__class__.__name__ in ('Authorization',
+                                       'Token',
+                                       'UserInfo'):
         try:
             session = OidcSession.load(ses_man_dump)
         except InconsinstentSessionDump as e:
@@ -114,13 +122,12 @@ def do_response(request, endpoint, req_args, error='', **args):
                 'error_description': str(e),
                 'method': request.method
             }), safe=False, status=500)
-
-        #  logger.warning(endpoint.__class__.__name__)
+        else:
+            #  logger.warning(endpoint.__class__.__name__)
+            _check_session_dump_consistency(endpoint.__class__.__name__,
+                                            ec,
+                                            ses_man_dump)
         ec.endpoint_context.session_manager.flush()
-        if ses_man_dump != session.serialize():
-            logger.critical(ses_man_dump, session)
-            raise InconsinstentSessionDump(endpoint.__class__.__name__)
-
     return resp
 
 
@@ -284,6 +291,8 @@ def authorization(request):
         }), safe=False, status=403)
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['authorization']
+    # yes, in flush we believe ...
+    ec.endpoint_context.session_manager.flush()
     return service_endpoint(request, _endpoint)
 
 
@@ -374,16 +383,6 @@ def _get_session_by_token(request):
         raise PermissionDenied()
 
     return token.session
-
-
-def _check_session_dump_consistency(endpoint_name, ec, session):
-    if ec.endpoint_context.session_manager.dump() != session:
-        logger.critical(
-            ec.endpoint_context.session_manager.dump(),
-            session
-        )
-        ec.endpoint_context.session_manager.flush()
-        raise InconsinstentSessionDump('userinfo endpoint')
 
 
 @csrf_exempt
@@ -518,7 +517,6 @@ def rp_logout(request):
             _endp.kill_cookies()
         except AttributeError:
             logger.debug('Cookie not implemented or not working.')
-        # _add_cookie(res, _kakor)
     return res
 
 
