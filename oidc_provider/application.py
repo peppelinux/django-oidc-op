@@ -16,10 +16,6 @@ def init_oidc_op_endpoints(app):
     op_config = app.srv_config
 
     op_config['issuer']
-    # if '{domain}' in iss:
-    # iss = iss.format(domain=app.srv_config.domain,
-    # port=app.srv_config.port)
-    # op_config['issuer'] = iss
     server = Server(op_config, cwd=folder)
 
     for endp in server.endpoint.values():
