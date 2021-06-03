@@ -19,6 +19,8 @@ cd example
 bash run.sh
 ````
 
+#### Example Relying-Party
+
 You can use [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP) as follow:
 ```
 cd JWTConnect-Python-OidcRP
