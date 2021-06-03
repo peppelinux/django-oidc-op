@@ -2,6 +2,8 @@ DOMAIN = "127.0.0.1"
 PORT = 8000
 SERVER_NAME = f"{DOMAIN}:{PORT}"
 
+OIDC_URL_PREFIX = 'oidcop/'
+
 OIDC_SIGN_ALGS = [
     "RS256",
     "RS512",
@@ -71,13 +73,14 @@ OIDC_JWKS_PUBLIC_PATH = 'data/static'
 
 
 OIDC_OP_ENDPOINTS = {
-    "webfinger": {
-      "path": ".well-known/webfinger",
-      "class": "oidcop.oidc.discovery.Discovery",
-      "kwargs": {
-        "client_authn_method": None
-      }
-    },
+    # not enabled :)
+    # "webfinger": {
+      # "path": ".well-known/webfinger",
+      # "class": "oidcop.oidc.discovery.Discovery",
+      # "kwargs": {
+        # "client_authn_method": None
+      # }
+    # },
     "provider_info": {
       "path": ".well-known/openid-configuration",
       "class": "oidcop.oidc.provider_config.ProviderConfiguration",
@@ -86,7 +89,7 @@ OIDC_OP_ENDPOINTS = {
       }
     },
     "registration": {
-      "path": "registration",
+      "path": f"{OIDC_URL_PREFIX}registration",
       "class": "oidcop.oidc.registration.Registration",
       "kwargs": {
         "client_authn_method": None,
@@ -98,7 +101,7 @@ OIDC_OP_ENDPOINTS = {
       }
     },
     "registration_api": {
-      "path": "registration_api",
+      "path": f"{OIDC_URL_PREFIX}registration_api",
       "class": "oidcop.oidc.read_registration.RegistrationRead",
       "kwargs": {
         "client_authn_method": [
@@ -107,7 +110,7 @@ OIDC_OP_ENDPOINTS = {
       }
     },
     "introspection": {
-      "path": "introspection",
+      "path": f"{OIDC_URL_PREFIX}introspection",
       "class": "oidcop.oauth2.introspection.Introspection",
       "kwargs": {
         "client_authn_method": [
@@ -122,7 +125,7 @@ OIDC_OP_ENDPOINTS = {
       }
     },
     "authorization": {
-      "path": "authorization",
+      "path": f"{OIDC_URL_PREFIX}authorization",
       "class": "oidcop.oidc.authorization.Authorization",
       "kwargs": {
         "client_authn_method": None,
@@ -150,7 +153,7 @@ OIDC_OP_ENDPOINTS = {
       }
     },
     "token": {
-      "path": "token",
+      "path": f"{OIDC_URL_PREFIX}token",
       "class": "oidcop.oidc.token.Token",
       "kwargs": {
         "client_authn_method": [
@@ -162,7 +165,7 @@ OIDC_OP_ENDPOINTS = {
       }
     },
     "userinfo": {
-      "path": "userinfo",
+      "path": f"{OIDC_URL_PREFIX}userinfo",
       "class": "oidcop.oidc.userinfo.UserInfo",
       "kwargs": {
         "claim_types_supported": [
@@ -175,7 +178,7 @@ OIDC_OP_ENDPOINTS = {
       }
     },
     "end_session": {
-      "path": "session",
+      "path": f"{OIDC_URL_PREFIX}session",
       "class": "oidcop.oidc.session.Session",
       "kwargs": {
         "logout_verify_url": "verify_logout",
@@ -185,7 +188,7 @@ OIDC_OP_ENDPOINTS = {
         "frontchannel_logout_session_supported": True,
         "backchannel_logout_supported": True,
         "backchannel_logout_session_supported": True,
-        "check_session_iframe": "check_session_iframe"
+        # "check_session_iframe": "check_session_iframe"
       }
     }
 }
@@ -269,7 +272,7 @@ OIDCOP_CONFIG = {
           "acr": "urn:oasis:names:tc:SAML:2.0:ac:classes:InternetProtocolPassword",
           "class": "oidc_provider.users.UserPassDjango",
           "kwargs": {
-            "verify_endpoint": "verify/oidc_user_login/",
+            "verify_endpoint": f"{OIDC_URL_PREFIX}verify/oidc_user_login/",
             "template": "oidc_login.html",
 
             "page_header": "Testing log in",

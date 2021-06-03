@@ -45,9 +45,8 @@ INSTALLED_APPS = [
 ]
 
 if 'oidc_provider' in INSTALLED_APPS:
-    from . oidc_provider_settings import OIDCOP_CONFIG, DOMAIN, PORT
+    from . oidc_provider_settings import OIDCOP_CONFIG, DOMAIN, PORT, OIDC_URL_PREFIX
     OIDCOP_CONF_FILE = f"{BASE_DIR}/oidc_provider_settings.py"
-
 
 
 

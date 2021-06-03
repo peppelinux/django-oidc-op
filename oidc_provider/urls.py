@@ -7,7 +7,7 @@ app_name = 'oidc_provider'
 
 urlpatterns = [
     path('.well-known/<str:service>', views.well_known,
-         name="oidc_op_well_known"),
+         name="_oidc_op_well_known"),
     path('registration', views.registration,
          name="oidc_op_registration"),
     path('registration_api', views.registration_api,
