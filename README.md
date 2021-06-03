@@ -4,7 +4,7 @@ To configure a standard OIDC Provider you have to edit the oidcop configuration 
 See `example/example/settings.py` and `example/example/oidc_provider_settings.py` to get in.
 
 This project is based on [IdentityPython oidc-op](https://github.com/IdentityPython/oidc-op).
-Please consult official [oidc-op documentation](https://oidcop.readthedocs.io/en/latest/) for any further information about it's features and capabilities.
+Please consult the official [oidc-op documentation](https://oidcop.readthedocs.io/en/latest/) for any further information about its features and capabilities.
 
 
 ## Run the example demo
