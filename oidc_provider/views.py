@@ -37,21 +37,21 @@ logger = logging.getLogger(__name__)
 IGNORED_HEADERS = ["cookie", "user-agent"]
 
 
-def _add_cookie(resp, cookie_spec):
-    kwargs = {'value': cookie_spec["value"]}
-    for param in ['expires', 'max-age']:
-        if param in cookie_spec:
-            kwargs[param] = cookie_spec[param]
-    kwargs["path"] = "/"
-    resp.set_cookie(cookie_spec["name"], **kwargs)
+# def _add_cookie(resp, cookie_spec):
+    # kwargs = {'value': cookie_spec["value"]}
+    # for param in ['expires', 'max-age']:
+        # if param in cookie_spec:
+            # kwargs[param] = cookie_spec[param]
+    # kwargs["path"] = "/"
+    # resp.set_cookie(cookie_spec["name"], **kwargs)
 
 
-def add_cookie(resp, cookie_spec):
-    if isinstance(cookie_spec, list):
-        for _spec in cookie_spec:
-            _add_cookie(resp, _spec)
-    elif isinstance(cookie_spec, dict):
-        _add_cookie(resp, cookie_spec)
+# def add_cookie(resp, cookie_spec):
+    # if isinstance(cookie_spec, list):
+        # for _spec in cookie_spec:
+            # _add_cookie(resp, _spec)
+    # elif isinstance(cookie_spec, dict):
+        # _add_cookie(resp, cookie_spec)
 
 def _check_session_dump_consistency(endpoint_name, ec, session):
     if ec.endpoint_context.session_manager.dump() != session:
@@ -102,8 +102,8 @@ def do_response(request, endpoint, req_args, error='', **args):
         # set response headers
         resp[key] = value
 
-    if 'cookie' in info:
-        add_cookie(resp, info['cookie'])
+    # if 'cookie' in info:
+        # add_cookie(resp, info['cookie'])
 
     ec = oidcop_app.endpoint_context
     ses_man_dump = ec.endpoint_context.session_manager.dump()
@@ -435,6 +435,7 @@ def session_endpoint(request):
         ec.endpoint_context.session_manager.load(session)
     _check_session_dump_consistency('session', ec, session)
     try:
+        breakpoint()
         res = service_endpoint(request, _endpoint)
         return res
     except Exception:
