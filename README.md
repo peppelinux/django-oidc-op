@@ -36,15 +36,15 @@ python3 snippets/rp_handler.py -c example/data/oidc_rp/conf.django.yaml -u myuse
 This project rely interely on behaviour and features provided by oidcop, to get an exaustive integration in Django it
 adopt the following customizations.
 
+#### oidc_provider_settings.py
+
+In the example project I handle all the oidcop configurations in this seprate file.
+I think it's more cleaner but feel free to adapt in your preferred schema.
+
 #### Settings
 
 `OIDCOP_CONFIG` is a python dictionary that contains the oidcop configuration.
-
-#### URLs
-
-MUST be configured in `urls.py` and also in oidc_op `example/oidc_provider_settings.py`.
-
-- /oidc/endpoint/<provider_name>
+`OIDC_URL_PREFIX`, eg: `oidcop/` if present will be used as url path in all the oidcop endpoints, except for `.well-known/openid-configuration`. In the example project I put this parameter in `oidc_provider_settings`, default is `''`.
 
 
 #### UserInfo endpoint
