@@ -26,13 +26,14 @@ from oidcmsg.oidc import AuthorizationRequest
 from urllib import parse as urlib_parse
 from urllib.parse import urlparse
 
-from . application import oidcop_application
+from . application import oidcop_app
+from . decorators import prepare_oidc_endpoint
 from . exceptions import InconsinstentSessionDump
 from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
 
 
 logger = logging.getLogger(__name__)
-oidcop_app = oidcop_application(conf=settings.OIDCOP_CONFIG)
+
 IGNORED_HEADERS = ["cookie", "user-agent"]
 
 
@@ -51,7 +52,6 @@ def add_cookie(resp, cookie_spec):
             _add_cookie(resp, _spec)
     elif isinstance(cookie_spec, dict):
         _add_cookie(resp, cookie_spec)
-
 
 def _check_session_dump_consistency(endpoint_name, ec, session):
     if ec.endpoint_context.session_manager.dump() != session:
@@ -276,11 +276,8 @@ def _fill_cdb_by_client(client):
         client.client_id: client.serialize()
     }
 
-
+@prepare_oidc_endpoint
 def authorization(request):
-    _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
-
     try:
         _fill_cdb(request)
     except InvalidClient as e:
@@ -291,8 +288,6 @@ def authorization(request):
         }), safe=False, status=403)
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['authorization']
-    # yes, in flush we believe ...
-    ec.endpoint_context.session_manager.flush()
     return service_endpoint(request, _endpoint)
 
 
@@ -386,32 +381,25 @@ def _get_session_by_token(request):
 
 
 @csrf_exempt
+@prepare_oidc_endpoint
 def token(request):
-    _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
-
     ec = oidcop_app.endpoint_context
-    ec.endpoint_context.session_manager.flush()
-
     _endpoint = ec.endpoint['token']
 
     _fill_cdb(request)
     session = _get_session_by_token(request).serialize()
     if session:
         ec.endpoint_context.session_manager.load(session)
-    _check_session_dump_consistency(_name, ec, session)
+    _check_session_dump_consistency('token', ec, session)
 
     response = service_endpoint(request, _endpoint)
     return response
 
 
 @csrf_exempt
+@prepare_oidc_endpoint
 def userinfo(request):
-    _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
-
     ec = oidcop_app.endpoint_context
-    ec.endpoint_context.session_manager.flush()
     _endpoint = ec.endpoint['userinfo']
 
     session = _get_session_by_token(request)
@@ -420,18 +408,15 @@ def userinfo(request):
 
     if session:
         ec.endpoint_context.session_manager.load(session)
-    _check_session_dump_consistency(_name, ec, session)
+    _check_session_dump_consistency('userinfo', ec, session)
 
     return service_endpoint(request, _endpoint)
 
 
 @csrf_exempt
+@prepare_oidc_endpoint
 def introspection(request):
-    _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
-
     ec = oidcop_app.endpoint_context
-    ec.endpoint_context.session_manager.flush()
     _endpoint = ec.endpoint['introspection']
 
     session = _get_session_by_token(request)
@@ -441,7 +426,7 @@ def introspection(request):
 
     if session:
         ec.endpoint_context.session_manager.load(session)
-    _check_session_dump_consistency(_name, ec, session)
+    _check_session_dump_consistency('introspection', ec, session)
 
     return service_endpoint(request, _endpoint)
 
@@ -449,20 +434,16 @@ def introspection(request):
 ########
 # LOGOUT
 ########
+@prepare_oidc_endpoint
 def session_endpoint(request):
-    _name = sys._getframe().f_code.co_name
-    _debug_request(f'{_name}', request)
-
     ec = oidcop_app.endpoint_context
-    ec.endpoint_context.session_manager.flush()
-
     _endpoint = ec.endpoint['session']
     session = _get_session_by_token(request)
     _fill_cdb_by_client(session.client)
     session = session.serialize()
     if session:
         ec.endpoint_context.session_manager.load(session)
-    _check_session_dump_consistency(_name, ec, session)
+    _check_session_dump_consistency('session', ec, session)
     try:
         res = service_endpoint(request, _endpoint)
         return res
