@@ -74,16 +74,6 @@ Configuration Example:
       }
 ````
 
-#### Relying-Party
-![Alt text](images/rp2.png)
-![Alt text](images/rp_detail.png)
-
-#### Session management and token preview
-![Alt text](images/session_detail.png)
-![Alt text](images/issued_token_list.png)
-![Alt text](images/issued_token_detail.png)
-
-
 ## Developers'
 
 #### Running tests
@@ -103,3 +93,15 @@ coverage report
 ## Author
 
 - Giuseppe De Marco
+
+
+## Gallery
+
+#### Relying-Party
+![Alt text](images/rp2.png)
+![Alt text](images/rp_detail.png)
+
+#### Session management and token preview
+![Alt text](images/session_detail.png)
+![Alt text](images/issued_token_list.png)
+![Alt text](images/issued_token_detail.png)
