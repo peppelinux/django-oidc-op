@@ -19,6 +19,7 @@ from oidcop.authn_event import create_authn_event
 from oidcop.exception import UnAuthorizedClient
 from oidcop.exception import InvalidClient
 from oidcop.exception import UnknownClient
+from oidcmsg.oidc import AuthorizationErrorResponse
 from oidcop.oidc.token import Token
 from oidcmsg.oauth2 import ResponseMessage
 from oidcmsg.oidc import AccessTokenRequest
@@ -130,13 +131,7 @@ def do_response(request, endpoint, req_args, error='', **args):
         ec.endpoint_context.session_manager.flush()
     return resp
 
-
-def service_endpoint(request, endpoint):
-    """
-    TODO: documentation here
-    """
-    logger.info('Request at the "{}" endpoint'.format(endpoint.name))
-
+def _get_http_info(request):
     http_info = {
         "headers": {
             k.lower(): v
@@ -150,7 +145,10 @@ def service_endpoint(request, endpoint):
             {"name": k, "value": v} for k, v in request.COOKIES.items()
         ]
     }
+    return http_info
 
+
+def _get_http_data(request, http_info):
     if request.method == 'GET':
         data = {k: v for k, v in request.GET.items()}
     elif request.body:
@@ -162,7 +160,17 @@ def service_endpoint(request, endpoint):
             data = {k: v[0] for k, v in urlib_parse.parse_qs(data).items()}
     else:
         data = {k: v for k, v in request.POST.items()}
+    return data
 
+
+def service_endpoint(request, endpoint):
+    """
+    TODO: documentation here
+    """
+    logger.info('Request at the "{}" endpoint'.format(endpoint.name))
+
+    http_info = _get_http_info(request)
+    data = _get_http_data(request, http_info)
     req_args = endpoint.parse_request(data, http_info=http_info)
 
     try:
@@ -188,10 +196,9 @@ def service_endpoint(request, endpoint):
 
     if isinstance(req_args, ResponseMessage) and 'error' in req_args:
         return JsonResponse(req_args.__dict__, status=400)
-
-    if 'redirect_location' in args:
+    elif 'redirect_location' in args:
         return HttpResponseRedirect(args['redirect_location'])
-    if 'http_response' in args:
+    elif 'http_response' in args:
         return HttpResponse(args['http_response'], status=200)
 
     return do_response(request, endpoint, req_args, **args)
@@ -327,18 +334,22 @@ def verify_user(request):
     )
 
     try:
-        args = endpoint.authz_part2(user=user.username,
-                                    session_id=_session_id,
-                                    request=authz_request,
-                                    authn_event=authn_event)
+        _args = endpoint.authz_part2(user=user.username,
+                                     session_id=_session_id,
+                                     request=authz_request,
+                                     authn_event=authn_event)
     except ValueError as excp:
-        msg = 'Something wrong with your Session ... {}'.format(excp)
+        msg = 'Something went wrong with your Session ... {}'.format(excp)
         return HttpResponse(msg, status=403)
 
-    if isinstance(args, ResponseMessage) and 'error' in args:
+    if isinstance(_args, ResponseMessage) and 'error' in args:
         return HttpResponse(args.to_json(), status=400)
+    elif isinstance(_args.get('response_args'), AuthorizationErrorResponse):
+        rargs = _args.get('response_args')
+        logger.error(rargs)
+        return HttpResponse(rargs.to_json(), status=400)
 
-    response = do_response(request, endpoint, request, **args)
+    response = do_response(request, endpoint, authz_request, **_args)
     return response
 
 
