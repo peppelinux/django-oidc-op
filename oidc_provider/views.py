@@ -39,10 +39,9 @@ IGNORED_HEADERS = ["cookie", "user-agent"]
 
 
 def _add_cookie(resp, cookie_spec):
-    kwargs = {'value': cookie_spec["value"]}
-    for param in ['expires', 'max-age']:
-        if param in cookie_spec:
-            kwargs[param] = cookie_spec[param]
+    kwargs = {k:v
+              for k,v in cookie_spec.items()
+              if k not in ('name',)}
     kwargs["path"] = "/"
     resp.set_cookie(cookie_spec["name"], **kwargs)
 
@@ -483,7 +482,7 @@ def rp_logout(request):
 
     _endp = oidcop_app.endpoint_context.endpoint['session']
     _info = _endp.unpack_signed_jwt(request.POST['sjwt'])
-    alla = None  # request.POST.get('logout')
+    alla = None
 
     _iframes = _endp.do_verified_logout(alla=alla, **_info)
     if _iframes:

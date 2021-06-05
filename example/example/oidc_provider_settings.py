@@ -310,9 +310,11 @@ OIDCOP_CONFIG = {
             ],
             "read_only": False
           },
-          "samesite": "none",
-          "httponly": True,
-          "secure": True,
+          "flags": {
+              "samesite": "None",
+              "httponly": True,
+              "secure": True,
+          },
           "name": {
             "session": "oidc_op",
             "register": "oidc_op_rp",
