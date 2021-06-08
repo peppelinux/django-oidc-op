@@ -35,7 +35,7 @@ RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/e
 
 You can also use a scripted RP handler on top of oidc-rp
 ````
-python3 snippets/rp_handler.py -c example/data/oidc_rp/conf.json -u myuser -p mypass -iss django_provider
+python3 snippets/rp_handler.py -c oidc_provider/tests/oidc_rp/conf.json -u myuser -p mypass -iss django_provider
 ````
 
 ## Configuration
@@ -92,8 +92,8 @@ running tests
 #### coverage
 ````
 coverage erase
-coverage run manage.py test
-coverage report
+coverage run manage.py test oidc_provider
+coverage report -m
 ````
 
 ## Author
