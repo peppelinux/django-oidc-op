@@ -24,7 +24,6 @@ from oidcop.oidc.token import Token
 from oidcmsg.oauth2 import ResponseMessage
 from oidcmsg.oidc import AccessTokenRequest
 from oidcmsg.oidc import AuthorizationRequest
-from urllib import parse as urlib_parse
 from urllib.parse import urlparse
 
 from . application import oidcop_app
@@ -40,7 +39,7 @@ IGNORED_HEADERS = ["cookie", "user-agent"]
 
 def _add_cookie(resp, cookie_spec):
     kwargs = {
-        k:v
+        k: v
         for k,v in cookie_spec.items()
         if k not in ('name',)
     }
@@ -54,6 +53,7 @@ def add_cookie(resp, cookie_spec):
             _add_cookie(resp, _spec)
     elif isinstance(cookie_spec, dict):
         _add_cookie(resp, cookie_spec)
+
 
 def _check_session_dump_consistency(endpoint_name, ec, session):
     if ec.endpoint_context.session_manager.dump() != session:
@@ -115,7 +115,7 @@ def do_response(request, endpoint, req_args, error='', **args):
                                        'Token',
                                        'UserInfo'):
         try:
-            session = OidcSession.load(ses_man_dump)
+            OidcSession.load(ses_man_dump)
         except InconsinstentSessionDump as e:
             logger.critical(e)
             ec.endpoint_context.session_manager.flush()
@@ -131,6 +131,7 @@ def do_response(request, endpoint, req_args, error='', **args):
                                             ses_man_dump)
         ec.endpoint_context.session_manager.flush()
     return resp
+
 
 def _get_http_info(request):
     http_info = {
@@ -152,13 +153,6 @@ def _get_http_info(request):
 def _get_http_data(request, http_info):
     if request.method == 'GET':
         data = {k: v for k, v in request.GET.items()}
-    # legacy ... to be removed
-    # elif request.body:
-        # data = request.body \
-            # if isinstance(request.body, str) else \
-            # request.body.decode()
-        # if 'authorization' in http_info.get('headers', ()):
-            # data = {k: v[0] for k, v in urlib_parse.parse_qs(data).items()}
     else:
         data = {k: v for k, v in request.POST.items()}
     return data
@@ -274,6 +268,7 @@ def _fill_cdb_by_client(client):
         client.client_id: client.serialize()
     }
 
+
 @prepare_oidc_endpoint
 def authorization(request):
     try:
@@ -386,7 +381,6 @@ def _get_session_by_token(request):
         ).first()
     else:
         raise PermissionDenied()
-
 
     if token:
         return token.session

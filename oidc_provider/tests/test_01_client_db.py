@@ -1,11 +1,10 @@
 import logging
-import json
 import random
 import string
 
 from django.test import TestCase
 from django.utils import timezone
-from oidc_provider.models import TIMESTAMP_FIELDS, OidcRelyingParty
+from oidc_provider.models import OidcRelyingParty
 
 
 logger = logging.getLogger('oidc_provider')
