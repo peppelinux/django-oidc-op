@@ -39,9 +39,11 @@ IGNORED_HEADERS = ["cookie", "user-agent"]
 
 
 def _add_cookie(resp, cookie_spec):
-    kwargs = {k:v
-              for k,v in cookie_spec.items()
-              if k not in ('name',)}
+    kwargs = {
+        k:v
+        for k,v in cookie_spec.items()
+        if k not in ('name',)
+    }
     kwargs["path"] = "/"
     resp.set_cookie(cookie_spec["name"], **kwargs)
 
@@ -398,7 +400,14 @@ def token(request):
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['token']
 
-    _fill_cdb(request)
+    try:
+        _fill_cdb(request)
+    except InvalidClient as e:
+        return JsonResponse(json.dumps({
+            'error': 'invalid_request',
+            'error_description': str(e),
+            'method': request.method
+        }), safe=False, status=403)
     session = _get_session_by_token(request).serialize()
     if session:
         ec.endpoint_context.session_manager.load(session)
