@@ -343,8 +343,8 @@ def verify_user(request):
         msg = 'Something went wrong with your Session ... {}'.format(excp)
         return HttpResponse(msg, status=403)
 
-    if isinstance(_args, ResponseMessage) and 'error' in args:
-        return HttpResponse(args.to_json(), status=400)
+    if isinstance(_args, ResponseMessage) and 'error' in _args:
+        return HttpResponse(_args.to_json(), status=400)
     elif isinstance(_args.get('response_args'), AuthorizationErrorResponse):
         rargs = _args.get('response_args')
         logger.error(rargs)
