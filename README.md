@@ -10,7 +10,7 @@ This project is based on [IdentityPython oidc-op](https://github.com/IdentityPyt
 Please consult the official [oidc-op documentation](https://oidcop.readthedocs.io/en/latest/) for any further information about its features and capabilities.
 
 To configure a standard OIDC Provider you have to edit the oidcop configuration file.
-See `example/example/settings.py` and `example/example/oidc_provider_settings.py` to get in.
+See `django-oidc-op/oidc_provider/tests/example/example/settings.py` and `django-oidc-op/oidc_provider/tests/example/example/oidc_provider_settings.py` to get in.
 
 ## Run the example demo
 ````
@@ -35,7 +35,7 @@ RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/e
 
 You can also use a scripted RP handler on top of oidc-rp
 ````
-python3 snippets/rp_handler.py -c oidc_provider/tests/oidc_rp/conf.json -u myuser -p mypass -iss django_provider
+python3 snippets/rp_handler.py -c oidc_provider/tests/oidc_rp/conf.json -u test -p testami18 -iss django_provider
 ````
 
 ## Configuration

@@ -151,10 +151,15 @@ def _get_http_info(request):
 
 
 def _get_http_data(request, http_info):
+    data = {}
     if request.method == 'GET':
         data = {k: v for k, v in request.GET.items()}
-    else:
+    elif request.method == 'POST':
         data = {k: v for k, v in request.POST.items()}
+
+    if not data and request.body:
+        data = json.loads(request.body)
+
     return data
 
 
