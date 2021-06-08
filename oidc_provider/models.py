@@ -525,6 +525,7 @@ class OidcIssuedToken(TimeStampedModel):
         ('authorization_code', 'authorization_code'),
         ('access_token', 'access_token'),
         ('id_token', 'id_token'),
+        ('refresh_token', 'refresh_token')
     )
 
     uid = models.CharField(max_length=128, blank=True, null=True)

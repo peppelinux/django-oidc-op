@@ -257,7 +257,8 @@
           "profile",
           "email",
           "address",
-          "phone"
+          "phone",
+          "offline_access"
         ],
         "token_endpoint_auth_method": [
           "client_secret_basic",
@@ -266,8 +267,8 @@
       },
       "issuer": "https://127.0.0.1:8000/",
 
-      #"client_id": "oLyRj7sJJ3XvAYjeDCe8rQ",
-      #"client_secret": "53fb49f2a6501ec775355c89750dc416744a3253138d5a04e409b313",
+#      "client_id": "DBP60x3KUQfCYWZlqFaS_Q",
+#      "client_secret": "8526270403788522b2444e87ea90c53bcafb984119cec92eeccc12f1",
 
       "redirect_uris": [
         "https://example.org/authz_cb/django_provider"

@@ -16,8 +16,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.utils import timezone
 from oidcop.authn_event import create_authn_event
-from oidcop.exception import UnAuthorizedClient
 from oidcop.exception import InvalidClient
+from oidcop.exception import UnAuthorizedClient
 from oidcop.exception import UnknownClient
 from oidcmsg.oidc import AuthorizationErrorResponse
 from oidcop.oidc.token import Token
@@ -150,13 +150,13 @@ def _get_http_info(request):
 def _get_http_data(request, http_info):
     if request.method == 'GET':
         data = {k: v for k, v in request.GET.items()}
-    elif request.body:
-        data = request.body \
-            if isinstance(request.body, str) else \
-            request.body.decode()
-        # <oidcop.oidc.token.AccessToken object at 0x7fd626329d68>
-        if 'authorization' in http_info.get('headers', ()):
-            data = {k: v[0] for k, v in urlib_parse.parse_qs(data).items()}
+    # legacy ... to be removed
+    # elif request.body:
+        # data = request.body \
+            # if isinstance(request.body, str) else \
+            # request.body.decode()
+        # if 'authorization' in http_info.get('headers', ()):
+            # data = {k: v[0] for k, v in urlib_parse.parse_qs(data).items()}
     else:
         data = {k: v for k, v in request.POST.items()}
     return data
@@ -354,11 +354,19 @@ def verify_user(request):
 
 def _get_session_by_token(request):
     bearer = request.META.get('HTTP_AUTHORIZATION')
+    token = None
+
     if bearer and not request.POST:
         token = OidcIssuedToken.objects.filter(
             value=bearer.split(' ')[1]
         ).first()
-    elif request.POST.get('grant_type'):
+    elif all((request.POST.get('refresh_token'),
+              request.POST.get('grant_type') == 'refresh_token')):
+        token = OidcIssuedToken.objects.filter(
+            type=request.POST['grant_type'],
+            value=request.POST['refresh_token']
+        ).first()
+    elif request.POST.get('grant_type') == 'authorization_code':
         token = OidcIssuedToken.objects.filter(
             type=request.POST['grant_type'],
             value=request.POST.get('code')
@@ -377,7 +385,11 @@ def _get_session_by_token(request):
     else:
         raise PermissionDenied()
 
-    return token.session
+
+    if token:
+        return token.session
+    else:
+        raise PermissionDenied()
 
 
 @csrf_exempt
