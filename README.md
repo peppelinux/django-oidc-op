@@ -1,5 +1,5 @@
 # django-oidc-op
-A Django implementation of an **OIDC Provider** and an **OAuth2 AS** on top of [jwtconnect.io](https://jwtconnect.io/).
+A Django implementation of an **OIDC Provider**/**OAuth2 AS** on top of [jwtconnect.io](https://jwtconnect.io/).
 This project is based on [IdentityPython oidc-op](https://github.com/IdentityPython/oidc-op).
 Please consult the official [oidc-op documentation](https://oidcop.readthedocs.io/en/latest/) for any further information about its features and capabilities.
 
@@ -29,7 +29,7 @@ RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/e
 
 You can also use a scripted RP handler on top of oidc-rp
 ````
-python3 snippets/rp_handler.py -c example/data/oidc_rp/conf.django.yaml -u myuser -p mypass -iss django_oidc_op
+python3 snippets/rp_handler.py -c example/data/oidc_rp/conf.json -u myuser -p mypass -iss django_provider
 ````
 
 ## Configuration
