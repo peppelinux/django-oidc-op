@@ -1,4 +1,10 @@
 # django-oidc-op
+
+![CI build](https://github.com/peppelinux/django-oidc-op/workflows/django-oidc-op/badge.svg)
+![pypi](https://img.shields.io/pypi/v/oidc_provider.svg)
+![License](https://img.shields.io/badge/license-Apache%202-blue.svg)
+![Python version](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue.svg)
+
 A Django implementation of an **OIDC Provider**/**OAuth2 AS** on top of [jwtconnect.io](https://jwtconnect.io/).
 This project is based on [IdentityPython oidc-op](https://github.com/IdentityPython/oidc-op).
 Please consult the official [oidc-op documentation](https://oidcop.readthedocs.io/en/latest/) for any further information about its features and capabilities.
