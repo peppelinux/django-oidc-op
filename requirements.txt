@@ -3,5 +3,5 @@ uwsgi
 filelock
 
 # oidcop==2.0.0
-git+https://github.com/IdentityPython/oidcop
+git+https://github.com/IdentityPython/oidc-op
 git+https://github.com/IdentityPython/JWTConnect-Python-OidcRP
