@@ -14,7 +14,6 @@ from django.http import (HttpResponse,
                          JsonResponse)
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
-from django.utils import timezone
 from oidcop.authn_event import create_authn_event
 from oidcop.exception import InvalidClient
 from oidcop.exception import UnAuthorizedClient
@@ -40,7 +39,7 @@ IGNORED_HEADERS = ["cookie", "user-agent"]
 def _add_cookie(resp, cookie_spec):
     kwargs = {
         k: v
-        for k,v in cookie_spec.items()
+        for k, v in cookie_spec.items()
         if k not in ('name',)
     }
     kwargs["path"] = "/"
@@ -292,7 +291,7 @@ def verify_user(request):
     debug_request(f'{_name}', request)
 
     token = request.POST.get('token')
-    if not token: # pragma: no cover
+    if not token:  # pragma: no cover
         return HttpResponse('Access forbidden: invalid token.', status=403)
 
     ec = oidcop_app.endpoint_context

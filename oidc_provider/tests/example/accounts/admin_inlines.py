@@ -1,8 +1,8 @@
-from django import forms
 from django.contrib import admin
 
-from .models import *
+from .models import PersistentId
+
 
 class PersistentIdInline(admin.TabularInline):
-	 model = PersistentId
-	 extra = 0
+    model = PersistentId
+    extra = 0

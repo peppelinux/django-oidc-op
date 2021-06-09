@@ -93,7 +93,7 @@ def run_rp_session(rph, issuer_id, username, password):
 
     request_args = urllib.parse.parse_qs(args)
     # from list to str
-    request_args = {k:v[0] for k,v in request_args.items()}
+    request_args = {k: v[0] for k, v in request_args.items()}
 
     # oidcrp.RPHandler.finalize() will parse the authorization response and depending on the configuration run the needed RP service
     result = rph.finalize(request_args['iss'], request_args)
@@ -104,8 +104,8 @@ def run_rp_session(rph, issuer_id, username, password):
 
     # get the keyjar related to the issuer
     decoded_access_token = decode_token(
-                                result['token'],
-                                keyjar=issuer_keyjar.get_service_context().keyjar
+        result['token'],
+        keyjar=issuer_keyjar.get_service_context().keyjar
     )
     print("Access Token", decoded_access_token)
     print("ID Token", result['id_token'].to_dict())
@@ -131,8 +131,8 @@ class TestOidcRPIntegration(TestCase):
         os.chdir('../example')
         self.oidc_srv = subprocess.Popen(
             ["bash", "run.sh"],
-             # stdout=subprocess.PIPE,
-             # stderr=subprocess.PIPE
+            # stdout=subprocess.PIPE,
+            # stderr=subprocess.PIPE
         )
         time.sleep(2)
 

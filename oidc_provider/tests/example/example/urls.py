@@ -30,5 +30,7 @@ urlpatterns += static(settings.STATIC_URL,
 if 'oidc_provider' in settings.INSTALLED_APPS:
     import oidc_provider.urls
     from oidc_provider.views import well_known
-    urlpatterns += path('.well-known/<str:service>', well_known, name="oidc_op_well_known"),
-    urlpatterns += path(f'{OIDC_URL_PREFIX}', include((oidc_provider.urls, 'oidc_op',))),
+    urlpatterns += path('.well-known/<str:service>',
+                        well_known, name="oidc_op_well_known"),
+    urlpatterns += path(f'{OIDC_URL_PREFIX}',
+                        include((oidc_provider.urls, 'oidc_op',))),

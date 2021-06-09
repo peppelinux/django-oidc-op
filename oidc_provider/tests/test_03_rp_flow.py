@@ -1,13 +1,9 @@
 import base64
 import datetime
-import json
 import logging
-import os
 import re
 import urllib
 
-from cryptojwt import KeyJar
-from cryptojwt.key_jar import init_key_jar
 
 from django.contrib.auth import get_user_model
 from django.test import Client
@@ -16,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from oidc_provider.models import OidcRelyingParty
-from oidc_provider.utils import *
+from oidc_provider.utils import decode_token, dt2timestamp, timestamp2dt
 
 logger = logging.getLogger('oidc_provider')
 
@@ -39,7 +35,7 @@ CLIENT_1 = {
         'post_logout_redirect_uris': [('https://127.0.0.1:8099', None)],
         'response_types': ['code'],
         'grant_types': ['authorization_code'],
-        'allowed_scopes' : ['openid', 'profile', 'email', 'offline_access']
+        'allowed_scopes': ['openid', 'profile', 'email', 'offline_access']
     }
 }
 CLIENT_1_BASICAUTHZ = f'Basic {base64.b64encode(f"{CLIENT_1_ID}:{CLIENT_1_PASSWD}".encode()).decode()}'
@@ -52,8 +48,8 @@ class TestOidcRPFlow(TestCase):
 
     def test_discovery_provider(self):
         url = reverse('oidc_provider:_well_known',
-                      kwargs={'service':'openid-configuration'}
-        )
+                      kwargs={'service': 'openid-configuration'}
+                      )
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, 200)
@@ -79,23 +75,24 @@ class TestOidcRPFlow(TestCase):
         self.assertEqual(type(response.json()), dict)
 
     def test_authz(self):
-        client = OidcRelyingParty.import_from_cdb(CLIENT_1)
+        OidcRelyingParty.import_from_cdb(CLIENT_1)
         data = {
-            'redirect_uri' : 'https://127.0.0.1:8099/authz_cb/django_provider',
-            'scope' : 'openid profile email address phone offline_access',
-            'response_type' : 'code',
-            'nonce' : 'd0GjnvG2zVZmnbyBzioXOFXU',
-            'state' : 'AREIA28Qh8xICz4j3rSc2tSQkV3QbFvx',
-            'code_challenge' : 'Mbp5kPfcaQ6MVj8MUcjcjHEcbwuNY5GBrG5HqJLgjCg',
-            'code_challenge_method' : 'S256',
-            'client_id' : 'jbxedfmfyc',
-            'prompt' : 'consent'
+            'redirect_uri': 'https://127.0.0.1:8099/authz_cb/django_provider',
+            'scope': 'openid profile email address phone offline_access',
+            'response_type': 'code',
+            'nonce': 'd0GjnvG2zVZmnbyBzioXOFXU',
+            'state': 'AREIA28Qh8xICz4j3rSc2tSQkV3QbFvx',
+            'code_challenge': 'Mbp5kPfcaQ6MVj8MUcjcjHEcbwuNY5GBrG5HqJLgjCg',
+            'code_challenge_method': 'S256',
+            'client_id': 'jbxedfmfyc',
+            'prompt': 'consent'
         }
         url = reverse('oidc_provider:authorization')
         response = self.client.get(url, data=data)
         print(f'Authorization request: {response.request}')
         self.assertEqual(response.status_code, 200)
-        self.assertIn('form action="/oidcop/verify/oidc_user_login/', response.content.decode())
+        self.assertIn('form action="/oidcop/verify/oidc_user_login/',
+                      response.content.decode())
 
         # yes I do a form submission now
         auth_code = re.search(
@@ -109,10 +106,10 @@ class TestOidcRPFlow(TestCase):
         }
 
         user = get_user_model().objects.create(
-                                        username='test',
-                                        email = 'me@my.self',
-                                        is_staff=1,
-                                        is_superuser=1)
+            username='test',
+            email='me@my.self',
+            is_staff=1,
+            is_superuser=1)
         user.set_password('testami18')
         user.save()
         # auth_url = ''.join((issuer_fqdn, auth_url))
@@ -139,7 +136,7 @@ class TestOidcRPFlow(TestCase):
 
         url = reverse('oidc_provider:token')
         headers = {
-           'HTTP_AUTHORIZATION': CLIENT_1_BASICAUTHZ
+            'HTTP_AUTHORIZATION': CLIENT_1_BASICAUTHZ
         }
         response = self.client.post(url, data=data, **headers)
 
@@ -150,17 +147,16 @@ class TestOidcRPFlow(TestCase):
         # userinfo
         url = reverse('oidc_provider:userinfo')
         headers = {
-           'HTTP_AUTHORIZATION': f"Bearer {response.json()['access_token']}"
+            'HTTP_AUTHORIZATION': f"Bearer {response.json()['access_token']}"
         }
         response = self.client.get(url, **headers)
 
         # test admin
         self.client.login(username='test', password='testami18')
         url = reverse('admin:oidc_provider_oidcsession_change',
-                      kwargs={'object_id':1})
+                      kwargs={'object_id': 1})
         response = self.client.get(url)
         # end admin
-
 
     def test_utils(self):
         decode_token(ACCESS_TOKEN)

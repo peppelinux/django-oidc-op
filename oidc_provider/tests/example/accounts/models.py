@@ -4,16 +4,14 @@ from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
-from django.conf import settings
 
 
 class User(AbstractUser):
-    GENDER= (
-                ( 'male', _('Maschio')),
-                ( 'female', _('Femmina')),
-                ( 'other', _('Altro')),
-            )
+    GENDER = (
+        ('male', _('Maschio')),
+        ('female', _('Femmina')),
+        ('other', _('Altro')),
+    )
 
     first_name = models.CharField(_('Name'), max_length=30,
                                   blank=True, null=True)
@@ -22,10 +20,10 @@ class User(AbstractUser):
     is_active = models.BooleanField(_('active'), default=True)
     email = models.EmailField('email address', blank=True, null=True)
     taxpayer_id = models.CharField(_('Taxpayer\'s identification number'),
-                                      max_length=32,
-                                      blank=True, null=True)
-    gender    = models.CharField(_('Genere'), choices=GENDER,
-                                 max_length=12, blank=True, null=True)
+                                   max_length=32,
+                                   blank=True, null=True)
+    gender = models.CharField(_('Genere'), choices=GENDER,
+                              max_length=12, blank=True, null=True)
     place_of_birth = models.CharField('Luogo di nascita', max_length=56,
                                       blank=True, null=True,
                                       choices=[(i.name, i.name) for i in pycountry.countries])
@@ -64,11 +62,11 @@ class User(AbstractUser):
 class PersistentId(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     persistent_id = models.CharField(_('SAML Persistent Stored ID'),
-                                 max_length=254,
-                                 blank=True, null=True)
+                                     max_length=254,
+                                     blank=True, null=True)
     recipient_id = models.CharField(_('SAML ServiceProvider entityID'),
-                                 max_length=254,
-                                 blank=True, null=True)
+                                    max_length=254,
+                                    blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:

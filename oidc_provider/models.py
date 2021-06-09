@@ -244,7 +244,7 @@ class OidcRelyingParty(TimeStampedModel):
     @classmethod
     def import_from_cdb(cls, cdb):
         for client_id in cdb:
-            if cls.objects.filter(client_id=client_id): # pragma: no cover
+            if cls.objects.filter(client_id=client_id):  # pragma: no cover
                 continue
             client = cls.objects.create(client_id=client_id)
             for k, v in cdb[client_id].items():
@@ -287,9 +287,9 @@ class OidcRelyingParty(TimeStampedModel):
 class OidcRPResponseType(TimeStampedModel):
     client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE)
     response_type = models.CharField(choices=[
-                                        (i, i) for i in OIDC_RESPONSE_TYPES
-                                    ],
-                                     max_length=60
+        (i, i) for i in OIDC_RESPONSE_TYPES
+    ],
+        max_length=60
     )
 
     class Meta:

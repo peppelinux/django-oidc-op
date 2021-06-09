@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='oidcissuedtoken',
             name='type',
-            field=models.CharField(choices=[('authorization_code', 'authorization_code'), ('access_token', 'access_token'), ('id_token', 'id_token'), ('refresh_token', 'refresh_token')], max_length=32),
+            field=models.CharField(choices=[('authorization_code', 'authorization_code'), (
+                'access_token', 'access_token'), ('id_token', 'id_token'), ('refresh_token', 'refresh_token')], max_length=32),
         ),
     ]

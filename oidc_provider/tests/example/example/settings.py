@@ -52,9 +52,8 @@ INSTALLED_APPS = [
 ]
 
 if 'oidc_provider' in INSTALLED_APPS:
-    from . oidc_provider_settings import OIDCOP_CONFIG, DOMAIN, PORT, OIDC_URL_PREFIX
+    from . oidc_provider_settings import DOMAIN, OIDCOP_CONFIG, OIDC_URL_PREFIX, PORT
     OIDCOP_CONF_FILE = f"{BASE_DIR}/oidc_provider_settings.py"
-
 
 
 MIDDLEWARE = [
@@ -180,9 +179,9 @@ LOGGING = {
             'propagate': True,
         },
         # 'django.server': {
-            # 'handlers': ['console'],
-            # 'level': 'INFO',
-            # 'propagate': False,
+        # 'handlers': ['console'],
+        # 'level': 'INFO',
+        # 'propagate': False,
         # },
         'oidc_provider': {
             'handlers': ['console'],
@@ -190,19 +189,19 @@ LOGGING = {
             'propagate': True,
         },
         # 'oidcop': {
-            # 'handlers': ['console'],
-            # 'level': 'DEBUG',
-            # 'propagate': False,
+        # 'handlers': ['console'],
+        # 'level': 'DEBUG',
+        # 'propagate': False,
         # },
         # 'oidcmsg': {
-            # 'handlers': ['console'],
-            # 'level': 'DEBUG',
-            # 'propagate': False,
+        # 'handlers': ['console'],
+        # 'level': 'DEBUG',
+        # 'propagate': False,
         # },
         # 'cryptojwt': {
-            # 'handlers': ['console'],
-            # 'level': 'DEBUG',
-            # 'propagate': False,
+        # 'handlers': ['console'],
+        # 'level': 'DEBUG',
+        # 'propagate': False,
         # },
     }
 }
