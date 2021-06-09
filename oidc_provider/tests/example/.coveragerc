@@ -1,5 +1,9 @@
 [run]
-source = .
+source = oidc_provider
+omit =
+    manage.py
+    accounts/*
+    */tests/*
 
 [report]
 fail_under = 100

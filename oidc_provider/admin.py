@@ -119,7 +119,7 @@ class OidcRelyingPartyAdmin(admin.ModelAdmin):
 
 
 @admin.register(Session)
-class SessionAdmin(admin.ModelAdmin):
+class SessionAdmin(admin.ModelAdmin): # pragma: no cover
     def _session_data(self, obj):
         return obj.get_decoded()
     list_display = ['session_key', '_session_data', 'expire_date']
@@ -156,8 +156,7 @@ class OidcSessionAdmin(admin.ModelAdmin):
                        'created', 'expires_at',
                        'user_session_info_preview',
                        'client_session_info_preview',
-                       'grant_preview',
-                       'session_info_preview',
+                       'grant_preview'
                        )
 
     fieldsets = (
@@ -220,11 +219,6 @@ class OidcSessionAdmin(admin.ModelAdmin):
         dumps = json.dumps(obj.grant, indent=2)
         return mark_safe(dumps.replace('\n', '<br>').replace(r' ', '&nbsp'))
     grant_preview.short_description = 'Grant'
-
-    def session_info_preview(self, obj):
-        dumps = json.dumps(obj.session_info, indent=2)
-        return mark_safe(dumps.replace('\n', '<br>').replace(r' ', '&nbsp'))
-    session_info_preview.short_description = 'Session Info'
 
     class Media:
         js = ('js/textarea_autosize.js',)

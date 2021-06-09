@@ -5,27 +5,31 @@ import pytz
 from oidcmsg.message import Message
 from cryptojwt.key_jar import KeyJar
 
-from . views import oidcop_app
-
-
-def timestamp2dt(value):
-    return int(datetime.datetime.timestamp(value))
+from . application import oidcop_app
 
 
 def dt2timestamp(value):
+    return int(datetime.datetime.timestamp(value))
+
+
+def timestamp2dt(value):
     pytz.utc.localize(datetime.datetime.fromtimestamp(value))
 
 
+def aware_dt_from_timestamp(timestamp):
+    dt = datetime.datetime.fromtimestamp(timestamp)
+    return pytz.timezone("UTC").localize(dt, is_dst=None)
+
+
 def decode_token(txt, attr_name='access_token', verify_sign=True):
-    issuer = oidcop_app.srv_config.conf['op']['server_info']['issuer']
-    jwks_path = oidcop_app.srv_config.conf['OIDC_KEYS']['private_path']
+    issuer = oidcop_app.srv_config['issuer']
+    jwks_path = oidcop_app.srv_config['keys']['private_path']
     jwks = json.loads(open(jwks_path).read())
 
     key_jar = KeyJar()
     key_jar.import_jwks(jwks, issuer=issuer)
 
-    jwt = json.loads(txt)
-    msg = Message().from_jwt(jwt.get(attr_name, ''),
+    msg = Message().from_jwt(txt,
                              keyjar=key_jar,
                              verify=verify_sign)
     return msg

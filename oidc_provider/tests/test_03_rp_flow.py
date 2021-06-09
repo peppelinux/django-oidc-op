@@ -1,4 +1,5 @@
 import base64
+import datetime
 import json
 import logging
 import os
@@ -15,6 +16,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from oidc_provider.models import OidcRelyingParty
+from oidc_provider.utils import *
 
 logger = logging.getLogger('oidc_provider')
 
@@ -36,11 +38,13 @@ CLIENT_1 = {
         'redirect_uris': [('https://127.0.0.1:8099/authz_cb/django_provider', {})],
         'post_logout_redirect_uris': [('https://127.0.0.1:8099', None)],
         'response_types': ['code'],
-        'grant_types': ['authorization_code']
+        'grant_types': ['authorization_code'],
+        'allowed_scopes' : ['openid', 'profile', 'email', 'offline_access']
     }
 }
-
 CLIENT_1_BASICAUTHZ = f'Basic {base64.b64encode(f"{CLIENT_1_ID}:{CLIENT_1_PASSWD}".encode()).decode()}'
+ACCESS_TOKEN = "eyJhbGciOiJFUzI1NiIsImtpZCI6Ik16UldNamhvUmt0UVVYWklkRTFSZUV0cE5GRkJTMFIwVEc1T05WVlJUazltVkZOWFFqVm9VMHBQWncifQ.eyJzY29wZSI6IFsib3BlbmlkIiwgInByb2ZpbGUiLCAiZW1haWwiLCAiYWRkcmVzcyIsICJwaG9uZSIsICJvZmZsaW5lX2FjY2VzcyJdLCAiYXVkIjogWyI2TXdoRzNWRl9BWml5U2huSHlteWxRIl0sICJqdGkiOiAiYmY5N2I0MThjOTZlMTFlYmEwYjAzZjlmOWRhN2RhNjkiLCAiY2xpZW50X2lkIjogIjZNd2hHM1ZGX0FaaXlTaG5IeW15bFEiLCAic3ViIjogIjZNd2hHM1ZGX0FaaXlTaG5IeW15bFEiLCAic2lkIjogIlowRkJRVUZCUW1kM1ZITlRibmx2Y0dOdFNrbFVRazFvZDBSWlUzcGFSR2hmT1hkWFNtaElWelZhVW05NmFHWkxhRVU1Y2xSc1FXVkJSMjlWVVZCWFZXVjFOazlCVERrNVN6TkZWMWRZTTBkaVVtbFZMVVV5ZVdKMVdXOUZPVWxKVDBoZk4zcDFkWEZMZDI1MGMwUm1Ua0YzUWpWVk4yNXdkekZYTUU1MkxWZFhjMkp5Y1VwQ2RFZG5jRTFXYUc1eGFIUjNkVGRCVkcxWFQyNURSR1kwZFZScU0yOWlZMFpYTTJnNFRVNWFObmRDVGxabFdFbEJRVkpVZHpKeldrOHhWWHBTWWtKMVdFY3phRXBQVTBKU1VXSmtaaTFVV1ZrMGEwVTBhWFpDZGxONFJ6UnFaWE5RWTBGTVRqaDZOek56YWpkTGFsaFBZejA9IiwgInRva2VuX2NsYXNzIjogImFjY2Vzc190b2tlbiIsICJpc3MiOiAiaHR0cHM6Ly8xMjcuMC4wLjE6ODAwMCIsICJpYXQiOiAxNjIzMjc2MzA2LCAiZXhwIjogMTYyMzI3OTkwNn0.tbJVJVKIgqhkD8cDldteeQY3FyLgckvggD-dWqjHbHB2HRo0lqv17DHGOOs4O5HwY3YMLG_yibgz8ncaSj6MYw"
+
 
 class TestOidcRPFlow(TestCase):
     def setUp(self):
@@ -100,17 +104,23 @@ class TestOidcRPFlow(TestCase):
 
         auth_dict = {
             'username': 'test',
-            'password': 'testami18',
+            'password': 'testami18_WRONG',
             'token': auth_code
         }
 
         user = get_user_model().objects.create(
                                         username='test',
-                                        email = 'me@my.self')
+                                        email = 'me@my.self',
+                                        is_staff=1,
+                                        is_superuser=1)
         user.set_password('testami18')
         user.save()
         # auth_url = ''.join((issuer_fqdn, auth_url))
         url = reverse('oidc_provider:verify_user')
+        response = self.client.post(url, data=auth_dict)
+        self.assertEqual(response.status_code, 403)
+
+        auth_dict['password'] = 'testami18'
         response = self.client.post(url, data=auth_dict)
 
         self.assertEqual(response.status_code, 302)
@@ -135,3 +145,26 @@ class TestOidcRPFlow(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn('refresh_token', response.json())
+        self.assertIn('access_token', response.json())
+
+        # userinfo
+        url = reverse('oidc_provider:userinfo')
+        headers = {
+           'HTTP_AUTHORIZATION': f"Bearer {response.json()['access_token']}"
+        }
+        response = self.client.get(url, **headers)
+
+        # test admin
+        self.client.login(username='test', password='testami18')
+        url = reverse('admin:oidc_provider_oidcsession_change',
+                      kwargs={'object_id':1})
+        response = self.client.get(url)
+        # end admin
+
+
+    def test_utils(self):
+        decode_token(ACCESS_TOKEN)
+
+        now = datetime.datetime.now()
+        ts = dt2timestamp(now)
+        timestamp2dt(ts)

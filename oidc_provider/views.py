@@ -29,7 +29,7 @@ from urllib.parse import urlparse
 from . application import oidcop_app
 from . decorators import prepare_oidc_endpoint, debug_request
 from . exceptions import InconsinstentSessionDump
-from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
+from . models import OidcRelyingParty, OidcSession, OidcIssuedToken, get_client_by_id
 
 
 logger = logging.getLogger(__name__)
@@ -250,13 +250,8 @@ def _fill_cdb(request) -> None:
     client_id = request.GET.get('client_id') or request.POST.get('client_id')
     _msg = f'Client {client_id} not found!'
     if client_id:
-        client = OidcRelyingParty.objects.filter(
-            client_id=client_id,
-            is_active=True,
-            client_secret_expires_at__gte=timezone.localtime()
-        )
+        client = get_client_by_id(client_id)
         if client:
-            client = client.first()
             ec = oidcop_app.endpoint_context
             ec.endpoint_context.cdb = {
                 client_id: client.serialize()
@@ -297,7 +292,7 @@ def verify_user(request):
     debug_request(f'{_name}', request)
 
     token = request.POST.get('token')
-    if not token:
+    if not token: # pragma: no cover
         return HttpResponse('Access forbidden: invalid token.', status=403)
 
     ec = oidcop_app.endpoint_context
