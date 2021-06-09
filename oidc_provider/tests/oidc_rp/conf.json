@@ -267,8 +267,8 @@
       },
       "issuer": "https://127.0.0.1:8000/",
 
-      "client_id": "DBP60x3KUQfCYWZlqFaS_Q",
-      "client_secret": "8526270403788522b2444e87ea90c53bcafb984119cec92eeccc12f1",
+     # "client_id": "DBP60x3KUQfCYWZlqFaS_Q",
+     # "client_secret": "8526270403788522b2444e87ea90c53bcafb984119cec92eeccc12f1",
 
       "redirect_uris": [
         "https://example.org/authz_cb/django_provider"

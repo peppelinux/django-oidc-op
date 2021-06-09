@@ -14,11 +14,11 @@ from oidcmsg.message import Message
 from oidcrp import rp_handler
 from oidcrp.util import load_yaml_config
 
-from django.contrib.auth import get_user_model
 from django.test import TestCase
 
 
 logger = logging.getLogger('oidc_provider')
+urllib3.disable_warnings()
 RPHandler = rp_handler.RPHandler
 
 
@@ -60,6 +60,8 @@ def run_rp_session(rph, issuer_id, username, password):
     info = rph.begin(issuer_id)
     issuer_fqdn = rph.hash2issuer[issuer_id]
     issuer_keyjar = rph.issuer2rp[issuer_fqdn]
+
+    print(f'Request authz grant: {info["url"]}\n')
     res = requests.get(info['url'], verify=rph.verify_ssl)
 
     auth_code = re.search(
@@ -80,6 +82,9 @@ def run_rp_session(rph, issuer_id, username, password):
                         data=auth_dict, verify=rph.verify_ssl,
                         allow_redirects=False)
 
+    print("Submitting credentails form:")
+    print(auth_url, auth_dict, '\n')
+
     # req is a 302, a redirect to the https://127.0.0.1:8099/authz_cb/django_oidc_op
     if req.status_code != 302:
         raise Exception(req.content)
@@ -87,7 +92,6 @@ def run_rp_session(rph, issuer_id, username, password):
     ws, args = urllib.parse.splitquery(rp_final_url)
 
     request_args = urllib.parse.parse_qs(args)
-
     # from list to str
     request_args = {k:v[0] for k,v in request_args.items()}
 
@@ -96,7 +100,7 @@ def run_rp_session(rph, issuer_id, username, password):
 
     # Tha't the access token, the bearer used to access to userinfo endpoint
     #  result['token']
-    print("Bearer Access Token", result['token'])
+    print("Bearer Access Token", result['token'], '\n')
 
     # get the keyjar related to the issuer
     decoded_access_token = decode_token(
@@ -121,19 +125,20 @@ class TestOidcRPIntegration(TestCase):
 
         # select the OP you want to, example: "django_oidc_op"
         self.issuer_id = 'django_provider'
-        self._run_example_project()
-        time.sleep(2)
 
     def _run_example_project(self):
+        """This is a pure integration test made with JWTConnect-Python-OidcRP"""
         os.chdir('../example')
         self.oidc_srv = subprocess.Popen(
             ["bash", "run.sh"],
-             stdout=subprocess.PIPE,
-             stderr=subprocess.PIPE
-             )
+             # stdout=subprocess.PIPE,
+             # stderr=subprocess.PIPE
+        )
+        time.sleep(2)
 
     def test_all(self):
+        self._run_example_project()
         run_rp_session(self.rph, self.issuer_id, 'test', 'testami18')
-
-    def tearDown(self):
-        self.oidc_srv.kill()
+        os.system(
+            """ps ax | grep "wsgi-file example/wsgi.py" | awk -F' ' {'print $1'} | xargs echo | xargs kill -KILL"""
+        )

@@ -262,9 +262,9 @@ def _fill_cdb(request) -> None:
                 client_id: client.serialize()
             }
             return
-
-    logger.warning(_msg)
-    raise InvalidClient(_msg)
+    else:
+        logger.warning(_msg)
+        raise InvalidClient(_msg)
 
 
 def _fill_cdb_by_client(client):

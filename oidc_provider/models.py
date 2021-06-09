@@ -153,9 +153,11 @@ class OidcRelyingParty(TimeStampedModel):
 
     @property
     def grant_types(self):
-        return [elem.grant_type
-                for elem in
-                self.oidcrpgranttype_set.filter(client=self)]
+        return [
+            elem.grant_type
+            for elem in
+            self.oidcrpgranttype_set.filter(client=self)
+        ]
 
     @grant_types.setter
     def grant_types(self, values):
@@ -255,9 +257,13 @@ class OidcRelyingParty(TimeStampedModel):
             client = cls.objects.create(client_id=client_id)
             for k, v in cdb[client_id].items():
                 if k in ('client_secret_expires_at', 'client_id_issued_at'):
-                    v = datetime.datetime.fromtimestamp(v)
+                    if v:
+                        v = datetime.datetime.fromtimestamp(v)
+                    else:
+                        v = timezone.localtime() + timezone.timedelta(days=1)
                 setattr(client, k, v)
             client.save()
+        return client
 
     def serialize(self):
         """
