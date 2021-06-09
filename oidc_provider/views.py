@@ -14,7 +14,6 @@ from django.http import (HttpResponse,
                          JsonResponse)
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
-from django.utils import timezone
 from oidcop.authn_event import create_authn_event
 from oidcop.exception import InvalidClient
 from oidcop.exception import UnAuthorizedClient
@@ -29,7 +28,7 @@ from urllib.parse import urlparse
 from . application import oidcop_app
 from . decorators import prepare_oidc_endpoint, debug_request
 from . exceptions import InconsinstentSessionDump
-from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
+from . models import OidcRelyingParty, OidcSession, OidcIssuedToken, get_client_by_id
 
 
 logger = logging.getLogger(__name__)
@@ -40,7 +39,7 @@ IGNORED_HEADERS = ["cookie", "user-agent"]
 def _add_cookie(resp, cookie_spec):
     kwargs = {
         k: v
-        for k,v in cookie_spec.items()
+        for k, v in cookie_spec.items()
         if k not in ('name',)
     }
     kwargs["path"] = "/"
@@ -151,10 +150,15 @@ def _get_http_info(request):
 
 
 def _get_http_data(request, http_info):
+    data = {}
     if request.method == 'GET':
         data = {k: v for k, v in request.GET.items()}
-    else:
+    elif request.method == 'POST':
         data = {k: v for k, v in request.POST.items()}
+
+    if not data and request.body:
+        data = json.loads(request.body)
+
     return data
 
 
@@ -245,21 +249,16 @@ def _fill_cdb(request) -> None:
     client_id = request.GET.get('client_id') or request.POST.get('client_id')
     _msg = f'Client {client_id} not found!'
     if client_id:
-        client = OidcRelyingParty.objects.filter(
-            client_id=client_id,
-            is_active=True,
-            client_secret_expires_at__gte=timezone.localtime()
-        )
+        client = get_client_by_id(client_id)
         if client:
-            client = client.first()
             ec = oidcop_app.endpoint_context
             ec.endpoint_context.cdb = {
                 client_id: client.serialize()
             }
             return
-
-    logger.warning(_msg)
-    raise InvalidClient(_msg)
+    else:
+        logger.warning(_msg)
+        raise InvalidClient(_msg)
 
 
 def _fill_cdb_by_client(client):
@@ -292,7 +291,7 @@ def verify_user(request):
     debug_request(f'{_name}', request)
 
     token = request.POST.get('token')
-    if not token:
+    if not token:  # pragma: no cover
         return HttpResponse('Access forbidden: invalid token.', status=403)
 
     ec = oidcop_app.endpoint_context

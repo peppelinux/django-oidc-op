@@ -10,6 +10,7 @@ from django.utils import timezone
 
 
 from . exceptions import InconsinstentSessionDump
+from . utils import aware_dt_from_timestamp
 
 
 logger = logging.getLogger(__name__)
@@ -30,11 +31,11 @@ TIMESTAMP_FIELDS = ['client_id_issued_at', 'client_secret_expires_at']
 def get_client_by_id(client_id):
     client = OidcRelyingParty.objects.filter(
         client_id=client_id,
-        is_active=True
-
+        is_active=True,
+        client_secret_expires_at__gte=timezone.localtime()
     )
     if client:
-        return client.last()
+        return client.first()
 
 
 class TimeStampedModel(models.Model):
@@ -119,15 +120,12 @@ class OidcRelyingParty(TimeStampedModel):
     @property
     def allowed_scopes(self):
         scopes = self.oidcrpscope_set.filter(client=self)
-        if scopes:
-            return [i.scope for i in scopes]
-        else:
-            return None
+        return [i.scope for i in scopes] if scopes else None
 
     @allowed_scopes.setter
     def allowed_scopes(self, values):
         if not values:
-            values = None
+            return None
         for i in values:
             data = dict(client=self, scope=i)
             if not self.oidcrpscope_set.filter(**data):
@@ -142,8 +140,7 @@ class OidcRelyingParty(TimeStampedModel):
 
     @contacts.setter
     def contacts(self, values):
-        old = self.oidcrpcontact_set.filter(client=self)
-        old.delete()
+        self.oidcrpcontact_set.filter(client=self).delete()
         if isinstance(values, str):
             value = [values]
         for value in values:
@@ -153,14 +150,15 @@ class OidcRelyingParty(TimeStampedModel):
 
     @property
     def grant_types(self):
-        return [elem.grant_type
-                for elem in
-                self.oidcrpgranttype_set.filter(client=self)]
+        return [
+            elem.grant_type
+            for elem in
+            self.oidcrpgranttype_set.filter(client=self)
+        ]
 
     @grant_types.setter
     def grant_types(self, values):
-        old = self.oidcrpgranttype_set.filter(client=self)
-        old.delete()
+        self.oidcrpgranttype_set.filter(client=self).delete()
         if isinstance(values, str):
             value = [values]
         for value in values:
@@ -178,8 +176,7 @@ class OidcRelyingParty(TimeStampedModel):
 
     @response_types.setter
     def response_types(self, values):
-        old = self.oidcrpresponsetype_set.filter(client=self)
-        old.delete()
+        self.oidcrpresponsetype_set.filter(client=self).delete()
         if isinstance(values, str):
             value = [values]
         for value in values:
@@ -195,10 +192,7 @@ class OidcRelyingParty(TimeStampedModel):
         return res
 
     def set_redirect_uri(self, uri_type: str, values):
-        old = self.oidcrpredirecturi_set.filter(
-            client=self, type=uri_type
-        )
-        old.delete()
+        self.oidcrpredirecturi_set.filter(client=self, type=uri_type).delete()
         for value in values:
             args = json.dumps(value[1] if value[1] else [])
             data = dict(
@@ -250,14 +244,18 @@ class OidcRelyingParty(TimeStampedModel):
     @classmethod
     def import_from_cdb(cls, cdb):
         for client_id in cdb:
-            if cls.objects.filter(client_id=client_id):
+            if cls.objects.filter(client_id=client_id):  # pragma: no cover
                 continue
             client = cls.objects.create(client_id=client_id)
             for k, v in cdb[client_id].items():
                 if k in ('client_secret_expires_at', 'client_id_issued_at'):
-                    v = datetime.datetime.fromtimestamp(v)
+                    if v:
+                        v = datetime.datetime.fromtimestamp(v)
+                    else:
+                        v = timezone.localtime() + timezone.timedelta(days=1)
                 setattr(client, k, v)
             client.save()
+        return client
 
     def serialize(self):
         """
@@ -289,9 +287,9 @@ class OidcRelyingParty(TimeStampedModel):
 class OidcRPResponseType(TimeStampedModel):
     client = models.ForeignKey(OidcRelyingParty, on_delete=models.CASCADE)
     response_type = models.CharField(choices=[
-                                        (i, i) for i in OIDC_RESPONSE_TYPES
-                                    ],
-                                     max_length=60
+        (i, i) for i in OIDC_RESPONSE_TYPES
+    ],
+        max_length=60
     )
 
     class Meta:
@@ -374,11 +372,6 @@ class OidcRPScope(TimeStampedModel):
         return '{}, [{}]'.format(self.client, self.scope)
 
 
-def _aware_dt_from_timestamp(timestamp):
-    dt = datetime.datetime.fromtimestamp(timestamp)
-    return pytz.timezone("UTC").localize(dt, is_dst=None)
-
-
 class OidcSession(TimeStampedModel):
     """
     Store UserSessionInfo, ClientSessionInfo and Grant
@@ -453,7 +446,7 @@ class OidcSession(TimeStampedModel):
             elif field_name == 'client_sessioninfo':
                 data['grant_uid'] = v[1]['subordinate'][0]
             elif field_name == 'grant_sessioninfo':
-                data['expires_at'] = _aware_dt_from_timestamp(
+                data['expires_at'] = aware_dt_from_timestamp(
                     v[1]['expires_at'])
                 data['revoked'] = v[1]['revoked']
                 data['sub'] = v[1]['sub']
@@ -580,8 +573,8 @@ class OidcIssuedToken(TimeStampedModel):
             data = dict(
                 session=session,
                 type=token['token_class'],
-                issued_at=_aware_dt_from_timestamp(token['issued_at']),
-                expires_at=_aware_dt_from_timestamp(token['expires_at']),
+                issued_at=aware_dt_from_timestamp(token['issued_at']),
+                expires_at=aware_dt_from_timestamp(token['expires_at']),
                 not_before=nbt,
                 revoked=token['revoked'],
                 value=token['value'],

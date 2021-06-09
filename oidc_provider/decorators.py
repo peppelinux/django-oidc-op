@@ -6,8 +6,15 @@ logger = logging.getLogger(__name__)
 
 
 def debug_request(endpoint_name, request):
+    _post = (f'POST:{request.POST}' if request.POST
+             else f'BODY:{request.body.decode()}' if request.body
+             else '')
+
+    bearer = request.META.get('HTTP_AUTHORIZATION')
+    _authz_header = f'- Authorization Header: {bearer}' if bearer else ''
+
     logger.debug(
-        f'{endpoint_name} request GET: {request.GET} - POST:{request.POST}'
+        f'{endpoint_name} request GET: {request.GET} - {_post}{_authz_header}'
     )
 
 

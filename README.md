@@ -1,10 +1,16 @@
 # django-oidc-op
+
+![CI build](https://github.com/peppelinux/django-oidc-op/workflows/django-oidc-op/badge.svg)
+![pypi](https://img.shields.io/pypi/v/oidc_provider.svg)
+![License](https://img.shields.io/badge/license-Apache%202-blue.svg)
+![Python version](https://img.shields.io/badge/python-3.7%20%7C%203.8%20%7C%203.9-blue.svg)
+
 A Django implementation of an **OIDC Provider**/**OAuth2 AS** on top of [jwtconnect.io](https://jwtconnect.io/).
 This project is based on [IdentityPython oidc-op](https://github.com/IdentityPython/oidc-op).
 Please consult the official [oidc-op documentation](https://oidcop.readthedocs.io/en/latest/) for any further information about its features and capabilities.
 
 To configure a standard OIDC Provider you have to edit the oidcop configuration file.
-See `example/example/settings.py` and `example/example/oidc_provider_settings.py` to get in.
+See `django-oidc-op/oidc_provider/tests/example/example/settings.py` and `django-oidc-op/oidc_provider/tests/example/example/oidc_provider_settings.py` to get in.
 
 ## Run the example demo
 ````
@@ -29,7 +35,7 @@ RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/e
 
 You can also use a scripted RP handler on top of oidc-rp
 ````
-python3 snippets/rp_handler.py -c example/data/oidc_rp/conf.json -u myuser -p mypass -iss django_provider
+python3 snippets/rp_handler.py -c oidc_provider/tests/oidc_rp/conf.json -u test -p testami18 -iss django_provider
 ````
 
 ## Configuration
@@ -86,8 +92,8 @@ running tests
 #### coverage
 ````
 coverage erase
-coverage run manage.py test
-coverage report
+coverage run manage.py test oidc_provider
+coverage report -m
 ````
 
 ## Author

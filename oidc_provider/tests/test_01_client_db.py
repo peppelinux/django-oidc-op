@@ -44,10 +44,10 @@ class TestOidcRelyingParty(TestCase):
     def test_create_rp(self):
         now = timezone.localtime()
         self.client = OidcRelyingParty.objects.create(
-                                            client_id=self.rp,
-                                            client_secret_expires_at = now,
-                                            client_id_issued_at = now,
-                                            is_active=True
+            client_id=self.rp,
+            client_secret_expires_at=now,
+            client_id_issued_at=now,
+            is_active=True
         )
         logger.info('Created and fetched RP: {}'.format(self.client))
 

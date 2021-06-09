@@ -21,10 +21,7 @@ def init_oidc_op_endpoints(app):
     for endp in server.endpoint.values():
         p = urlparse(endp.endpoint_path)
         _vpath = p.path.split('/')
-        if _vpath[0] == '':
-            endp.vpath = _vpath[1:]
-        else:
-            endp.vpath = _vpath
+        endp.vpath = _vpath
 
     return server
 

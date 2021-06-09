@@ -127,7 +127,7 @@ class UserInfo(object):
         client_id = client id, ex: 'mHwpZsDeWo5g'
         """
         user = get_user_model().objects.filter(username=user_id).first()
-        if not user:
+        if not user:  # pragma: no cover
             # Todo: raise exception here, this wouldn't be possible.
             return {}
 
