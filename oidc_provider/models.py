@@ -243,6 +243,7 @@ class OidcRelyingParty(TimeStampedModel):
 
     @classmethod
     def import_from_cdb(cls, cdb):
+        clients = []
         for client_id in cdb:
             if cls.objects.filter(client_id=client_id):  # pragma: no cover
                 continue
@@ -255,7 +256,8 @@ class OidcRelyingParty(TimeStampedModel):
                         v = timezone.localtime() + timezone.timedelta(days=1)
                 setattr(client, k, v)
             client.save()
-        return client
+            clients.append(client)
+        return clients
 
     def serialize(self):
         """

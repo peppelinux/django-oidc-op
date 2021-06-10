@@ -10,8 +10,8 @@ urlpatterns = [
          name="_well_known"),
     path('registration', views.registration,
          name="registration"),
-    path('registration_api', views.registration_api,
-         name="registration_api"),
+    path('registration_read', views.registration_read,
+         name="registration_read"),
 
     path('authorization', views.authorization,
          name="authorization"),

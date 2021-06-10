@@ -26,9 +26,9 @@ from oidcmsg.oidc import AuthorizationRequest
 from urllib.parse import urlparse
 
 from . application import oidcop_app
-from . decorators import prepare_oidc_endpoint, debug_request
+from . decorators import fill_cdb_by_request, prepare_oidc_endpoint, debug_request
 from . exceptions import InconsinstentSessionDump
-from . models import OidcRelyingParty, OidcSession, OidcIssuedToken, get_client_by_id
+from . models import OidcRelyingParty, OidcSession, OidcIssuedToken
 
 
 logger = logging.getLogger(__name__)
@@ -238,27 +238,12 @@ def registration(request):
 
 @csrf_exempt
 @prepare_oidc_endpoint
-def registration_api(request):
+@fill_cdb_by_request
+def registration_read(request):
     return service_endpoint(
         request,
-        oidcop_app.endpoint_context.endpoint['registration_api']
+        oidcop_app.endpoint_context.endpoint['registration_read']
     )
-
-
-def _fill_cdb(request) -> None:
-    client_id = request.GET.get('client_id') or request.POST.get('client_id')
-    _msg = f'Client {client_id} not found!'
-    if client_id:
-        client = get_client_by_id(client_id)
-        if client:
-            ec = oidcop_app.endpoint_context
-            ec.endpoint_context.cdb = {
-                client_id: client.serialize()
-            }
-            return
-    else:
-        logger.warning(_msg)
-        raise InvalidClient(_msg)
 
 
 def _fill_cdb_by_client(client):
@@ -269,15 +254,8 @@ def _fill_cdb_by_client(client):
 
 
 @prepare_oidc_endpoint
+@fill_cdb_by_request
 def authorization(request):
-    try:
-        _fill_cdb(request)
-    except InvalidClient as e:
-        return JsonResponse(json.dumps({
-            'error': 'invalid_request',
-            'error_description': str(e),
-            'method': request.method
-        }), safe=False, status=403)
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['authorization']
     return service_endpoint(request, _endpoint)
@@ -389,18 +367,10 @@ def _get_session_by_token(request):
 
 @csrf_exempt
 @prepare_oidc_endpoint
+@fill_cdb_by_request
 def token(request):
     ec = oidcop_app.endpoint_context
     _endpoint = ec.endpoint['token']
-
-    try:
-        _fill_cdb(request)
-    except InvalidClient as e:
-        return JsonResponse(json.dumps({
-            'error': 'invalid_request',
-            'error_description': str(e),
-            'method': request.method
-        }), safe=False, status=403)
     session = _get_session_by_token(request).serialize()
     if session:
         ec.endpoint_context.session_manager.load(session)

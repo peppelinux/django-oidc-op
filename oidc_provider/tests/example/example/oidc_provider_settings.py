@@ -100,8 +100,8 @@ OIDC_OP_ENDPOINTS = {
             }
         }
     },
-    "registration_api": {
-        "path": f"{OIDC_URL_PREFIX}registration_api",
+    "registration_read": {
+        "path": f"{OIDC_URL_PREFIX}registration_read",
         "class": "oidcop.oidc.read_registration.RegistrationRead",
         "kwargs": {
             "client_authn_method": [

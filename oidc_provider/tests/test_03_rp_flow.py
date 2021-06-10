@@ -18,11 +18,12 @@ logger = logging.getLogger('oidc_provider')
 
 CLIENT_1_ID = 'jbxedfmfyc'
 CLIENT_1_PASSWD = '19cc69b70d0108f630e52f72f7a3bd37ba4e11678ad1a7434e9818e1'
+CLIENT_1_RAT = 'z3PCMmC1HZ1QmXeXGOQMJpWQNQynM4xY'
 CLIENT_1 = {
     'jbxedfmfyc': {
         'client_id': CLIENT_1_ID,
         'client_salt': '6flfsj0Z',
-        'registration_access_token': 'z3PCMmC1HZ1QmXeXGOQMJpWQNQynM4xY',
+        'registration_access_token': CLIENT_1_RAT,
         'registration_client_uri': 'https://127.0.0.1:8000/registration_api?client_id=jbxedfmfyc',
         'client_id_issued_at': timezone.localtime().timestamp(),
         'client_secret': CLIENT_1_PASSWD,
@@ -46,7 +47,7 @@ class TestOidcRPFlow(TestCase):
     def setUp(self):
         self.client = Client()
 
-    def test_discovery_provider(self):
+    def _test_discovery_provider(self):
         url = reverse('oidc_provider:_well_known',
                       kwargs={'service': 'openid-configuration'}
                       )
@@ -73,6 +74,20 @@ class TestOidcRPFlow(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(type(response.json()), dict)
+
+        # TODO
+        # test read registration api
+        OidcRelyingParty.import_from_cdb(CLIENT_1)
+        url = reverse('oidc_provider:registration_read')
+        headers = {
+            'HTTP_AUTHORIZATION': response.json()['registration_access_token']
+        }
+        response = self.client.get(
+            url,
+            {'client_id': response.json()['client_id']},
+            **headers
+        )
+        self.assertEqual(response.status_code, 200)
 
     def test_authz(self):
         OidcRelyingParty.import_from_cdb(CLIENT_1)
