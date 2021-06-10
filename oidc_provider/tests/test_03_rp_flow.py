@@ -80,7 +80,7 @@ class TestOidcRPFlow(TestCase):
         OidcRelyingParty.import_from_cdb(CLIENT_1)
         url = reverse('oidc_provider:registration_read')
         headers = {
-            'HTTP_AUTHORIZATION': response.json()['registration_access_token']
+            'HTTP_AUTHORIZATION': f"Bearer {response.json()['registration_access_token']}"
         }
         response = self.client.get(
             url,
@@ -88,6 +88,7 @@ class TestOidcRPFlow(TestCase):
             **headers
         )
         self.assertEqual(response.status_code, 200)
+        self.assertIn('client_secret', response.json())
 
     def test_authz(self):
         OidcRelyingParty.import_from_cdb(CLIENT_1)
