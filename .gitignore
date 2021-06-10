@@ -4,6 +4,7 @@
 !example/data/static/README.md
 __pycache__/*
 *.pyc
+oidc_provider/tests/example/.coverage
 oidc_provider/tests/example/db.sqlite3
 oidc_provider/tests/example/data/oidc_op/private/*
 !oidc_provider/tests/example/data/oidc_op/private/README.md

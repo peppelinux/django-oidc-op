@@ -75,7 +75,6 @@ class TestOidcRPFlow(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(type(response.json()), dict)
 
-        # TODO
         # test read registration api
         OidcRelyingParty.import_from_cdb(CLIENT_1)
         url = reverse('oidc_provider:registration_read')
