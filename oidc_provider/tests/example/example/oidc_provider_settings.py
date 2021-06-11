@@ -238,7 +238,6 @@ OIDCOP_CONFIG = {
     "base_url": f"https://{SERVER_NAME}",
     "op": {
         "server_info": {
-            # "seed": "CHANGE-THIS-RANDOMNESS!!!",
             "add_on": {
                 "pkce": {
                     "function": "oidcop.oidc.add_on.pkce.add_pkce_support",

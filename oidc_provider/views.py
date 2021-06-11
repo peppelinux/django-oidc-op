@@ -351,10 +351,11 @@ def _get_session_by_token(request):
             type=request.POST['token_type_hint'],
             value=request.POST['token']
         ).first()
-    elif request.GET.get('id_token_hint'):
+    elif request.GET.get('id_token_hint') or request.POST.get('id_token_hint'):
+        _id_token_hint = request.GET.get('id_token_hint') or request.POST.get('id_token_hint')
         token = OidcIssuedToken.objects.filter(
             type='id_token',
-            value=request.GET['id_token_hint']
+            value=_id_token_hint
         ).first()
     else:
         raise PermissionDenied()

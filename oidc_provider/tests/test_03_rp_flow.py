@@ -19,6 +19,7 @@ logger = logging.getLogger('oidc_provider')
 CLIENT_1_ID = 'jbxedfmfyc'
 CLIENT_1_PASSWD = '19cc69b70d0108f630e52f72f7a3bd37ba4e11678ad1a7434e9818e1'
 CLIENT_1_RAT = 'z3PCMmC1HZ1QmXeXGOQMJpWQNQynM4xY'
+CLIENT_1_SESLOGOUT = 'https://127.0.0.1:8099/session_logout/django_provider'
 CLIENT_1 = {
     'jbxedfmfyc': {
         'client_id': CLIENT_1_ID,
@@ -33,7 +34,7 @@ CLIENT_1 = {
         'token_endpoint_auth_method': 'client_secret_basic',
         # 'jwks_uri': 'https://127.0.0.1:8099/static/jwks.json',
         'redirect_uris': [('https://127.0.0.1:8099/authz_cb/django_provider', {})],
-        'post_logout_redirect_uris': [('https://127.0.0.1:8099', None)],
+        'post_logout_redirect_uris': [(CLIENT_1_SESLOGOUT, None)],
         'response_types': ['code'],
         'grant_types': ['authorization_code'],
         'allowed_scopes': ['openid', 'profile', 'email', 'offline_access']
@@ -90,6 +91,7 @@ class TestOidcRPFlow(TestCase):
         self.assertIn('client_secret', response.json())
 
     def test_authz(self):
+        # without dynamic client registration here ...
         OidcRelyingParty.import_from_cdb(CLIENT_1)
         data = {
             'redirect_uri': 'https://127.0.0.1:8099/authz_cb/django_provider',
@@ -127,13 +129,16 @@ class TestOidcRPFlow(TestCase):
             is_superuser=1)
         user.set_password('testami18')
         user.save()
-        # auth_url = ''.join((issuer_fqdn, auth_url))
+
         url = reverse('oidc_provider:verify_user')
         response = self.client.post(url, data=auth_dict)
         self.assertEqual(response.status_code, 403)
 
         auth_dict['password'] = 'testami18'
         response = self.client.post(url, data=auth_dict)
+
+        # put the right cookie in
+        _cookies = response.cookies
 
         self.assertEqual(response.status_code, 302)
         print(f'Authorization code redirect: {response.url}')
@@ -159,6 +164,18 @@ class TestOidcRPFlow(TestCase):
         self.assertIn('refresh_token', response.json())
         self.assertIn('access_token', response.json())
 
+        _id_token = response.json()['id_token']
+
+        # refresh token
+        data = {
+            "grant_type" : "refresh_token",
+            "client_id" : f"{CLIENT_1_ID}",
+            "client_secret" : f"{CLIENT_1_PASSWD}",
+            "refresh_token" : f"{response.json()['refresh_token']}"
+        }
+        response = self.client.post(url, data=data, **headers)
+        self.assertIn('access_token', response.json())
+
         # userinfo
         url = reverse('oidc_provider:userinfo')
         headers = {
@@ -172,6 +189,39 @@ class TestOidcRPFlow(TestCase):
                       kwargs={'object_id': 1})
         response = self.client.get(url)
         # end admin
+
+        # session logout
+        data = {
+            'id_token_hint': _id_token,
+            'post_logout_redirect_uri': 'https://127.0.0.1:8099/session_logout/django_provider',
+            'state': _data['state'][0]
+        }
+        headers = {
+            'HTTP_COOKIE': f"oidc_op='{_cookies.get('oidc_op').value}'"
+        }
+        url = reverse('oidc_provider:session')
+        response = self.client.get(
+            url, data=data, cookies=_cookies, **headers
+        )
+        self.assertEqual(response.status_code, 302)
+
+        # verify logout
+        url = reverse('oidc_provider:verify_logout')
+        _qs = response.url.split('?')[1]
+        response = self.client.get(f"{url}?{_qs}")
+        self.assertIn('type="hidden" name="sjwt"', response.content.decode())
+
+        # rp logout
+        url = reverse('oidc_provider:rp_logout')
+        data = {
+            'sjwt': [urllib.parse.parse_qs(_qs)['sjwt'][0]],
+            'logout': ['yes']
+        }
+        response = self.client.post(url, data=data, **headers)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(CLIENT_1_SESLOGOUT, response.url)
+        self.assertIn(_data['state'][0], response.url)
+
 
     def test_utils(self):
         decode_token(ACCESS_TOKEN)
