@@ -1,4 +1,4 @@
 Django>=3.1,<4.0
 uwsgi
 filelock
-oidcop==2.0.0-2
+oidcop==2.0.1
