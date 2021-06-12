@@ -1,5 +1,3 @@
-import pycountry
-
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import AbstractUser
@@ -19,14 +17,13 @@ class User(AbstractUser):
                                  blank=True, null=True)
     is_active = models.BooleanField(_('active'), default=True)
     email = models.EmailField('email address', blank=True, null=True)
-    taxpayer_id = models.CharField(_('Taxpayer\'s identification number'),
+    taxpayer_id = models.CharField(_("Taxpayer's identification number"),
                                    max_length=32,
                                    blank=True, null=True)
     gender = models.CharField(_('Genere'), choices=GENDER,
                               max_length=12, blank=True, null=True)
     place_of_birth = models.CharField('Luogo di nascita', max_length=56,
-                                      blank=True, null=True,
-                                      choices=[(i.name, i.name) for i in pycountry.countries])
+                                      blank=True, null=True)
     birth_date = models.DateField('Data di nascita',
                                   null=True, blank=True)
     origin = models.CharField(_('from which conenctor this user come from'),
@@ -61,10 +58,10 @@ class User(AbstractUser):
 
 class PersistentId(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    persistent_id = models.CharField(_('SAML Persistent Stored ID'),
+    persistent_id = models.CharField(_('Persistent Stored ID'),
                                      max_length=254,
                                      blank=True, null=True)
-    recipient_id = models.CharField(_('SAML ServiceProvider entityID'),
+    recipient_id = models.CharField(_('Relying-Party entityID'),
                                     max_length=254,
                                     blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
