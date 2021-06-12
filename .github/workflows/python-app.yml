@@ -44,8 +44,9 @@ jobs:
       #run: |
         #pytest --cov=oidc_endpoint tests/
     - name: Test with django
-      working-directory: ./example
+      working-directory: ./oidc_provider/tests/example
       run: |
+        ln -s ../../../oidc_provider .
         ./manage.py test
     #- name: Bandit Security Scan
       #run: |

@@ -13,3 +13,6 @@ oidc_provider/tests/example/static/
 snippets/private
 snippets/static
 static/*
+build/*
+dist/*
+*.egg-*
