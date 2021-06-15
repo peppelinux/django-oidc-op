@@ -47,7 +47,9 @@ jobs:
       working-directory: ./oidc_provider/tests/example
       run: |
         ln -s ../../../oidc_provider .
-        ./manage.py test
+        coverage erase
+        coverage run ./manage.py test
+        coverage report -m
     #- name: Bandit Security Scan
       #run: |
         #bandit --skip B105,B106,B107 -r oidc_provider

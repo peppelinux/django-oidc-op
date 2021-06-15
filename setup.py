@@ -18,7 +18,7 @@ with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as requir
 
 setup(
     name="oidc_provider",
-    version='2.0.0',
+    version='2.0.1',
     description="django oidc provider",
     long_description=README,
     long_description_content_type='text/markdown',
