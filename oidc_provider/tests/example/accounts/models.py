@@ -17,7 +17,7 @@ class User(AbstractUser):
                                  blank=True, null=True)
     is_active = models.BooleanField(_('active'), default=True)
     email = models.EmailField('email address', blank=True, null=True)
-    taxpayer_id = models.CharField(_('Taxpayer\'s identification number'),
+    taxpayer_id = models.CharField(_("Taxpayer's identification number"),
                                    max_length=32,
                                    blank=True, null=True)
     gender = models.CharField(_('Genere'), choices=GENDER,
@@ -58,10 +58,10 @@ class User(AbstractUser):
 
 class PersistentId(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    persistent_id = models.CharField(_('SAML Persistent Stored ID'),
+    persistent_id = models.CharField(_('Persistent Stored ID'),
                                      max_length=254,
                                      blank=True, null=True)
-    recipient_id = models.CharField(_('SAML ServiceProvider entityID'),
+    recipient_id = models.CharField(_('Relying-Party entityID'),
                                     max_length=254,
                                     blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)

@@ -44,9 +44,12 @@ jobs:
       #run: |
         #pytest --cov=oidc_endpoint tests/
     - name: Test with django
-      working-directory: ./example
+      working-directory: ./oidc_provider/tests/example
       run: |
-        ./manage.py test
+        ln -s ../../../oidc_provider .
+        coverage erase
+        coverage run ./manage.py test
+        coverage report -m
     #- name: Bandit Security Scan
       #run: |
         #bandit --skip B105,B106,B107 -r oidc_provider
