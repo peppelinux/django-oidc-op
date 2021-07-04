@@ -1,5 +1,3 @@
-import pycountry
-
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.models import AbstractUser
@@ -25,8 +23,7 @@ class User(AbstractUser):
     gender = models.CharField(_('Genere'), choices=GENDER,
                               max_length=12, blank=True, null=True)
     place_of_birth = models.CharField('Luogo di nascita', max_length=56,
-                                      blank=True, null=True,
-                                      choices=[(i.name, i.name) for i in pycountry.countries])
+                                      blank=True, null=True)
     birth_date = models.DateField('Data di nascita',
                                   null=True, blank=True)
     origin = models.CharField(_('from which conenctor this user come from'),
