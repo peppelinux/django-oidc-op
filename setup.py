@@ -12,13 +12,13 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
     README = readme.read()
 
 
-with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as requirements:
-    REQUIREMENTS = requirements.read()
+#with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as requirements:
+#    REQUIREMENTS = requirements.read()
 
 
 setup(
     name="oidc_provider",
-    version='2.1.0',
+    version='2.1.1',
     description="django oidc provider",
     long_description=README,
     long_description_content_type='text/markdown',
@@ -40,6 +40,9 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Topic :: Software Development :: Libraries :: Python Modules"],
-    install_requires=REQUIREMENTS,
+    install_requires=[
+    "Django>=3.1,<4.0",
+    "oidcop==2.1.0"
+    ],
     zip_safe=False,
 )
