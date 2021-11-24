@@ -29,7 +29,7 @@ bash run.sh
 
 You can use [JWTConnect-Python-OidcRP](https://github.com/openid/JWTConnect-Python-OidcRP) as follow:
 ```
-cd JWTConnect-Python-OidcRP
+cd JWTConnect-Python-OidcRP/example
 RP_LOGFILE_NAME="./flrp.django.log" python3 -m flask_rp.wsgi ../django-oidc-op/example/data/oidc_rp/conf.django.yaml
 ```
 
