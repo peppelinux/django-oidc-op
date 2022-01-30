@@ -193,6 +193,8 @@ class OidcRelyingParty(TimeStampedModel):
 
     def set_redirect_uri(self, uri_type: str, values):
         self.oidcrpredirecturi_set.filter(client=self, type=uri_type).delete()
+        if isinstance(values, str):
+            values = [values]
         for value in values:
             args = json.dumps(value[1] if value[1] else [])
             data = dict(
@@ -215,7 +217,7 @@ class OidcRelyingParty(TimeStampedModel):
                 )
 
             field = getattr(self, d)
-            if field.tzinfo is None or field.tzinfo.utcoffset(d) is None:
+            if field.tzinfo is None or field.tzinfo.utcoffset(field) is None:
                 timezone.activate(pytz.timezone("UTC"))
                 setattr(self, d, timezone.make_aware(field))
 

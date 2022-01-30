@@ -140,7 +140,7 @@ def _get_http_info(request):
             if k not in IGNORED_HEADERS
         },
         "method": request.method,
-        "url": request.get_raw_uri(),
+        "url": request.build_absolute_uri(),
         # name is not unique
         "cookie": [
             {"name": k, "value": v} for k, v in request.COOKIES.items()

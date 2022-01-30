@@ -61,15 +61,26 @@ class TestOidcRPFlow(TestCase):
         url = reverse('oidc_provider:registration')
         data = {
             "application_type": "web",
-            "response_types": ["code"],
-            "contacts": ["ops@example.com"],
+            "redirect_uris": [
+                "https://client.example.org/callback",
+                "https://client.example.org/callback2",
+            ],
+            "client_name": "My Example",
+            "client_name#ja-Jpan-JP": "クライアント名",
+            "subject_type": "pairwise",
             "token_endpoint_auth_method": "client_secret_basic",
-            "redirect_uris": ["https://127.0.0.1:8099/authz_cb/django_provider"],
-            "post_logout_redirect_uris": ["https://127.0.0.1:8099/session_logout/django_provider"],
-            # "jwks_uri": "https://127.0.0.1:8099/static/jwks.json",
-            "frontchannel_logout_uri": "https://127.0.0.1:8099/fc_logout/django_provider",
-            "backchannel_logout_uri": "https://127.0.0.1:8099/bc_logout/django_provider",
-            "grant_types": ["authorization_code"]
+            # "jwks_uri": "https://client.example.org/my_public_keys.jwks",
+            "userinfo_encrypted_response_alg": "RSA-OAEP",
+            "userinfo_encrypted_response_enc": "A128CBC-HS256",
+            "contacts": ["ve7jtb@example.org", "mary@example.org"],
+            "request_uris": [
+                "https://client.example.org/rf.txt#qpXaRLh_n93TT",
+                "https://client.example.org/rf.txt",
+            ],
+            "post_logout_redirect_uris": [
+                "https://rp.example.com/pl?foo=bar",
+                "https://rp.example.com/pl",
+            ],
         }
         response = self.client.post(url, data=data)
 
