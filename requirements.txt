@@ -1,6 +1,7 @@
 Django>=3.1,<4.1
 uwsgi
 filelock
+pytz
 
 oidcop==2.3.4
 #git+https://github.com/IdentityPython/oidc-op
