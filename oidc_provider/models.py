@@ -531,8 +531,13 @@ class OidcIssuedToken(TimeStampedModel):
                             blank=False, null=False)
 
     issued_at = models.DateTimeField()
-    expires_at = models.DateTimeField()
-    not_before = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(
+        help_text=("0 means that won't expire")
+    )
+    not_before = models.DateTimeField(
+        help_text=("0 means that this claim is disabled"),
+        null=True, blank=True
+    )
 
     revoked = models.BooleanField(default=False)
     value = models.TextField(unique=True)
