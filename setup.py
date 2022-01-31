@@ -18,7 +18,7 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
 
 setup(
     name="oidc_provider",
-    version='2.1.1',
+    version='2.3.4',
     description="django oidc provider",
     long_description=README,
     long_description_content_type='text/markdown',
