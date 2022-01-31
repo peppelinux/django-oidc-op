@@ -1,7 +1,8 @@
-Django>=3.1,<4.0
+Django>=3.1,<4.1
 uwsgi
 filelock
+pytz
 
-oidcop==2.1.0
+oidcop==2.3.4
 #git+https://github.com/IdentityPython/oidc-op
 #git+https://github.com/IdentityPython/JWTConnect-Python-OidcRP

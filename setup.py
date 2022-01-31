@@ -41,8 +41,8 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Topic :: Software Development :: Libraries :: Python Modules"],
     install_requires=[
-    "Django>=3.1,<4.0",
-    "oidcop==2.1.0"
+    "Django>=3.1,<4.1",
+    "oidcop==2.3.4"
     ],
     zip_safe=False,
 )

@@ -23,7 +23,7 @@ def aware_dt_from_timestamp(timestamp):
 
 def decode_token(txt, attr_name='access_token', verify_sign=True):
     issuer = oidcop_app.srv_config['issuer']
-    jwks_path = oidcop_app.srv_config['keys']['private_path']
+    jwks_path = oidcop_app.srv_config.conf['keys']['private_path']
     jwks = json.loads(open(jwks_path).read())
 
     key_jar = KeyJar()

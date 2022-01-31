@@ -245,24 +245,6 @@ OIDCOP_CONFIG = {
                         "essential": False,
                         "code_challenge_method": "S256 S384 S512"
                     }
-                },
-                "claims": {
-                    "function": "oidcop.oidc.add_on.custom_scopes.add_custom_scopes",
-                    "kwargs": {
-                        "research_and_scholarship": [
-                            "name",
-                            "given_name",
-                            "family_name",
-                            "email",
-                            "email_verified",
-                            "sub",
-                            "iss",
-                            "eduperson_scoped_affiliation"
-                        ],
-                        # "profile": [
-                        # "email"
-                        # ]
-                    }
                 }
             },
             "authz": OIDC_OP_AUTHZ,

@@ -140,7 +140,7 @@ def _get_http_info(request):
             if k not in IGNORED_HEADERS
         },
         "method": request.method,
-        "url": request.get_raw_uri(),
+        "url": request.build_absolute_uri(),
         # name is not unique
         "cookie": [
             {"name": k, "value": v} for k, v in request.COOKIES.items()
@@ -151,10 +151,8 @@ def _get_http_info(request):
 
 def _get_http_data(request, http_info):
     data = {}
-    if request.method == 'GET':
-        data = {k: v for k, v in request.GET.items()}
-    elif request.method == 'POST':
-        data = {k: v for k, v in request.POST.items()}
+    _meth = getattr(request, request.method)
+    data = {k: v for k, v in _meth.items()}
 
     if not data and request.body:
         data = json.loads(request.body)
